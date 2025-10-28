@@ -9,6 +9,9 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  
+# リポジトリレベルでGitHub Pagesを有効化する必要があります
+# Settings → Pages → Source: GitHub Actions を選択してください
 
 concurrency:
   group: "pages"
@@ -34,8 +37,6 @@ jobs:
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
-      with:
-        enablement: true
     
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
