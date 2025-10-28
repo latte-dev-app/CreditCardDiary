@@ -7,7 +7,7 @@ url: "https://latte-dev-app.github.io"
 baseurl: "/CreditCardDiary"
 
 # ビルド設定
-build_command: "flutter build web --release"
+build_command: "flutter build web --release --base-href=/CreditCardDiary/"
 publish_directory: "build/web"
 
 # プラグイン設定
