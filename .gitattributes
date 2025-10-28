@@ -1,4 +1,4 @@
 # Ensure shell scripts are executable
-.netlify/build.sh text eol=lf
+scripts/netlify_build.sh text eol=lf
 *.sh text eol=lf
 
