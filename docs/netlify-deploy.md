@@ -28,10 +28,16 @@ Netlifyが自動検出する設定：
 #### 4. デプロイ完了
 数分でサイトが公開されます！
 
-### 方法2: GitHub Actions経由でデプロイ
+### 方法2: GitHub Actions経由でデプロイ（推奨）
+
+**注意**: Netlifyのビルド環境に問題があるため、GitHub ActionsでビルドしてNetlifyにデプロイする方法を推奨します。
 
 #### 1. Netlifyサイトを作成
-上記の「方法1」の手順でNetlifyにサイトを作成します。
+1. https://www.netlify.com にアクセス
+2. "Add new site" → "Import an existing project"
+3. GitHubを選択
+4. リポジトリを選択
+5. **重要**: ビルド設定は無効化します（GitHub Actionsでビルドするため）
 
 #### 2. Netlify認証情報を取得
 1. https://app.netlify.com にアクセス
@@ -61,6 +67,7 @@ Netlifyが自動検出する設定：
 #### 5. ワークフローの動作確認
 - `main`ブランチにpushすると自動でデプロイされます
 - Pull Requestを作成するとプレビューデプロイが作成されます
+- GitHub Actionsでビルドが成功してからNetlifyにデプロイされます
 
 ## 🔗 公開URL
 `https://your-app-name.netlify.app`

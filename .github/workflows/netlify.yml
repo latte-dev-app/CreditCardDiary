@@ -1,4 +1,4 @@
-name: Deploy to Netlify
+name: Build and Deploy to Netlify
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
       run: flutter build web --release
     
     # Netlify CLIでデプロイ
-    - name: Deploy to Netlify
+    - name: Deploy to Netlify (Production)
       uses: netlify/actions/cli@master
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
