@@ -19,9 +19,11 @@ Netlifyへのデプロイ方法は2つあります：
 4. ビルド設定が自動検出される
 
 #### 3. デプロイ設定確認
-以下の設定を確認：
-- Build command: `flutter build web`
+Netlifyが自動検出する設定：
+- Build command: 自動的に `.netlify/build.sh` が実行されます
 - Publish directory: `build/web`
+
+**注意**: `.netlify/build.sh` スクリプトが自動的にFlutter SDKをインストールしてからビルドします。
 
 #### 4. デプロイ完了
 数分でサイトが公開されます！
@@ -81,3 +83,26 @@ Netlifyへのデプロイ方法は2つあります：
 - 設定が簡単
 - デプロイが高速
 - PR毎にプレビュー環境が自動生成される
+
+## 🔧 技術的な詳細
+
+### Netlifyでのビルドプロセス
+
+1. **Flutter SDKのインストール**: `.netlify/build.sh` スクリプトが自動的にFlutter SDKをダウンロード・インストールします
+2. **依存関係のインストール**: `flutter pub get` で依存パッケージを取得します
+3. **Webビルド**: `flutter build web --release` でプロダクション用にビルドします
+4. **デプロイ**: `build/web` ディレクトリが自動的にデプロイされます
+
+### ビルド時間
+- 初回ビルド: 5-10分（Flutter SDKのダウンロード含む）
+- 2回目以降: 3-5分（キャッシュが効く場合）
+
+### トラブルシューティング
+
+**エラー: "flutter: command not found"**
+- `.netlify/build.sh` スクリプトが正しく実行されているか確認
+- Netlifyのビルドログを確認してFlutter SDKがインストールされているか確認
+
+**ビルドが非常に遅い**
+- Flutter SDKのダウンロードは初回のみ時間がかかります
+- Netlifyのキャッシュを有効にすることを検討してください
