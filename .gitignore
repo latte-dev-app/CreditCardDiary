@@ -46,6 +46,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Android local properties (contains user-specific paths)
+android/local.properties
+
 # macOS
 .DS_Store
 .AppleDouble
