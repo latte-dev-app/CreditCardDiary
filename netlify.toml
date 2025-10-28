@@ -8,18 +8,15 @@
 [build.environment]
   NODE_VERSION = "18"
   FLUTTER_VERSION = "3.27.0"
-  NETLIFY_USE_YARN = "true"
   PUB_CACHE = "$HOME/.pub-cache"
   PATH = "$HOME/flutter/bin:$HOME/.pub-cache/bin:$PATH"
 
 [build.image]
-  name = "focal"  # Ubuntu 20.04ベースの安定ビルド環境
+  name = "jammy"  # Ubuntu 22.04ベースで安定
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-[context.production.environment]
-  FLUTTER_VERSION = "3.27.0"
 
