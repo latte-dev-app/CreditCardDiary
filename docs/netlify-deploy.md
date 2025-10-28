@@ -20,10 +20,14 @@ Netlifyへのデプロイ方法は2つあります：
 
 #### 3. デプロイ設定確認
 Netlifyが自動検出する設定：
-- Build command: 自動的に `.netlify/build.sh` が実行されます
+- Build command: `bash ./scripts/netlify_build.sh`
 - Publish directory: `build/web`
+- Build image: `focal` (Ubuntu 20.04ベースの安定版)
 
-**注意**: `.netlify/build.sh` スクリプトが自動的にFlutter SDKをインストールしてからビルドします。
+**重要**: 
+- `scripts/netlify_build.sh` スクリプトが自動的にFlutter SDKをインストールしてからビルドします
+- 安定版ビルド環境（focal）を使用してビルドエラーを回避します
+- Node.js 18を使用して互換性を確保します
 
 #### 4. デプロイ完了
 数分でサイトが公開されます！
@@ -107,9 +111,18 @@ Netlifyが自動検出する設定：
 ### トラブルシューティング
 
 **エラー: "flutter: command not found"**
-- `.netlify/build.sh` スクリプトが正しく実行されているか確認
+- `scripts/netlify_build.sh` スクリプトが正しく実行されているか確認
 - Netlifyのビルドログを確認してFlutter SDKがインストールされているか確認
+
+**エラー: "mkdir: command not found" や "touch: command not found"**
+- Netlifyの新しいビルド環境（noble）の問題です
+- `netlify.toml`で安定版ビルド環境（focal）を指定しています
+- キャッシュをクリアして再デプロイしてください
 
 **ビルドが非常に遅い**
 - Flutter SDKのダウンロードは初回のみ時間がかかります
 - Netlifyのキャッシュを有効にすることを検討してください
+
+**Node.js関連のエラー**
+- `package.json`でNode.js 18を指定しています
+- `netlify.toml`でもNODE_VERSION = "18"を設定しています

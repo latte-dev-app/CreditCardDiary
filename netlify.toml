@@ -1,12 +1,16 @@
-# Netlify build is disabled - using GitHub Actions for building and deployment
-# [build]
-#   publish = "build/web"
-#   command = "bash ./scripts/netlify_build.sh"
+[build]
+  publish = "build/web"
+  command = "bash ./scripts/netlify_build.sh"
+  environment = { NETLIFY_USE_YARN = "true" }
 
 [build.environment]
   FLUTTER_VERSION = "3.27.0"
   PUB_CACHE = "$HOME/.pub-cache"
   PATH = "$HOME/flutter/bin:$HOME/.pub-cache/bin:$PATH"
+  NODE_VERSION = "18"
+
+[build.image]
+  name = "focal"  # Ubuntu 20.04ベースの安定ビルド環境
 
 [[redirects]]
   from = "/*"
