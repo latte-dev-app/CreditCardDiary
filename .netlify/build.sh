@@ -1,33 +1,32 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Flutter SDK のダウンロードとセットアップ
-echo "Installing Flutter SDK..."
-FLUTTER_VERSION="${FLUTTER_VERSION:-3.27.0}"
-FLUTTER_URL="https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
+echo "Starting Netlify build for Flutter Web..."
 
-cd ~
-if [ ! -d "flutter" ]; then
-  echo "Downloading Flutter SDK..."
-  curl -L "$FLUTTER_URL" | tar xJ
+# 1) Install Flutter (stable channel)
+echo "Step 1: Installing Flutter SDK..."
+if [ ! -d "$HOME/flutter" ]; then
+  git clone --depth 1 https://github.com/flutter/flutter.git -b stable "$HOME/flutter"
+else
+  echo "Flutter already exists in $HOME/flutter"
 fi
 
-export PATH="$HOME/flutter/bin:$PATH"
+# 2) Add flutter to PATH
+export PATH="$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin:$PATH"
 
-# Flutterのセットアップ
-echo "Setting up Flutter..."
-flutter doctor
-flutter config --no-enable-web
+echo "Step 2: Flutter version check..."
+flutter --version
 
-# プロジェクトのディレクトリに戻る
-cd /opt/build/repo
+# 3) Enable web and verify
+echo "Step 3: Enabling web support..."
+flutter config --enable-web
 
-# 依存関係のインストール
-echo "Installing dependencies..."
+# 4) Fetch Dart/Flutter deps
+echo "Step 4: Installing dependencies..."
 flutter pub get
 
-# Webビルド
-echo "Building web..."
+# 5) Build the web app
+echo "Step 5: Building web app..."
 flutter build web --release
 
 echo "Build completed successfully!"
