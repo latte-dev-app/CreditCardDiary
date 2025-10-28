@@ -37,11 +37,28 @@ cd build/web
 python -m http.server 8000
 ```
 
-### GitHub Pagesに公開
+### デプロイ方法
+
+#### GitHub Pagesに公開
 
 1. リポジトリのSettings → Pagesでアクションを有効化
 2. mainブランチにpushすると自動デプロイ
 3. `https://your-username.github.io/creditcarddiary` でアクセス
+
+#### Netlifyに公開（推奨）
+
+詳細な手順は [docs/netlify-deploy.md](docs/netlify-deploy.md) を参照してください。
+
+**簡単な手順:**
+1. https://www.netlify.com にアクセスしてGitHubアカウントでサインアップ
+2. "Add new site" → "Import an existing project" を選択
+3. リポジトリを選択して接続
+4. ビルド設定は自動検出される（`flutter build web` → `build/web`）
+5. 数分で `https://your-app-name.netlify.app` で公開される
+
+**GitHub Actionsでのデプロイ:**
+- `.github/workflows/netlify.yml` を使用してGitHub Actions経由でデプロイすることも可能
+- 詳細は [docs/netlify-deploy.md](docs/netlify-deploy.md) の「方法2」を参照
 
 ## セットアップ
 

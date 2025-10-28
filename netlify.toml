@@ -2,8 +2,14 @@
   publish = "build/web"
   command = "flutter build web"
 
+[build.environment]
+  FLUTTER_VERSION = "3.27.0"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[context.production.environment]
+  FLUTTER_VERSION = "3.27.0"
 
