@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../providers/card_provider.dart';
+import '../../application/card_provider.dart';
 
 class MonthlyChart extends StatelessWidget {
   const MonthlyChart({super.key});
