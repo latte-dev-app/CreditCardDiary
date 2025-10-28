@@ -1,10 +1,16 @@
 # クレジットカード使用額トラッカー
 
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://latte-dev-app.github.io/CreditCardDiary)
+[![Flutter](https://img.shields.io/badge/Flutter-3.27.0-blue)](https://flutter.dev)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Flutter Webで動作するクレジットカードの使用額記録アプリです。
 
-## デモ
+## 🌐 ライブデモ
 
-本アプリはローカル環境で動作します。データは全てブラウザ内（localStorage）に保存されます。
+**👉 [https://latte-dev-app.github.io/CreditCardDiary](https://latte-dev-app.github.io/CreditCardDiary)**
+
+本アプリはGitHub Pagesでホストされており、ブラウザで直接アクセスできます。データは全てブラウザ内（localStorage）に保存されます。
 
 ## 概要
 
@@ -37,28 +43,31 @@ cd build/web
 python -m http.server 8000
 ```
 
-### デプロイ方法
+### 🚀 デプロイ方法
 
-#### GitHub Pagesに公開
+#### GitHub Pages（現在のデプロイ方法）
 
-1. リポジトリのSettings → Pagesでアクションを有効化
-2. mainブランチにpushすると自動デプロイ
-3. `https://your-username.github.io/creditcarddiary` でアクセス
+**自動デプロイ:**
+1. リポジトリをパブリックに変更
+2. Settings → Pages → Source: GitHub Actions
+3. `main`ブランチにプッシュすると自動デプロイ
+4. `https://latte-dev-app.github.io/CreditCardDiary` でアクセス
 
-#### Netlifyに公開（推奨）
+**詳細な手順:**
+- [docs/github-pages-deploy.md](docs/github-pages-deploy.md) を参照してください
 
-詳細な手順は [docs/netlify-deploy.md](docs/netlify-deploy.md) を参照してください。
+#### ローカル開発
 
-**簡単な手順:**
-1. https://www.netlify.com にアクセスしてGitHubアカウントでサインアップ
-2. "Add new site" → "Import an existing project" を選択
-3. リポジトリを選択して接続
-4. ビルド設定は自動検出される（`flutter build web` → `build/web`）
-5. 数分で `https://your-app-name.netlify.app` で公開される
+```bash
+# 依存関係のインストール
+flutter pub get
 
-**GitHub Actionsでのデプロイ:**
-- `.github/workflows/netlify.yml` を使用してGitHub Actions経由でデプロイすることも可能
-- 詳細は [docs/netlify-deploy.md](docs/netlify-deploy.md) の「方法2」を参照
+# 開発サーバー起動
+flutter run -d chrome
+
+# プロダクションビルド
+flutter build web --release
+```
 
 ## セットアップ
 
@@ -77,22 +86,34 @@ flutter pub get
 flutter run -d chrome
 ```
 
-## ディレクトリ構成
+## 📁 プロジェクト構成
 
 ```
-lib/
-├── main.dart              # アプリケーションのエントリーポイント
-├── models/
-│   └── card_model.dart    # カードと支出のデータモデル
-├── providers/
-│   └── card_provider.dart # 状態管理とデータ操作
-├── screens/
-│   ├── main_screen.dart   # メイン画面（ナビゲーション）
-│   ├── home_screen.dart   # ホーム画面（月別表示）
-│   ├── card_detail_screen.dart # カード詳細画面
-│   └── settings_screen.dart   # 設定画面
-└── utils/
-    └── local_storage.dart # ローカルストレージ操作ユーティリティ
+creditcarddiary/
+├── .github/workflows/
+│   └── github-pages.yml    # GitHub Pages用デプロイワークフロー
+├── lib/                    # Flutterアプリのソースコード
+│   ├── main.dart           # アプリケーションのエントリーポイント
+│   ├── models/
+│   │   └── card_model.dart # カードと支出のデータモデル
+│   ├── providers/
+│   │   └── card_provider.dart # 状態管理とデータ操作
+│   ├── screens/
+│   │   ├── main_screen.dart   # メイン画面（ナビゲーション）
+│   │   ├── home_screen.dart   # ホーム画面（月別表示）
+│   │   ├── card_detail_screen.dart # カード詳細画面
+│   │   └── settings_screen.dart   # 設定画面
+│   ├── utils/
+│   │   └── local_storage.dart # ローカルストレージ操作ユーティリティ
+│   └── widgets/
+│       ├── monthly_chart.dart # 月別グラフウィジェット
+│       └── summary_card.dart  # サマリーカードウィジェット
+├── web/                    # Web用の設定ファイル
+├── docs/                   # ドキュメント
+│   └── github-pages-deploy.md # GitHub Pagesデプロイ手順
+├── _config.yml             # GitHub Pages用設定
+├── README.md               # プロジェクト説明
+└── pubspec.yaml            # Flutter依存関係
 ```
 
 ## 使い方

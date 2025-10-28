@@ -31,6 +31,10 @@ migrate_working_dir/
 .pub/
 /build/
 
+# GitHub Pages用の除外設定
+# ビルド成果物はGitHub Actionsで生成されるため、ローカルビルドは除外
+/build/web/
+
 # Symbolication related
 app.*.symbols
 

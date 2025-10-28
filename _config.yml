@@ -1,0 +1,35 @@
+# GitHub Pages用の設定ファイル
+
+# サイトの基本情報
+title: "クレジットカード使用額トラッカー"
+description: "Flutter Webで動作するクレジットカードの使用額記録アプリ"
+url: "https://latte-dev-app.github.io"
+baseurl: "/CreditCardDiary"
+
+# ビルド設定
+build_command: "flutter build web --release"
+publish_directory: "build/web"
+
+# プラグイン設定
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+# 除外ファイル（GitHub Pagesで不要なファイル）
+exclude:
+  - android/
+  - ios/
+  - linux/
+  - macos/
+  - windows/
+  - test/
+  - docs/
+  - scripts/
+  - deploy.bat
+  - simple-deploy.bat
+  - netlify.toml
+  - package.json
+  - temp_reload.txt
+  - "*.iml"
+  - .gitignore
+  - .gitattributes
