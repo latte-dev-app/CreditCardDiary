@@ -35,7 +35,11 @@ jobs:
       run: flutter pub get
     
     - name: Build web
-      run: flutter build web --release --base-href="/CreditCardDiary/"
+      run: |
+        flutter build web --release --base-href="/CreditCardDiary/"
+        # GitHub Pages 向け: Jekyll無効化とSPA 404対策
+        touch build/web/.nojekyll
+        cp build/web/index.html build/web/404.html
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
