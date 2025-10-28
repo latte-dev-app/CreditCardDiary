@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# 基本PATHを確実に設定（mkdir、touchなどの基本コマンドを確保）
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
 echo "Starting Netlify build for Flutter Web..."
 
 # 1) Install Flutter (stable channel)
@@ -11,7 +14,7 @@ else
   echo "Flutter already exists in $HOME/flutter"
 fi
 
-# 2) Add flutter to PATH
+# 2) Add flutter to PATH（基本PATHを保持）
 export PATH="$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin:$PATH"
 
 echo "Step 2: Flutter version check..."

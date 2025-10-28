@@ -1,5 +1,8 @@
 [build]
+  # 方法1: カスタムスクリプト（推奨）
   command = "bash ./scripts/netlify_build.sh"
+  # 方法2: 直接Flutterコマンド（シンプル）
+  # command = "flutter build web --release"
   publish = "build/web"
 
 [build.environment]
