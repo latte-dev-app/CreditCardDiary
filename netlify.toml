@@ -1,9 +1,11 @@
 [build]
   publish = "build/web"
-  command = "flutter build web"
+  command = "bash .netlify/build.sh"
 
 [build.environment]
   FLUTTER_VERSION = "3.27.0"
+  PUB_CACHE = "$HOME/.pub-cache"
+  PATH = "$HOME/flutter/bin:$HOME/.pub-cache/bin:$PATH"
 
 [[redirects]]
   from = "/*"
