@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/card_provider.dart';
-import '../models/card_model.dart';
+import '../../application/card_provider.dart';
+import '../../domain/card_model.dart';
 import 'card_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {

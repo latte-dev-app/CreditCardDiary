@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/card_model.dart';
+import '../domain/card_model.dart';
 
 class LocalStorage {
   static const String _keyCards = 'cards_data';

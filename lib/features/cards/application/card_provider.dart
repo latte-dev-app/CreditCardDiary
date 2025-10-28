@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../models/card_model.dart';
-import '../utils/local_storage.dart';
+import '../domain/card_model.dart';
+import '../infrastructure/local_storage.dart';
 
 class CardProvider with ChangeNotifier {
   List<CreditCard> _cards = [];

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/card_model.dart';
-import '../providers/card_provider.dart';
+import '../../domain/card_model.dart';
+import '../../application/card_provider.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
