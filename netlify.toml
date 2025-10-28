@@ -1,6 +1,8 @@
 [build]
   # 方法1: カスタムスクリプト（推奨）
   command = "bash ./scripts/netlify_build.sh"
+  # GitHub Actionsでのみデプロイする場合はNetlifyのビルドを常にスキップ
+  ignore = "exit 0"
   # 方法2: 直接Flutterコマンド（シンプル）
   # command = "flutter build web --release"
   publish = "build/web"
@@ -12,7 +14,7 @@
   PATH = "$HOME/flutter/bin:$HOME/.pub-cache/bin:$PATH"
 
 [build.image]
-  name = "jammy"  # Ubuntu 22.04ベースで安定
+  name = "focal"  # Ubuntu 20.04ベース（安定。初期化時のmise/bundler問題の回避）
 
 [[redirects]]
   from = "/*"
