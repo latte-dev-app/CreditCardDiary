@@ -119,6 +119,11 @@ Netlifyが自動検出する設定：
 - `netlify.toml`で安定版ビルド環境（focal）を指定しています
 - キャッシュをクリアして再デプロイしてください
 
+**エラー: "Can't redefine existing key" や "Failed to parse configuration"**
+- `netlify.toml`で`[build.environment]`が重複している可能性があります
+- すべての環境変数を1つの`[build.environment]`ブロック内にまとめてください
+- TOML構文エラーを修正してください
+
 **ビルドが非常に遅い**
 - Flutter SDKのダウンロードは初回のみ時間がかかります
 - Netlifyのキャッシュを有効にすることを検討してください
