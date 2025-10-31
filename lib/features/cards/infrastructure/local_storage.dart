@@ -5,6 +5,8 @@ import '../domain/card_model.dart';
 class LocalStorage {
   static const String _keyCards = 'cards_data';
   static const String _keyTransactions = 'transactions_data';
+  static const String _keyCardBudgets = 'card_budgets_data';
+  static const String _keyTotalBudgets = 'total_budgets_data';
 
   // SharedPreferencesインスタンスを取得（集計モード設定用）
   static Future<SharedPreferences> getSharedPreferences() async {
@@ -157,6 +159,76 @@ class LocalStorage {
   static Future<List<Transaction>> getAllTransactions() async {
     final prefsData = await loadData();
     return (prefsData['transactions'] as List<Transaction>? ?? []).toList();
+  }
+
+  // 予算関連操作
+  // カード別予算を保存
+  static Future<void> saveCardBudgets(Map<String, Map<String, int>> budgets) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyCardBudgets, jsonEncode(budgets));
+  }
+
+  // カード別予算を読み込み
+  static Future<Map<String, Map<String, int>>> loadCardBudgets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final budgetsJsonString = prefs.getString(_keyCardBudgets);
+    if (budgetsJsonString == null) return {};
+    
+    final decoded = jsonDecode(budgetsJsonString) as Map<String, dynamic>;
+    return decoded.map((key, value) => MapEntry(
+      key,
+      Map<String, int>.from((value as Map).map((k, v) => MapEntry(k.toString(), v as int))),
+    ));
+  }
+
+  // 全体予算を保存
+  static Future<void> saveTotalBudgets(Map<String, int> budgets) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyTotalBudgets, jsonEncode(budgets));
+  }
+
+  // 全体予算を読み込み
+  static Future<Map<String, int>> loadTotalBudgets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final budgetsJsonString = prefs.getString(_keyTotalBudgets);
+    if (budgetsJsonString == null) return {};
+    
+    final decoded = jsonDecode(budgetsJsonString) as Map<String, dynamic>;
+    return decoded.map((key, value) => MapEntry(key, value as int));
+  }
+
+  // 予算設定（カード別）
+  static Future<void> setCardBudget(String cardId, int year, int month, int amount) async {
+    final budgets = await loadCardBudgets();
+    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    
+    if (!budgets.containsKey(cardId)) {
+      budgets[cardId] = {};
+    }
+    budgets[cardId]![monthKey] = amount;
+    await saveCardBudgets(budgets);
+  }
+
+  // 予算取得（カード別）
+  static Future<int?> getCardBudget(String cardId, int year, int month) async {
+    final budgets = await loadCardBudgets();
+    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    return budgets[cardId]?[monthKey];
+  }
+
+  // 予算設定（全体）
+  static Future<void> setTotalBudget(int year, int month, int amount) async {
+    final budgets = await loadTotalBudgets();
+    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    budgets[monthKey] = amount;
+    await saveTotalBudgets(budgets);
+  }
+
+  // 予算取得（全体）
+  static Future<int?> getTotalBudget(int year, int month) async {
+    final budgets = await loadTotalBudgets();
+    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    return budgets[monthKey];
   }
 }
 

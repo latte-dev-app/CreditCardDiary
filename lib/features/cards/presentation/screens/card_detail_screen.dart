@@ -54,11 +54,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
-          final useBillingMonth = provider.useBillingMonth;
           final transactions = provider.getTransactionsByCardId(card.id);
-          final monthlyTotal = useBillingMonth
-              ? provider.getBillingMonthlyTotalByCardId(card.id)
-              : provider.getMonthlyTotalByCardId(card.id);
+          final monthlyTotal = provider.getMonthlyTotalByCardId(card.id);
           
           // 月順にソート
           final sortedMonths = monthlyTotal.keys.toList()
@@ -88,20 +85,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
           return Column(
             children: [
-              // 集計モード切替トグル
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const Text('請求月ベース'),
-                    Switch(
-                      value: useBillingMonth,
-                      onChanged: (_) => provider.toggleAggregationMode(),
-                    ),
-                  ],
-                ),
-              ),
               // 締め日/支払日設定ボタン
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -115,6 +98,80 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     ),
                   ],
                 ),
+              ),
+              // カード別予算進捗バー
+              FutureBuilder<int?>(
+                future: provider.getCardBudget(card.id, DateTime.now().year, DateTime.now().month),
+                builder: (context, snapshot) {
+                  final budget = snapshot.data;
+                  if (budget == null || budget == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  final cardTotals = provider.getCardTotalsByMonth(
+                    DateTime.now().year,
+                    DateTime.now().month,
+                  );
+                  final total = cardTotals[card.id] ?? 0;
+                  final progress = (total / budget).clamp(0.0, 1.0);
+                  final isOverBudget = total > budget;
+                  
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isOverBudget ? Colors.red : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '予算進捗',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isOverBudget ? Colors.red : Colors.grey[800],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 16),
+                              onPressed: () => _showCardBudgetDialog(context, provider, card),
+                              tooltip: '予算を編集',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isOverBudget ? Colors.red : Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 6,
+                            backgroundColor: Colors.grey[200],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isOverBudget ? Colors.red : Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               // カード情報
               Container(
@@ -202,16 +259,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             children: [
                               if (sortedMonths.isNotEmpty) ...[
                                 Text(
-                                  '${sortedMonths.last.replaceAll('-', '年')}月の${useBillingMonth ? '請求額' : '使用額'}',
+                                  '${sortedMonths.last.replaceAll('-', '年')}月の使用額',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
                                   ),
                                 ),
                               ],
-                              Text(
-                                useBillingMonth ? '合計請求額' : '合計使用額',
-                                style: const TextStyle(
+                              const Text(
+                                '合計使用額',
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                 ),
@@ -897,6 +954,63 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCardBudgetDialog(BuildContext context, CardProvider provider, CreditCard card) async {
+    final now = DateTime.now();
+    final currentBudget = await provider.getCardBudget(card.id, now.year, now.month);
+    if (!context.mounted) return;
+    
+    final budgetController = TextEditingController(
+      text: currentBudget?.toString() ?? '',
+    );
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${card.name}の予算設定'),
+        content: TextField(
+          controller: budgetController,
+          decoration: const InputDecoration(
+            labelText: '予算額',
+            hintText: '例: 50000',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          if (currentBudget != null)
+            TextButton(
+              onPressed: () async {
+                await provider.setCardBudget(card.id, now.year, now.month, 0);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('削除', style: TextStyle(color: Colors.red)),
+            ),
+          ElevatedButton(
+            onPressed: () async {
+              final budgetStr = budgetController.text.trim();
+              if (budgetStr.isNotEmpty) {
+                final budget = int.tryParse(budgetStr);
+                if (budget != null && budget > 0) {
+                  await provider.setCardBudget(card.id, now.year, now.month, budget);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                }
+              }
+            },
+            child: const Text('保存'),
           ),
         ],
       ),

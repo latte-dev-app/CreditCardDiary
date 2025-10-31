@@ -128,6 +128,19 @@ class CardProvider with ChangeNotifier {
         .fold<int>(0, (sum, t) => sum + t.amount);
   }
 
+  // 指定月のカード別合計を取得
+  Map<String, int> getCardTotalsByMonth(int year, int month) {
+    final Map<String, int> cardTotals = {};
+    final monthTransactions = getTransactionsByMonth(year, month);
+    
+    for (final transaction in monthTransactions) {
+      cardTotals[transaction.cardId] = 
+          (cardTotals[transaction.cardId] ?? 0) + transaction.amount;
+    }
+    
+    return cardTotals;
+  }
+
   // ---- 請求月（締め日）ベース集計（簡易近似） ----
   // 近似: closingDayが設定されているカードの取引は、丸ごと翌月の請求月として扱う。
   // （取引日に日付が無いための近似。closingDay未設定/31日はカレンダー月のまま）
@@ -190,6 +203,47 @@ class CardProvider with ChangeNotifier {
   // 互換: 既存エクスポートはそのまま
   String exportToJson() {
     return LocalStorage.exportToJson(_cards, _transactions);
+  }
+
+  // 予算関連操作
+  // カード別予算を設定
+  Future<void> setCardBudget(String cardId, int year, int month, int amount) async {
+    await LocalStorage.setCardBudget(cardId, year, month, amount);
+    notifyListeners();
+  }
+
+  // カード別予算を取得
+  Future<int?> getCardBudget(String cardId, int year, int month) async {
+    return await LocalStorage.getCardBudget(cardId, year, month);
+  }
+
+  // 全体予算を設定
+  Future<void> setTotalBudget(int year, int month, int amount) async {
+    await LocalStorage.setTotalBudget(year, month, amount);
+    notifyListeners();
+  }
+
+  // 全体予算を取得
+  Future<int?> getTotalBudget(int year, int month) async {
+    return await LocalStorage.getTotalBudget(year, month);
+  }
+
+  // カード別予算の進捗率を計算（0.0-1.0、超過時は1.0を超える）
+  Future<double> getCardBudgetProgress(String cardId, int year, int month) async {
+    final budget = await getCardBudget(cardId, year, month);
+    if (budget == null || budget == 0) return 0.0;
+    
+    final total = getCardTotalsByMonth(year, month)[cardId] ?? 0;
+    return (total / budget).clamp(0.0, double.infinity);
+  }
+
+  // 全体予算の進捗率を計算（0.0-1.0、超過時は1.0を超える）
+  Future<double> getTotalBudgetProgress(int year, int month) async {
+    final budget = await getTotalBudget(year, month);
+    if (budget == null || budget == 0) return 0.0;
+    
+    final total = getTotalByMonth(year, month);
+    return (total / budget).clamp(0.0, double.infinity);
   }
 }
 

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../application/card_provider.dart';
-import '../../domain/card_model.dart';
 
 class LineChartScreen extends StatefulWidget {
   const LineChartScreen({super.key});
@@ -49,7 +48,6 @@ class _LineChartScreenState extends State<LineChartScreen> {
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
-          final useBillingMonth = provider.useBillingMonth;
           final years = _getAvailableYears(provider);
           if (years.isEmpty) {
             return const Center(
@@ -61,9 +59,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
           }
 
           final year = _selectedYear ?? years.last;
-          final monthlyTotals = useBillingMonth
-              ? _getBillingMonthlyTotalsByYear(provider, year)
-              : _getMonthlyTotalsByYear(provider, year);
+          final monthlyTotals = _getMonthlyTotalsByYear(provider, year);
           final maxValue = (monthlyTotals.isNotEmpty
                   ? monthlyTotals.reduce((a, b) => a > b ? a : b)
                   : 0)
@@ -75,20 +71,8 @@ class _LineChartScreenState extends State<LineChartScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 集計モード切替トグル
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const Text('請求月ベース'),
-                    Switch(
-                      value: useBillingMonth,
-                      onChanged: (_) => provider.toggleAggregationMode(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 Text(
-                  '$year年の${useBillingMonth ? '請求額' : '支出'}推移',
+                  '$year年の支出推移',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -144,6 +128,23 @@ class _LineChartScreenState extends State<LineChartScreen> {
                       borderData: FlBorderData(
                         show: true,
                         border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                            return touchedSpots.map((LineBarSpot touchedSpot) {
+                              final month = touchedSpot.x.toInt() + 1;
+                              final amount = touchedSpot.y.toInt();
+                              return LineTooltipItem(
+                                '$month月: ${formatter.format(amount)}円',
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            }).toList();
+                          },
+                        ),
                       ),
                       lineBarsData: [
                         LineChartBarData(
@@ -217,31 +218,6 @@ class _LineChartScreenState extends State<LineChartScreen> {
     return totals;
   }
 
-  List<int> _getBillingMonthlyTotalsByYear(CardProvider provider, int year) {
-    final List<int> totals = List<int>.filled(12, 0);
-    for (final t in provider.transactions) {
-      final card = provider.cards.firstWhere(
-        (c) => c.id == t.cardId,
-        orElse: () => provider.cards.isNotEmpty ? provider.cards.first : throw StateError('No cards'),
-      );
-      final shifted = _shiftByClosing(card, t.year, t.month);
-      if (shifted.$1 == year) {
-        final idx = (shifted.$2 - 1).clamp(0, 11);
-        totals[idx] += t.amount;
-      }
-    }
-    return totals;
-  }
-
-  (int, int) _shiftByClosing(CreditCard card, int year, int month) {
-    if (card.closingDay == null || card.closingDay == 31) {
-      return (year, month);
-    }
-    // 近似として、当月の取引は全て翌月の請求月に寄せる
-    final newMonth = month == 12 ? 1 : month + 1;
-    final newYear = month == 12 ? year + 1 : year;
-    return (newYear, newMonth);
-  }
 
   List<int> _getAvailableYears(CardProvider provider) {
     final years = provider.transactions.map((t) => t.year).toSet().toList();
