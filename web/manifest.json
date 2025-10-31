@@ -1,11 +1,11 @@
 {
-    "name": "creditcarddiary",
-    "short_name": "creditcarddiary",
-    "start_url": "/CreditCardDiary/",
+    "name": "クレジットカード管理",
+    "short_name": "カード管理",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "クレジットカードの支出を管理するアプリ",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -5,12 +5,18 @@ class CreditCard {
   final String name;
   final String type; // カード種類（Visa, Mastercard, その他）
   final String color;
+  final String? imagePath; // カード画像のパス
+  final int? closingDay; // 締め日（1-31）
+  final int? paymentDay; // 支払日（1-31）
 
   CreditCard({
     required this.id,
     required this.name,
     required this.type,
     required this.color,
+    this.imagePath,
+    this.closingDay,
+    this.paymentDay,
   });
 
   Map<String, dynamic> toJson() => {
@@ -18,6 +24,9 @@ class CreditCard {
         'name': name,
         'type': type,
         'color': color,
+        'imagePath': imagePath,
+        'closingDay': closingDay,
+        'paymentDay': paymentDay,
       };
 
   factory CreditCard.fromJson(Map<String, dynamic> json) => CreditCard(
@@ -25,6 +34,9 @@ class CreditCard {
         name: json['name'],
         type: json['type'] ?? 'その他',
         color: json['color'],
+        imagePath: json['imagePath'],
+        closingDay: json['closingDay'],
+        paymentDay: json['paymentDay'],
       );
 
   CreditCard copyWith({
@@ -32,12 +44,18 @@ class CreditCard {
     String? name,
     String? type,
     String? color,
+    String? imagePath,
+    int? closingDay,
+    int? paymentDay,
   }) {
     return CreditCard(
       id: id ?? this.id,
       name: name ?? this.name,
       type: type ?? this.type,
       color: color ?? this.color,
+      imagePath: imagePath ?? this.imagePath,
+      closingDay: closingDay ?? this.closingDay,
+      paymentDay: paymentDay ?? this.paymentDay,
     );
   }
 }

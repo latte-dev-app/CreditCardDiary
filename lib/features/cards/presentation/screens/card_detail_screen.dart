@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../domain/card_model.dart';
 import '../../application/card_provider.dart';
+import '../../infrastructure/image_storage.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
@@ -51,8 +54,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
+          final useBillingMonth = provider.useBillingMonth;
           final transactions = provider.getTransactionsByCardId(card.id);
-          final monthlyTotal = provider.getMonthlyTotalByCardId(card.id);
+          final monthlyTotal = useBillingMonth
+              ? provider.getBillingMonthlyTotalByCardId(card.id)
+              : provider.getMonthlyTotalByCardId(card.id);
           
           // 月順にソート
           final sortedMonths = monthlyTotal.keys.toList()
@@ -63,8 +69,53 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               ? monthlyTotal[sortedMonths.last]!
               : 0;
 
+          // 支払い済みかどうかを判定
+          final now = DateTime.now();
+          bool isPaid = false;
+          if (card.paymentDay != null && sortedMonths.isNotEmpty) {
+            // 最新の取引月を取得
+            final latestMonth = sortedMonths.last;
+            final latestYear = int.parse(latestMonth.split('-')[0]);
+            final latestMonthNum = int.parse(latestMonth.split('-')[1]);
+            
+            // 支払日が過ぎているか確認
+            if (now.year > latestYear || 
+                (now.year == latestYear && now.month > latestMonthNum) ||
+                (now.year == latestYear && now.month == latestMonthNum && now.day > card.paymentDay!)) {
+              isPaid = true;
+            }
+          }
+
           return Column(
             children: [
+              // 集計モード切替トグル
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text('請求月ベース'),
+                    Switch(
+                      value: useBillingMonth,
+                      onChanged: (_) => provider.toggleAggregationMode(),
+                    ),
+                  ],
+                ),
+              ),
+              // 締め日/支払日設定ボタン
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => _showDateSettingsDialog(context),
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text('締め日/支払日設定'),
+                    ),
+                  ],
+                ),
+              ),
               // カード情報
               Container(
                 margin: const EdgeInsets.all(16),
@@ -72,21 +123,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 decoration: BoxDecoration(
                   color: _parseColor(card.color),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                 ),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
                               children: [
                                 Text(
                                   card.name,
@@ -96,28 +149,49 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  card.type,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 16,
+                                if (isPaid) ...[
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
-                                ),
+                                ],
                               ],
                             ),
-                        const Icon(
-                          Icons.credit_card,
-                          color: Colors.white,
-                          size: 48,
+                            const SizedBox(height: 4),
+                            Text(
+                              card.type,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
+                        if (card.imagePath != null && File(card.imagePath!).existsSync())
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(card.imagePath!),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.credit_card,
+                            color: Colors.white,
+                            size: 48,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -128,16 +202,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             children: [
                               if (sortedMonths.isNotEmpty) ...[
                                 Text(
-                                  '${sortedMonths.last.replaceAll('-', '年')}月の使用額',
+                                  '${sortedMonths.last.replaceAll('-', '年')}月の${useBillingMonth ? '請求額' : '使用額'}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
                                   ),
                                 ),
                               ],
-                              const Text(
-                                '合計使用額',
-                                style: TextStyle(
+                              Text(
+                                useBillingMonth ? '合計請求額' : '合計使用額',
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                 ),
@@ -215,6 +289,17 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                     ),
                                   ),
                                   IconButton(
+                                    icon: const Icon(Icons.edit_outlined),
+                                    iconSize: 20,
+                                    onPressed: () {
+                                      _showEditTransactionDialog(
+                                        context,
+                                        transaction,
+                                      );
+                                    },
+                                    tooltip: '編集',
+                                  ),
+                                  IconButton(
                                     icon: const Icon(Icons.delete_outline),
                                     iconSize: 20,
                                     onPressed: () {
@@ -238,8 +323,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTransactionDialog(context),
-        child: const Icon(Icons.add),
         tooltip: '支出追加',
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -277,12 +362,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     );
   }
 
-  void _showEditCardDialog(BuildContext context, CreditCard card) {
+  void _showEditCardDialog(BuildContext context, CreditCard card) async {
     final nameController = TextEditingController(text: card.name);
     final typeController = TextEditingController(text: card.type);
     String selectedColor = card.color;
+    String? currentImagePath = card.imagePath;
+    File? selectedImageFile;
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -291,6 +378,67 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 画像表示・選択
+                GestureDetector(
+                  onTap: () async {
+                    final source = await showDialog<ImageSource>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('画像を選択'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.camera_alt),
+                              title: const Text('カメラで撮影'),
+                              onTap: () => Navigator.pop(context, ImageSource.camera),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.photo_library),
+                              title: const Text('ギャラリーから選択'),
+                              onTap: () => Navigator.pop(context, ImageSource.gallery),
+                            ),
+                            if (currentImagePath != null || selectedImageFile != null)
+                              ListTile(
+                                leading: const Icon(Icons.delete),
+                                title: const Text('画像を削除'),
+                                onTap: () {
+                                  setDialogState(() {
+                                    currentImagePath = null;
+                                    selectedImageFile = null;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                    if (source != null) {
+                      final imageFile = await ImageStorage.pickImage(source);
+                      if (imageFile != null) {
+                        setDialogState(() {
+                          selectedImageFile = imageFile;
+                          currentImagePath = null;
+                        });
+                      }
+                    }
+                  },
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: selectedImageFile != null
+                        ? Image.file(selectedImageFile!, fit: BoxFit.cover)
+                        : currentImagePath != null && File(currentImagePath!).existsSync()
+                            ? Image.file(File(currentImagePath!), fit: BoxFit.cover)
+                            : const Icon(Icons.add_photo_alternate, size: 40),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
@@ -352,24 +500,125 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               child: const Text('キャンセル'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final name = nameController.text.trim();
                 final type = typeController.text.trim();
                 if (name.isNotEmpty && type.isNotEmpty) {
+                  String? imagePath = currentImagePath;
+                  
+                  // 新しい画像が選択されている場合、保存
+                  if (selectedImageFile != null) {
+                    // 古い画像を削除
+                    if (currentImagePath != null) {
+                      await ImageStorage.deleteImage(currentImagePath);
+                    }
+                    // 新しい画像を保存
+                    imagePath = await ImageStorage.saveImage(selectedImageFile!, card.id);
+                  } else if (currentImagePath == null && card.imagePath != null) {
+                    // 画像が削除された場合
+                    await ImageStorage.deleteImage(card.imagePath);
+                    imagePath = null;
+                  }
+                  
                   final updatedCard = card.copyWith(
                     name: name,
                     type: type,
                     color: selectedColor,
+                    imagePath: imagePath,
                   );
                   // カードを更新（支出は保持）
+                  if (!context.mounted) return;
                   final provider = context.read<CardProvider>();
-                  provider.updateCard(updatedCard);
-                  Navigator.pop(context);
-                  // 画面の状態を更新
-                  setState(() {
-                    card = updatedCard;
-                  });
+                  await provider.updateCard(updatedCard);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    // 画面の状態を更新
+                    setState(() {
+                      card = updatedCard;
+                    });
+                  }
                 }
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDateSettingsDialog(BuildContext context) {
+    int? selectedClosingDay = card.closingDay;
+    int? selectedPaymentDay = card.paymentDay;
+    final days = List.generate(31, (index) => index + 1);
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('締め日/支払日設定'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<int?>(
+                  value: selectedClosingDay,
+                  decoration: const InputDecoration(
+                    labelText: '締め日',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('未設定')),
+                    ...days.map((day) => DropdownMenuItem(
+                      value: day,
+                      child: Text('$day日'),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedClosingDay = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int?>(
+                  value: selectedPaymentDay,
+                  decoration: const InputDecoration(
+                    labelText: '支払日',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('未設定')),
+                    ...days.map((day) => DropdownMenuItem(
+                      value: day,
+                      child: Text('$day日'),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedPaymentDay = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final updatedCard = card.copyWith(
+                  closingDay: selectedClosingDay,
+                  paymentDay: selectedPaymentDay,
+                );
+                context.read<CardProvider>().updateCard(updatedCard);
+                Navigator.pop(context);
+                setState(() {
+                  card = updatedCard;
+                });
               },
               child: const Text('保存'),
             ),
@@ -498,6 +747,130 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 }
               },
               child: const Text('追加'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditTransactionDialog(
+      BuildContext context, Transaction transaction) {
+    final amountController = TextEditingController(text: transaction.amount.toString());
+    int selectedYear = transaction.year;
+    int selectedMonth = transaction.month;
+    
+    // 年のリスト（現在年から5年後まで）
+    final years = List.generate(
+      10,
+      (index) => DateTime.now().year - 5 + index,
+    );
+    
+    // 月のリスト
+    final months = List.generate(12, (index) => index + 1);
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('支出編集'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(
+                    labelText: '金額',
+                    hintText: '例: 3500',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedYear,
+                        decoration: const InputDecoration(
+                          labelText: '年',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: years.map((year) {
+                          return DropdownMenuItem(
+                            value: year,
+                            child: Text('$year年'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setDialogState(() {
+                              selectedYear = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedMonth,
+                        decoration: const InputDecoration(
+                          labelText: '月',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: months.map((month) {
+                          return DropdownMenuItem(
+                            value: month,
+                            child: Text('$month月'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setDialogState(() {
+                              selectedMonth = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final amountStr = amountController.text.trim();
+                
+                if (amountStr.isNotEmpty) {
+                  final amount = int.tryParse(amountStr);
+                  if (amount != null && amount > 0) {
+                    final updatedTransaction = transaction.copyWith(
+                      amount: amount,
+                      year: selectedYear,
+                      month: selectedMonth,
+                    );
+                    context.read<CardProvider>().updateTransaction(updatedTransaction);
+                    Navigator.pop(context);
+                  }
+                }
+              },
+              child: const Text('保存'),
             ),
           ],
         ),

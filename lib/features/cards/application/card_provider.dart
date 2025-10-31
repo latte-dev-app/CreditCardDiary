@@ -1,79 +1,110 @@
 import 'package:flutter/foundation.dart';
-import '../domain/card_model.dart';
+import '../domain/card_model.dart' as dm;
 import '../infrastructure/local_storage.dart';
+import '../infrastructure/repositories/card_repository.dart';
 
 class CardProvider with ChangeNotifier {
-  List<CreditCard> _cards = [];
-  List<Transaction> _transactions = [];
+  late final CardRepository _cardRepo = SharedPreferencesCardRepository();
+  late final TransactionRepository _txRepo = SharedPreferencesTransactionRepository();
 
-  List<CreditCard> get cards => _cards;
-  List<Transaction> get transactions => _transactions;
+  List<dm.CreditCard> _cards = [];
+  List<dm.Transaction> _transactions = [];
+  bool _useBillingMonth = false; // 請求月ベース集計フラグ
 
-  // 初期化：データを読み込む
+  List<dm.CreditCard> get cards => _cards;
+  List<dm.Transaction> get transactions => _transactions;
+  bool get useBillingMonth => _useBillingMonth;
+
+  // 初期化：データ読み込み
   Future<void> init() async {
-    await loadData();
+    await _loadAggregationMode();
+    await _loadFromDb();
   }
 
-  // カード追加
-  Future<void> addCard(CreditCard card) async {
-    _cards.add(card);
-    await saveData();
+  // 集計モードの読み込み
+  Future<void> _loadAggregationMode() async {
+    final prefs = await LocalStorage.getSharedPreferences();
+    _useBillingMonth = prefs.getBool('use_billing_month') ?? false;
+  }
+
+  // 集計モードの保存
+  Future<void> _saveAggregationMode() async {
+    final prefs = await LocalStorage.getSharedPreferences();
+    await prefs.setBool('use_billing_month', _useBillingMonth);
+  }
+
+  // 集計モードの切替
+  Future<void> toggleAggregationMode() async {
+    _useBillingMonth = !_useBillingMonth;
+    await _saveAggregationMode();
     notifyListeners();
   }
 
-  // カード更新（支出は保持する）
-  Future<void> updateCard(CreditCard updatedCard) async {
-    final index = _cards.indexWhere((card) => card.id == updatedCard.id);
-    if (index != -1) {
-      _cards[index] = updatedCard;
-      await saveData();
-      notifyListeners();
-    }
+  Future<void> _loadFromDb() async {
+    final c = await _cardRepo.getAllCards();
+    final t = await _txRepo.getAllTransactions();
+    _cards = c;
+    _transactions = t;
+    notifyListeners();
   }
 
-  // カード削除
+  Future<void> _saveData() async {
+    await LocalStorage.saveData(_cards, _transactions);
+  }
+
+  // カード追加/更新/削除
+  Future<void> addCard(dm.CreditCard card) async {
+    await _cardRepo.upsertCard(card);
+    await _loadFromDb();
+  }
+
+  Future<void> updateCard(dm.CreditCard updatedCard) async {
+    await _cardRepo.upsertCard(updatedCard);
+    await _loadFromDb();
+  }
+
   Future<void> deleteCard(String cardId) async {
-    _cards.removeWhere((card) => card.id == cardId);
-    _transactions.removeWhere((transaction) => transaction.cardId == cardId);
-    await saveData();
-    notifyListeners();
+    await _cardRepo.deleteCard(cardId);
+    await _loadFromDb();
   }
 
   // 全データ削除
   Future<void> deleteAllData() async {
     _cards.clear();
     _transactions.clear();
-    await saveData();
+    await _saveData();
     notifyListeners();
   }
 
-  // 支出追加
-  Future<void> addTransaction(Transaction transaction) async {
-    _transactions.add(transaction);
-    await saveData();
-    notifyListeners();
+  // 支出追加/更新/削除
+  Future<void> addTransaction(dm.Transaction transaction) async {
+    await _txRepo.upsertTransaction(transaction);
+    await _loadFromDb();
   }
 
-  // 支出削除
   Future<void> deleteTransaction(String transactionId) async {
-    _transactions.removeWhere((t) => t.id == transactionId);
-    await saveData();
-    notifyListeners();
+    await _txRepo.deleteTransaction(transactionId);
+    await _loadFromDb();
+  }
+
+  Future<void> updateTransaction(dm.Transaction updatedTransaction) async {
+    await _txRepo.upsertTransaction(updatedTransaction);
+    await _loadFromDb();
   }
 
   // カードIDでフィルタリング
-  List<Transaction> getTransactionsByCardId(String cardId) {
+  List<dm.Transaction> getTransactionsByCardId(String cardId) {
     return _transactions.where((t) => t.cardId == cardId).toList();
   }
 
-  // カード別の合計金額を計算
+  // カード別の合計金額を計算（カレンダー月）
   int getTotalByCardId(String cardId) {
     return _transactions
         .where((t) => t.cardId == cardId)
-        .fold(0, (sum, t) => sum + t.amount);
+        .fold<int>(0, (sum, t) => sum + t.amount);
   }
 
-  // カードの月別合計を計算
+  // カードの月別合計（カレンダー月）
   Map<String, int> getMonthlyTotalByCardId(String cardId) {
     final Map<String, int> monthlyTotal = {};
     for (final transaction in _transactions.where((t) => t.cardId == cardId)) {
@@ -83,23 +114,71 @@ class CardProvider with ChangeNotifier {
     return monthlyTotal;
   }
 
-  // 指定月の支出を取得
-  List<Transaction> getTransactionsByMonth(int year, int month) {
+  // 指定月の支出（カレンダー月）
+  List<dm.Transaction> getTransactionsByMonth(int year, int month) {
     return _transactions.where((t) => 
       t.year == year && t.month == month
     ).toList();
   }
 
-  // 指定月の合計金額を計算
+  // 指定月の合計金額（カレンダー月）
   int getTotalByMonth(int year, int month) {
     return _transactions
         .where((t) => t.year == year && t.month == month)
-        .fold(0, (sum, t) => sum + t.amount);
+        .fold<int>(0, (sum, t) => sum + t.amount);
+  }
+
+  // ---- 請求月（締め日）ベース集計（簡易近似） ----
+  // 近似: closingDayが設定されているカードの取引は、丸ごと翌月の請求月として扱う。
+  // （取引日に日付が無いための近似。closingDay未設定/31日はカレンダー月のまま）
+  Map<String, int> getBillingMonthlyTotalByCardId(String cardId) {
+    final Map<String, int> monthlyTotal = {};
+    final card = _cards.firstWhere((c) => c.id == cardId, orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+    for (final t in _transactions.where((x) => x.cardId == cardId)) {
+      final shifted = _shiftByClosing(card, t.year, t.month);
+      final key = '${shifted.$1}-${shifted.$2.toString().padLeft(2, '0')}';
+      monthlyTotal[key] = (monthlyTotal[key] ?? 0) + t.amount;
+    }
+    return monthlyTotal;
+  }
+
+  int getBillingTotalByMonth(int year, int month) {
+    int sum = 0;
+    for (final t in _transactions) {
+      final card = _cards.firstWhere((c) => c.id == t.cardId, orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+      final shifted = _shiftByClosing(card, t.year, t.month);
+      if (shifted.$1 == year && shifted.$2 == month) {
+        sum += t.amount;
+      }
+    }
+    return sum;
+  }
+
+  List<dm.Transaction> getTransactionsByBillingMonth(int year, int month) {
+    final List<dm.Transaction> list = [];
+    for (final t in _transactions) {
+      final card = _cards.firstWhere((c) => c.id == t.cardId, orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+      final shifted = _shiftByClosing(card, t.year, t.month);
+      if (shifted.$1 == year && shifted.$2 == month) {
+        list.add(t);
+      }
+    }
+    return list;
+  }
+
+  (int, int) _shiftByClosing(dm.CreditCard card, int year, int month) {
+    if (card.closingDay == null || card.closingDay == 31) {
+      return (year, month);
+    }
+    // 近似として、当月の取引は全て翌月の請求月に寄せる
+    final newMonth = month == 12 ? 1 : month + 1;
+    final newYear = month == 12 ? year + 1 : year;
+    return (newYear, newMonth);
   }
 
   // 全体の合計金額
   int getTotalAmount() {
-    return _transactions.fold(0, (sum, t) => sum + t.amount);
+    return _transactions.fold<int>(0, (sum, t) => sum + t.amount);
   }
 
   // 全体の平均金額
@@ -108,31 +187,9 @@ class CardProvider with ChangeNotifier {
     return getTotalAmount() / _transactions.length;
   }
 
-  // データ保存
-  Future<void> saveData() async {
-    await LocalStorage.saveData(_cards, _transactions);
-  }
-
-  // データ読み込み
-  Future<void> loadData() async {
-    final data = await LocalStorage.loadData();
-    _cards = data['cards'] ?? [];
-    _transactions = data['transactions'] ?? [];
-    notifyListeners();
-  }
-
-  // データエクスポート（JSON文字列）
+  // 互換: 既存エクスポートはそのまま
   String exportToJson() {
     return LocalStorage.exportToJson(_cards, _transactions);
-  }
-
-  // データインポート（JSON文字列から）
-  Future<void> importFromJson(String jsonString) async {
-    final data = LocalStorage.importFromJson(jsonString);
-    _cards = data['cards'] ?? [];
-    _transactions = data['transactions'] ?? [];
-    await saveData();
-    notifyListeners();
   }
 }
 

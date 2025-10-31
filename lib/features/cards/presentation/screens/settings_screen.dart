@@ -25,12 +25,6 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('JSON形式でダウンロード'),
             onTap: () => _exportData(context),
           ),
-          ListTile(
-            leading: const Icon(Icons.upload),
-            title: const Text('データをインポート'),
-            subtitle: const Text('JSON形式からインポート'),
-            onTap: () => _importData(context),
-          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.delete_forever),
@@ -81,60 +75,6 @@ class SettingsScreen extends StatelessWidget {
               Navigator.pop(context);
             },
             child: const Text('コピー'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _importData(BuildContext context) {
-    final jsonController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('データをインポート'),
-        content: SingleChildScrollView(
-          child: TextField(
-            controller: jsonController,
-            maxLines: 10,
-            decoration: const InputDecoration(
-              hintText: 'JSON形式のデータを貼り付けてください',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final jsonData = jsonController.text.trim();
-              if (jsonData.isNotEmpty) {
-                try {
-                  await context.read<CardProvider>().importFromJson(jsonData);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('データをインポートしました'),
-                      ),
-                    );
-                  }
-                  Navigator.pop(context);
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('インポートに失敗しました: $e'),
-                      ),
-                    );
-                  }
-                }
-              }
-            },
-            child: const Text('インポート'),
           ),
         ],
       ),

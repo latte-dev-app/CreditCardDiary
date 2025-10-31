@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../application/card_provider.dart';
 import '../../domain/card_model.dart';
+import '../../infrastructure/image_storage.dart';
 import 'card_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -51,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('クレカ使用額トラッカー'),
+        title: const Text(''),
         elevation: 0,
         actions: [
           IconButton(
@@ -69,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
-                '${year}年${month}月',
+                '$year年$month月',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
@@ -89,11 +92,30 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
-          final monthTotal = provider.getTotalByMonth(year, month);
-          final monthTransactions = provider.getTransactionsByMonth(year, month);
+          final useBillingMonth = provider.useBillingMonth;
+          final monthTotal = useBillingMonth
+              ? provider.getBillingTotalByMonth(year, month)
+              : provider.getTotalByMonth(year, month);
+          final monthTransactions = useBillingMonth
+              ? provider.getTransactionsByBillingMonth(year, month)
+              : provider.getTransactionsByMonth(year, month);
               
               return Column(
                 children: [
+                  // 集計モード切替トグル
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const Text('請求月ベース'),
+                        Switch(
+                          value: useBillingMonth,
+                          onChanged: (_) => provider.toggleAggregationMode(),
+                        ),
+                      ],
+                    ),
+                  ),
                   // 月別サマリー
                   Container(
                     margin: const EdgeInsets.all(16),
@@ -107,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -117,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '${year}年${month}月の合計',
+                          useBillingMonth ? '$year年$month月の請求額' : '$year年$month月の合計',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -171,20 +193,39 @@ class _HomeScreenState extends State<HomeScreen> {
                               vertical: 8,
                             ),
                             child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _parseColor(card.color),
-                                child: const Icon(
-                                  Icons.credit_card,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              leading: card.imagePath != null && File(card.imagePath!).existsSync()
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Image.file(
+                                        File(card.imagePath!),
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return CircleAvatar(
+                                            backgroundColor: _parseColor(card.color),
+                                            child: const Icon(
+                                              Icons.credit_card,
+                                              color: Colors.white,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : CircleAvatar(
+                                      backgroundColor: _parseColor(card.color),
+                                      child: const Icon(
+                                        Icons.credit_card,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                               title: Text(card.name),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(card.type),
                                   Text(
-                                    '${year}年${month}月: ${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                    '$year年$month月: ${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -211,8 +252,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCardDialog(context),
-        child: const Icon(Icons.add),
         tooltip: 'カード追加',
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -233,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String selectedType = 'Visa';
     bool isCustomType = false;
     bool isCustomName = false;
+    File? selectedImageFile;
 
     // 主要なクレジットカード名
     final List<String> cardNames = [
@@ -263,10 +305,57 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 画像選択
+                GestureDetector(
+                  onTap: () async {
+                    final source = await showDialog<ImageSource>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('画像を選択'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.camera_alt),
+                              title: const Text('カメラで撮影'),
+                              onTap: () => Navigator.pop(context, ImageSource.camera),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.photo_library),
+                              title: const Text('ギャラリーから選択'),
+                              onTap: () => Navigator.pop(context, ImageSource.gallery),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                    if (source != null) {
+                      final imageFile = await ImageStorage.pickImage(source);
+                      if (imageFile != null && context.mounted) {
+                        setDialogState(() {
+                          selectedImageFile = imageFile;
+                        });
+                      }
+                    }
+                  },
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: selectedImageFile != null
+                        ? Image.file(selectedImageFile!, fit: BoxFit.cover)
+                        : const Icon(Icons.add_photo_alternate, size: 40),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Text('カード名'),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: cardNames.first,
+                  value: null,
+                  hint: const Text('カード名を選択'),
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(
@@ -286,6 +375,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         isCustomName = value == 'その他';
                         if (isCustomName) {
                           customNameController.text = '';
+                          nameController.text = '';
                         } else {
                           nameController.text = value;
                         }
@@ -393,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('キャンセル'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final cardName = isCustomName
                     ? customNameController.text.trim()
                     : nameController.text.trim();
@@ -401,14 +491,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? typeController.text.trim()
                     : selectedType;
                 if (cardName.isNotEmpty && type.isNotEmpty) {
+                  final cardId = DateTime.now().millisecondsSinceEpoch.toString();
+                  String? imagePath;
+                  
+                  // 画像が選択されている場合、保存
+                  if (selectedImageFile != null) {
+                    imagePath = await ImageStorage.saveImage(selectedImageFile!, cardId);
+                  }
+                  
                   final card = CreditCard(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    id: cardId,
                     name: cardName,
                     type: type,
                     color: selectedColor,
+                    imagePath: imagePath,
                   );
-                  context.read<CardProvider>().addCard(card);
-                  Navigator.pop(context);
+                  if (!context.mounted) return;
+                  await context.read<CardProvider>().addCard(card);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: const Text('追加'),
