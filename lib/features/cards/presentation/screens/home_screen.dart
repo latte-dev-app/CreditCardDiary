@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -133,44 +134,71 @@ class _HomeScreenState extends State<HomeScreen> {
               return Column(
                 children: [
                   // 月別サマリー
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue[400]!, Colors.purple[400]!],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$year年$month月の合計',
-                          style: textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOutCubic,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(28),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                margin: const EdgeInsets.all(24),
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blue[400]!.withValues(alpha: 0.7),
+                                      Colors.purple[400]!.withValues(alpha: 0.7),
+                                      Colors.pink[400]!.withValues(alpha: 0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(28),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.blue.withValues(alpha: 0.3),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '$year年$month月の合計',
+                                  style: textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  '${monthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                  style: textTheme.headlineSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Text(
-                          '${monthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                          style: textTheme.headlineSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                   
                   // 予算進捗バー
@@ -180,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       final budget = snapshot.data;
                       if (budget == null || budget == 0) {
                         return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: ElevatedButton.icon(
                             onPressed: () => _showBudgetDialog(context, provider, year, month),
                             icon: const Icon(Icons.add_chart, size: 24.0),
@@ -193,90 +221,123 @@ class _HomeScreenState extends State<HomeScreen> {
                       final progress = (total / budget).clamp(0.0, 1.0);
                       final isOverBudget = total > budget;
                       
-                      return Container(
-                        margin: const EdgeInsets.all(16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isOverBudget ? colorScheme.error : colorScheme.outline.withOpacity(0.5),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: progress),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeInOutCubic,
+                        builder: (context, animatedProgress, child) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surface.withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: isOverBudget 
+                                        ? colorScheme.error.withValues(alpha: 0.6)
+                                        : colorScheme.outline.withOpacity(0.3),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.08),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  '予算進捗',
-                                  style: textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '予算進捗',
+                                      style: textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, size: 20.0),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 48.0,
+                                        minHeight: 48.0,
+                                      ),
+                                      onPressed: () => _showBudgetDialog(context, provider, year, month),
+                                      tooltip: '予算を編集',
+                                    ),
+                                  ],
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit, size: 20.0),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 48.0,
-                                    minHeight: 48.0,
-                                  ),
-                                  onPressed: () => _showBudgetDialog(context, provider, year, month),
-                                  tooltip: '予算を編集',
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (isOverBudget)
+                                      Text(
+                                        '超過: ${(total - budget).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.error,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (isOverBudget)
-                                  Text(
-                                    '超過: ${(total - budget).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.error,
-                                      fontWeight: FontWeight.bold,
+                                const SizedBox(height: 12),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        FractionallySizedBox(
+                                          widthFactor: animatedProgress,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: isOverBudget
+                                                    ? [colorScheme.error, colorScheme.errorContainer]
+                                                    : [
+                                                        colorScheme.primary,
+                                                        colorScheme.tertiary,
+                                                      ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${(progress * 100).toStringAsFixed(1)}%',
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ],
-                            ),
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 8,
-                                backgroundColor: colorScheme.surfaceContainerHighest,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isOverBudget ? colorScheme.error : colorScheme.primary,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${(progress * 100).toStringAsFixed(1)}%',
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -311,13 +372,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           final cardMonthTotal = monthTransactions
                               .where((t) => t.cardId == card.id)
                               .fold(0, (sum, t) => sum + t.amount);
-                          return Card(
-                            elevation: 2.0,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: ListTile(
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: Duration(milliseconds: 300 + (index * 50)),
+                            curve: Curves.easeInOutCubic,
+                            builder: (context, value, child) {
+                              return Opacity(
+                                opacity: value,
+                                child: Transform.translate(
+                                  offset: Offset(20 * (1 - value), 0),
+                                  child: Card(
+                                    elevation: 2.0,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 8,
+                                    ),
+                                    child: ListTile(
                               leading: card.imagePath != null && File(card.imagePath!).existsSync()
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(20),
@@ -368,15 +438,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                               trailing: const Icon(Icons.arrow_forward_ios, size: 20.0),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => CardDetailScreen(card: card),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => CardDetailScreen(card: card),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),

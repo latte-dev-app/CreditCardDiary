@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -74,138 +75,178 @@ class _LineChartScreenState extends State<LineChartScreen> {
               .toDouble();
           final formatter = NumberFormat('#,###');
 
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$year年の支出推移',
-                  style: textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 1,
-                            getTitlesWidget: (value, meta) {
-                              if (value >= 0 && value <= 11) {
-                                final m = value.toInt() + 1;
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    '$m月',
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                            reservedSize: 40,
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final label = '${formatter.format(value)}円';
-                              return Text(label, style: const TextStyle(fontSize: 10));
-                            },
-                            reservedSize: 56,
-                          ),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(
-                        show: true,
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      lineTouchData: LineTouchData(
-                        touchTooltipData: LineTouchTooltipData(
-                          getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                            return touchedSpots.map((LineBarSpot touchedSpot) {
-                              final month = touchedSpot.x.toInt() + 1;
-                              final amount = touchedSpot.y.toInt();
-                              return LineTooltipItem(
-                                '$month月: ${formatter.format(amount)}円',
-                                const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              );
-                            }).toList();
-                          },
-                        ),
-                      ),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: List.generate(12, (index) {
-                            return FlSpot(
-                              index.toDouble(),
-                              monthlyTotals[index].toDouble(),
-                            );
-                          }),
-                          isCurved: true,
-                          color: Colors.blue,
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: Colors.blue.withValues(alpha: 0.1),
-                          ),
-                        ),
-                      ],
-                      minX: 0,
-                      maxX: 11,
-                      minY: 0,
-                      maxY: (maxValue * 1.1).clamp(0, double.infinity),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '合計: ${formatter.format(monthlyTotals.fold<int>(0, (s, v) => s + v))}円',
-                        style: textTheme.titleMedium?.copyWith(
+                        '$year年の支出推移',
+                        style: textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '平均: ${formatter.format((monthlyTotals.fold<int>(0, (s, v) => s + v) / 12).round())}円',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 24),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                            child: Card(
+                              elevation: 2,
+                              color: colorScheme.surface.withValues(alpha: 0.8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                side: BorderSide(
+                                  color: colorScheme.outline.withOpacity(0.2),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: LineChart(
+                                  LineChartData(
+                                    gridData: FlGridData(
+                                      show: true,
+                                      drawVerticalLine: false,
+                                    ),
+                                    titlesData: FlTitlesData(
+                                      show: true,
+                                      bottomTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          interval: 1,
+                                          getTitlesWidget: (value, meta) {
+                                            if (value >= 0 && value <= 11) {
+                                              final m = value.toInt() + 1;
+                                              return Padding(
+                                                padding: const EdgeInsets.only(top: 8),
+                                                child: Text(
+                                                  '$m月',
+                                                  style: const TextStyle(fontSize: 10),
+                                                ),
+                                              );
+                                            }
+                                            return const SizedBox.shrink();
+                                          },
+                                          reservedSize: 40,
+                                        ),
+                                      ),
+                                      leftTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          getTitlesWidget: (value, meta) {
+                                            final label = '${formatter.format(value)}円';
+                                            return Text(label, style: const TextStyle(fontSize: 10));
+                                          },
+                                          reservedSize: 56,
+                                        ),
+                                      ),
+                                      topTitles: const AxisTitles(
+                                        sideTitles: SideTitles(showTitles: false),
+                                      ),
+                                      rightTitles: const AxisTitles(
+                                        sideTitles: SideTitles(showTitles: false),
+                                      ),
+                                    ),
+                                    borderData: FlBorderData(
+                                      show: true,
+                                      border: Border.all(color: Colors.grey[300]!),
+                                    ),
+                                    lineTouchData: LineTouchData(
+                                      touchTooltipData: LineTouchTooltipData(
+                                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                                          return touchedSpots.map((LineBarSpot touchedSpot) {
+                                            final month = touchedSpot.x.toInt() + 1;
+                                            final amount = touchedSpot.y.toInt();
+                                            return LineTooltipItem(
+                                              '$month月: ${formatter.format(amount)}円',
+                                              const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            );
+                                          }).toList();
+                                        },
+                                      ),
+                                    ),
+                                    lineBarsData: [
+                                      LineChartBarData(
+                                        spots: List.generate(12, (index) {
+                                          return FlSpot(
+                                            index.toDouble(),
+                                            monthlyTotals[index].toDouble(),
+                                          );
+                                        }),
+                                        isCurved: true,
+                                        color: Colors.blue,
+                                        barWidth: 3,
+                                        dotData: const FlDotData(show: true),
+                                        belowBarData: BarAreaData(
+                                          show: true,
+                                          color: Colors.blue.withValues(alpha: 0.1),
+                                        ),
+                                      ),
+                                    ],
+                                    minX: 0,
+                                    maxX: 11,
+                                    minY: 0,
+                                    maxY: (maxValue * 1.1).clamp(0, double.infinity),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: colorScheme.outline.withOpacity(0.2),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '合計: ${formatter.format(monthlyTotals.fold<int>(0, (s, v) => s + v))}円',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '平均: ${formatter.format((monthlyTotals.fold<int>(0, (s, v) => s + v) / 12).round())}円',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -130,81 +131,120 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   final progress = (total / budget).clamp(0.0, 1.0);
                   final isOverBudget = total > budget;
                   
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isOverBudget ? colorScheme.error : colorScheme.outline.withOpacity(0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '予算進捗',
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20.0),
-                              constraints: const BoxConstraints(
-                                minWidth: 48.0,
-                                minHeight: 48.0,
-                              ),
-                              onPressed: () => _showCardBudgetDialog(context, provider, card),
-                              tooltip: '予算を編集',
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isOverBudget 
+                                ? colorScheme.error.withValues(alpha: 0.6)
+                                : colorScheme.outline.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 8,
-                            backgroundColor: colorScheme.surfaceContainerHighest,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              isOverBudget ? colorScheme.error : colorScheme.primary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '予算進捗',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit, size: 20.0),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 48.0,
+                                    minHeight: 48.0,
+                                  ),
+                                  onPressed: () => _showCardBudgetDialog(context, provider, card),
+                                  tooltip: '予算を編集',
+                                ),
+                              ],
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 8,
+                                backgroundColor: colorScheme.surfaceContainerHighest,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isOverBudget ? colorScheme.error : colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
               ),
               // カード情報
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: _parseColor(card.color),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOutCubic,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.scale(
+                      scale: 0.95 + (0.05 * value),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            margin: const EdgeInsets.all(24),
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  _parseColor(card.color).withValues(alpha: 0.7),
+                                  _parseColor(card.color).withValues(alpha: 0.6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _parseColor(card.color).withValues(alpha: 0.4),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -254,16 +294,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           const Icon(
                             Icons.credit_card,
                             color: Colors.white,
-                            size: 48,
+                            size: 56,
                           ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -300,7 +340,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       ),
                     ),
                   ],
-                ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
 
               // 支出一覧
@@ -329,72 +375,85 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         itemCount: transactions.length,
                         itemBuilder: (context, index) {
                           final transaction = transactions[index];
-                          return Card(
-                            elevation: 2.0,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _parseColor(card.color),
-                                radius: 20,
-                                child: const Icon(
-                                  Icons.shopping_cart,
-                                  color: Colors.white,
-                                  size: 24.0,
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: Duration(milliseconds: 300 + (index * 50)),
+                            curve: Curves.easeInOutCubic,
+                            builder: (context, value, child) {
+                              return Opacity(
+                                opacity: value,
+                                child: Transform.translate(
+                                  offset: Offset(20 * (1 - value), 0),
+                                  child: Card(
+                                    elevation: 2.0,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 8,
+                                    ),
+                                    child: ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: _parseColor(card.color),
+                                        radius: 24,
+                                        child: const Icon(
+                                          Icons.shopping_cart,
+                                          color: Colors.white,
+                                          size: 28.0,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        '${transaction.year}年${transaction.month}月',
+                                        style: textTheme.titleMedium,
+                                      ),
+                                      subtitle: Text(
+                                        '${transaction.month}月',
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${transaction.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                            style: textTheme.bodyLarge?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit_outlined, size: 20.0),
+                                            constraints: const BoxConstraints(
+                                              minWidth: 48.0,
+                                              minHeight: 48.0,
+                                            ),
+                                            onPressed: () {
+                                              _showEditTransactionDialog(
+                                                context,
+                                                transaction,
+                                              );
+                                            },
+                                            tooltip: '編集',
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete_outline, size: 20.0),
+                                            constraints: const BoxConstraints(
+                                              minWidth: 48.0,
+                                              minHeight: 48.0,
+                                            ),
+                                            onPressed: () {
+                                              _showDeleteTransactionDialog(
+                                                context,
+                                                transaction,
+                                              );
+                                            },
+                                            tooltip: '削除',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              title: Text(
-                                '${transaction.year}年${transaction.month}月',
-                                style: textTheme.titleMedium,
-                              ),
-                              subtitle: Text(
-                                '${transaction.month}月',
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '${transaction.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                    style: textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined, size: 20.0),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 48.0,
-                                      minHeight: 48.0,
-                                    ),
-                                    onPressed: () {
-                                      _showEditTransactionDialog(
-                                        context,
-                                        transaction,
-                                      );
-                                    },
-                                    tooltip: '編集',
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, size: 20.0),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 48.0,
-                                      minHeight: 48.0,
-                                    ),
-                                    onPressed: () {
-                                      _showDeleteTransactionDialog(
-                                        context,
-                                        transaction,
-                                      );
-                                    },
-                                    tooltip: '削除',
-                                  ),
-                                ],
-                              ),
-                            ),
+                              );
+                            },
                           );
                         },
                       ),

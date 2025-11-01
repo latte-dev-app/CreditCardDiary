@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../application/card_provider.dart';
@@ -18,49 +19,113 @@ class SettingsScreen extends StatelessWidget {
         surfaceTintColor: colorScheme.surfaceTint,
       ),
       body: ListView(
+        padding: const EdgeInsets.all(24),
         children: [
-          ListTile(
-            leading: Icon(Icons.info, size: 24.0, color: colorScheme.onSurface),
-            title: Text(
-              'クレカ使用額トラッカー',
-              style: textTheme.titleMedium,
-            ),
-            subtitle: Text(
-              'バージョン 1.0.0',
-              style: textTheme.bodySmall,
-            ),
-          ),
-          const Divider(),
-          ListTile(
-            leading: Icon(Icons.upload_file, size: 24.0, color: colorScheme.onSurface),
-            title: Text(
-              'データをエクスポート',
-              style: textTheme.titleMedium,
-            ),
-            subtitle: Text(
-              'JSON形式でダウンロード',
-              style: textTheme.bodySmall,
-            ),
-            onTap: () => _exportData(context),
-          ),
-          const Divider(),
-          ListTile(
-            leading: Icon(
-              Icons.delete_forever,
-              size: 24.0,
-              color: colorScheme.error,
-            ),
-            title: Text(
-              '全データを削除',
-              style: textTheme.titleMedium?.copyWith(
-                color: colorScheme.error,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: Card(
+                elevation: 2,
+                color: colorScheme.surface.withValues(alpha: 0.8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: colorScheme.outline.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                ),
+                child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              leading: Icon(Icons.info, size: 24.0, color: colorScheme.onSurface),
+              title: Text(
+                'クレカ使用額トラッカー',
+                style: textTheme.titleMedium,
+              ),
+              subtitle: Text(
+                'バージョン 1.0.0',
+                style: textTheme.bodySmall,
+              ),
+                ),
               ),
             ),
-            subtitle: Text(
-              '全てのデータを削除します',
-              style: textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: Card(
+                elevation: 2,
+                color: colorScheme.surface.withValues(alpha: 0.8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: colorScheme.outline.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                ),
+                child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              leading: Icon(Icons.upload_file, size: 24.0, color: colorScheme.onSurface),
+              title: Text(
+                'データをエクスポート',
+                style: textTheme.titleMedium,
+              ),
+              subtitle: Text(
+                'JSON形式でダウンロード',
+                style: textTheme.bodySmall,
+              ),
+              onTap: () => _exportData(context),
+                ),
+              ),
             ),
-            onTap: () => _showDeleteAllDataDialog(context),
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: Card(
+                elevation: 2,
+                color: colorScheme.surface.withValues(alpha: 0.8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: colorScheme.outline.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                ),
+                child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              leading: Icon(
+                Icons.delete_forever,
+                size: 24.0,
+                color: colorScheme.error,
+              ),
+              title: Text(
+                '全データを削除',
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.error,
+                ),
+              ),
+              subtitle: Text(
+                '全てのデータを削除します',
+                style: textTheme.bodySmall,
+              ),
+              onTap: () => _showDeleteAllDataDialog(context),
+                ),
+              ),
+            ),
           ),
         ],
       ),

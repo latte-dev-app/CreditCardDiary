@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -156,11 +157,18 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
 
           final formatter = NumberFormat('#,###');
 
-          return Column(
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Column(
             children: [
               // 比較モード切替
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 child: Row(
                   children: [
                     Text(
@@ -204,87 +212,110 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: barGroups.isEmpty
-                      ? Center(
-                          child: Text(
-                            'データがありません',
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        )
-                      : BarChart(
-                          BarChartData(
-                            alignment: BarChartAlignment.spaceAround,
-                            maxY: (maxValue * 1.1).clamp(0, double.infinity),
-                            barTouchData: BarTouchData(
-                              touchTooltipData: BarTouchTooltipData(
-                                getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                  final cardName = cardNames[group.x.toInt()];
-                                  final amount = rod.toY.toInt();
-                                  final label = rodIndex == 0
-                                      ? '$selectedYear年$selectedMonth月'
-                                      : '$currentYear年$currentMonth月';
-                                  return BarTooltipItem(
-                                    '$cardName\n$label: ${formatter.format(amount)}円',
-                                    const TextStyle(color: Colors.white),
-                                  );
-                                },
-                              ),
-                            ),
-                            titlesData: FlTitlesData(
-                              show: true,
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (value, meta) {
-                                    if (value.toInt() >= 0 &&
-                                        value.toInt() < cardNames.length) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        child: Text(
-                                          cardNames[value.toInt()],
-                                          style: const TextStyle(fontSize: 10),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
-                                  reservedSize: 50,
-                                ),
-                              ),
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${formatter.format(value)}円',
-                                      style: const TextStyle(fontSize: 10),
-                                    );
-                                  },
-                                  reservedSize: 56,
-                                ),
-                              ),
-                              topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                            ),
-                            borderData: FlBorderData(
-                              show: true,
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            barGroups: barGroups,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Card(
+                        elevation: 2,
+                        color: colorScheme.surface.withValues(alpha: 0.8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          side: BorderSide(
+                            color: colorScheme.outline.withOpacity(0.2),
+                            width: 1.5,
                           ),
                         ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: barGroups.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'データがありません',
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                )
+                              : BarChart(
+                                  BarChartData(
+                                    alignment: BarChartAlignment.spaceAround,
+                                    maxY: (maxValue * 1.1).clamp(0, double.infinity),
+                                    barTouchData: BarTouchData(
+                                      touchTooltipData: BarTouchTooltipData(
+                                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                          final cardName = cardNames[group.x.toInt()];
+                                          final amount = rod.toY.toInt();
+                                          final label = rodIndex == 0
+                                              ? '$selectedYear年$selectedMonth月'
+                                              : '$currentYear年$currentMonth月';
+                                          return BarTooltipItem(
+                                            '$cardName\n$label: ${formatter.format(amount)}円',
+                                            const TextStyle(color: Colors.white),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    titlesData: FlTitlesData(
+                                      show: true,
+                                      bottomTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          getTitlesWidget: (value, meta) {
+                                            if (value.toInt() >= 0 &&
+                                                value.toInt() < cardNames.length) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(top: 8),
+                                                child: Text(
+                                                  cardNames[value.toInt()],
+                                                  style: const TextStyle(fontSize: 10),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              );
+                                            }
+                                            return const SizedBox.shrink();
+                                          },
+                                          reservedSize: 50,
+                                        ),
+                                      ),
+                                      leftTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          getTitlesWidget: (value, meta) {
+                                            return Text(
+                                              '${formatter.format(value)}円',
+                                              style: const TextStyle(fontSize: 10),
+                                            );
+                                          },
+                                          reservedSize: 56,
+                                        ),
+                                      ),
+                                      topTitles: const AxisTitles(
+                                        sideTitles: SideTitles(showTitles: false),
+                                      ),
+                                      rightTitles: const AxisTitles(
+                                        sideTitles: SideTitles(showTitles: false),
+                                      ),
+                                    ),
+                                    borderData: FlBorderData(
+                                      show: true,
+                                      border: Border.all(color: Colors.grey[300]!),
+                                    ),
+                                    barGroups: barGroups,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
-          );
+          ),
+        );
+      },
+    );
         },
       ),
     );
