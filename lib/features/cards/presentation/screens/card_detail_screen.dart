@@ -36,17 +36,31 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(card.name),
+        title: Text(card.name, style: textTheme.titleLarge),
+        elevation: 0,
+        surfaceTintColor: colorScheme.surfaceTint,
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: () => _showEditCardDialog(context, card),
             tooltip: 'カード編集',
           ),
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: () => _showDeleteConfirmation(context),
             tooltip: 'カード削除',
           ),
@@ -93,7 +107,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   children: [
                     TextButton.icon(
                       onPressed: () => _showDateSettingsDialog(context),
-                      icon: const Icon(Icons.calendar_today),
+                      icon: const Icon(Icons.calendar_today, size: 24.0),
                       label: const Text('締め日/支払日設定'),
                     ),
                   ],
@@ -118,12 +132,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isOverBudget ? Colors.red : Colors.grey[300]!,
+                        color: isOverBudget ? colorScheme.error : colorScheme.outline.withOpacity(0.5),
                         width: 1,
                       ),
                     ),
@@ -135,36 +149,38 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           children: [
                             Text(
                               '予算進捗',
-                              style: TextStyle(
-                                fontSize: 14,
+                              style: textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: isOverBudget ? Colors.red : Colors.grey[800],
+                                color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.edit, size: 16),
+                              icon: const Icon(Icons.edit, size: 20.0),
+                              constraints: const BoxConstraints(
+                                minWidth: 48.0,
+                                minHeight: 48.0,
+                              ),
                               onPressed: () => _showCardBudgetDialog(context, provider, card),
                               tooltip: '予算を編集',
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Text(
                           '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isOverBudget ? Colors.red : Colors.grey[700],
+                          style: textTheme.bodySmall?.copyWith(
+                            color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: progress,
-                            minHeight: 6,
-                            backgroundColor: Colors.grey[200],
+                            minHeight: 8,
+                            backgroundColor: colorScheme.surfaceContainerHighest,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              isOverBudget ? Colors.red : Colors.green,
+                              isOverBudget ? colorScheme.error : colorScheme.primary,
                             ),
                           ),
                         ),
@@ -180,13 +196,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 decoration: BoxDecoration(
                   color: _parseColor(card.color),
                   borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -198,14 +214,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  card.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                            Text(
+                              card.name,
+                              style: textTheme.headlineSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                                 if (isPaid) ...[
                                   const SizedBox(width: 8),
                                   const Icon(
@@ -219,9 +234,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             const SizedBox(height: 4),
                             Text(
                               card.type,
-                              style: const TextStyle(
+                              style: textTheme.bodyLarge?.copyWith(
                                 color: Colors.white70,
-                                fontSize: 16,
                               ),
                             ),
                           ],
@@ -277,9 +291,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           ),
                           Text(
                             '${latestMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                            style: const TextStyle(
+                            style: textTheme.headlineSmall?.copyWith(
                               color: Colors.white,
-                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -299,13 +312,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           children: [
                             Icon(
                               Icons.receipt_long,
-                              size: 64,
-                              color: Colors.grey[400],
+                              size: 48.0,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               '支出が記録されていません',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: textTheme.bodyLarge?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -315,6 +330,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         itemBuilder: (context, index) {
                           final transaction = transactions[index];
                           return Card(
+                            elevation: 2.0,
                             margin: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 8,
@@ -322,17 +338,21 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: _parseColor(card.color),
+                                radius: 20,
                                 child: const Icon(
                                   Icons.shopping_cart,
                                   color: Colors.white,
+                                  size: 24.0,
                                 ),
                               ),
-                              title: Text('${transaction.year}年${transaction.month}月'),
+                              title: Text(
+                                '${transaction.year}年${transaction.month}月',
+                                style: textTheme.titleMedium,
+                              ),
                               subtitle: Text(
                                 '${transaction.month}月',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               trailing: Row(
@@ -340,14 +360,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 children: [
                                   Text(
                                     '${transaction.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                    style: const TextStyle(
+                                    style: textTheme.bodyLarge?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 16,
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.edit_outlined),
-                                    iconSize: 20,
+                                    icon: const Icon(Icons.edit_outlined, size: 20.0),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48.0,
+                                      minHeight: 48.0,
+                                    ),
                                     onPressed: () {
                                       _showEditTransactionDialog(
                                         context,
@@ -357,8 +379,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                     tooltip: '編集',
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    iconSize: 20,
+                                    icon: const Icon(Icons.delete_outline, size: 20.0),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48.0,
+                                      minHeight: 48.0,
+                                    ),
                                     onPressed: () {
                                       _showDeleteTransactionDialog(
                                         context,
@@ -395,23 +420,39 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('カード削除'),
-        content: const Text('このカードと全ての支出記録を削除しますか？'),
+        title: Text('カード削除', style: textTheme.titleLarge),
+        content: Text(
+          'このカードと全ての支出記録を削除しますか？',
+          style: textTheme.bodyMedium,
+        ),
+        elevation: 24.0,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            },
             child: const Text('キャンセル'),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<CardProvider>().deleteCard(card.id);
+              if (!context.mounted) return;
               Navigator.pop(context); // ダイアログを閉じる
+              if (!context.mounted) return;
               Navigator.pop(context); // 画面を戻る
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
             child: const Text('削除'),
           ),
         ],
@@ -425,12 +466,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     String selectedColor = card.color;
     String? currentImagePath = card.imagePath;
     File? selectedImageFile;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('カード編集'),
+          title: Text('カード編集', style: textTheme.titleLarge),
+          elevation: 24.0,
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -441,7 +485,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     final source = await showDialog<ImageSource>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('画像を選択'),
+                        title: Text('画像を選択', style: textTheme.titleLarge),
+                        elevation: 24.0,
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -608,12 +653,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     int? selectedClosingDay = card.closingDay;
     int? selectedPaymentDay = card.paymentDay;
     final days = List.generate(31, (index) => index + 1);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('締め日/支払日設定'),
+          title: Text('締め日/支払日設定', style: textTheme.titleLarge),
+          elevation: 24.0,
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -698,12 +746,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     
     // 月のリスト
     final months = List.generate(12, (index) => index + 1);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
     
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('支出追加'),
+          title: Text('支出追加', style: textTheme.titleLarge),
+          elevation: 24.0,
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -825,12 +876,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     
     // 月のリスト
     final months = List.generate(12, (index) => index + 1);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
     
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('支出編集'),
+          title: Text('支出編集', style: textTheme.titleLarge),
+          elevation: 24.0,
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -937,22 +991,37 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   void _showDeleteTransactionDialog(
       BuildContext context, Transaction transaction) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('支出削除'),
-        content: const Text('この支出を削除しますか？'),
+        title: Text('支出削除', style: textTheme.titleLarge),
+        content: Text(
+          'この支出を削除しますか？',
+          style: textTheme.bodyMedium,
+        ),
+        elevation: 24.0,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            },
             child: const Text('キャンセル'),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<CardProvider>().deleteTransaction(transaction.id);
+              if (!context.mounted) return;
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
             child: const Text('削除'),
           ),
         ],
@@ -968,11 +1037,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final budgetController = TextEditingController(
       text: currentBudget?.toString() ?? '',
     );
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${card.name}の予算設定'),
+        title: Text('${card.name}の予算設定', style: textTheme.titleLarge),
+        elevation: 24.0,
         content: TextField(
           controller: budgetController,
           decoration: const InputDecoration(
@@ -1017,4 +1089,5 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     );
   }
 }
+
 

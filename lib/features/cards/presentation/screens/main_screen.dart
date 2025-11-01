@@ -21,15 +21,26 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
+        iconSize: 24.0,
+        selectedFontSize: 14.0,
+        unselectedFontSize: 12.0,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        elevation: 8.0,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

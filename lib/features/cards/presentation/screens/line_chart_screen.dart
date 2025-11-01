@@ -16,9 +16,15 @@ class _LineChartScreenState extends State<LineChartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('支出推移'),
+        title: Text('支出推移', style: textTheme.titleLarge),
+        elevation: 0,
+        surfaceTintColor: colorScheme.surfaceTint,
         actions: [
           Consumer<CardProvider>(
             builder: (context, provider, _) {
@@ -50,10 +56,12 @@ class _LineChartScreenState extends State<LineChartScreen> {
         builder: (context, provider, _) {
           final years = _getAvailableYears(provider);
           if (years.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'データがありません',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             );
           }
@@ -73,8 +81,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
               children: [
                 Text(
                   '$year年の支出推移',
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -175,7 +182,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -183,17 +190,15 @@ class _LineChartScreenState extends State<LineChartScreen> {
                     children: [
                       Text(
                         '合計: ${formatter.format(monthlyTotals.fold<int>(0, (s, v) => s + v))}円',
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         '平均: ${formatter.format((monthlyTotals.fold<int>(0, (s, v) => s + v) / 12).round())}円',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

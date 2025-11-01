@@ -56,14 +56,22 @@ class _HomeScreenState extends State<HomeScreen> {
     final year = _selectedYear ?? _selectedMonth.year;
     final month = _selectedMonth.month;
     final availableYears = _getAvailableYears();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     
     return Scaffold(
       appBar: AppBar(
         title: const Text(''),
         elevation: 0,
+        surfaceTintColor: colorScheme.surfaceTint,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart),
+            icon: const Icon(Icons.bar_chart, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: () {
               Navigator.push(
                 context,
@@ -75,7 +83,11 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'カード比較',
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
+            icon: const Icon(Icons.arrow_back_ios, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: _previousMonth,
             tooltip: '前の月',
           ),
@@ -87,10 +99,12 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 '$year年$month月',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             itemBuilder: (context) => availableYears.map((y) {
@@ -101,7 +115,11 @@ class _HomeScreenState extends State<HomeScreen> {
             }).toList(),
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_forward_ios),
+            icon: const Icon(Icons.arrow_forward_ios, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: _nextMonth,
             tooltip: '次の月',
           ),
@@ -117,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // 月別サマリー
                   Container(
                     margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.blue[400]!, Colors.purple[400]!],
@@ -128,8 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -138,18 +156,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           '$year年$month月の合計',
-                          style: const TextStyle(
+                          style: textTheme.titleLarge?.copyWith(
                             color: Colors.white,
-                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(width: 16),
                         Text(
                           '${monthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                          style: const TextStyle(
+                          style: textTheme.headlineSmall?.copyWith(
                             color: Colors.white,
-                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -167,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: ElevatedButton.icon(
                             onPressed: () => _showBudgetDialog(context, provider, year, month),
-                            icon: const Icon(Icons.add_chart),
+                            icon: const Icon(Icons.add_chart, size: 24.0),
                             label: const Text('予算を設定'),
                           ),
                         );
@@ -181,16 +197,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         margin: const EdgeInsets.all(16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isOverBudget ? Colors.red : Colors.grey[300]!,
-                            width: 2,
+                            color: isOverBudget ? colorScheme.error : colorScheme.outline.withOpacity(0.5),
+                            width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 5,
+                              blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
                           ],
@@ -203,14 +219,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   '予算進捗',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                                  style: textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: isOverBudget ? Colors.red : Colors.grey[800],
+                                    color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.edit, size: 20),
+                                  icon: const Icon(Icons.edit, size: 20.0),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 48.0,
+                                    minHeight: 48.0,
+                                  ),
                                   onPressed: () => _showBudgetDialog(context, provider, year, month),
                                   tooltip: '予算を編集',
                                 ),
@@ -222,18 +241,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isOverBudget ? Colors.red : Colors.grey[700],
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 if (isOverBudget)
                                   Text(
                                     '超過: ${(total - budget).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.red,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.error,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -245,18 +262,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: LinearProgressIndicator(
                                 value: progress,
                                 minHeight: 8,
-                                backgroundColor: Colors.grey[200],
+                                backgroundColor: colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  isOverBudget ? Colors.red : Colors.green,
+                                  isOverBudget ? colorScheme.error : colorScheme.primary,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             Text(
                               '${(progress * 100).toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -274,13 +290,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Icon(
                               Icons.credit_card,
-                              size: 64,
-                              color: Colors.grey[400],
+                              size: 48.0,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'カードが登録されていません',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: textTheme.bodyLarge?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -294,6 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               .where((t) => t.cardId == card.id)
                               .fold(0, (sum, t) => sum + t.amount);
                           return Card(
+                            elevation: 2.0,
                             margin: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 8,
@@ -310,9 +329,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                         errorBuilder: (context, error, stackTrace) {
                                           return CircleAvatar(
                                             backgroundColor: _parseColor(card.color),
+                                            radius: 20,
                                             child: const Icon(
                                               Icons.credit_card,
                                               color: Colors.white,
+                                              size: 24.0,
                                             ),
                                           );
                                         },
@@ -320,25 +341,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                     )
                                   : CircleAvatar(
                                       backgroundColor: _parseColor(card.color),
+                                      radius: 20,
                                       child: const Icon(
                                         Icons.credit_card,
                                         color: Colors.white,
+                                        size: 24.0,
                                       ),
                                     ),
-                              title: Text(card.name),
+                              title: Text(
+                                card.name,
+                                style: textTheme.titleMedium,
+                              ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(card.type),
+                                  Text(
+                                    card.type,
+                                    style: textTheme.bodySmall,
+                                  ),
                                   Text(
                                     '$year年$month月: ${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                    style: const TextStyle(
+                                    style: textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
                               ),
-                              trailing: const Icon(Icons.arrow_forward_ios),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 20.0),
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -402,11 +431,15 @@ class _HomeScreenState extends State<HomeScreen> {
       'その他',
     ];
 
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('カード追加'),
+          title: Text('カード追加', style: textTheme.titleLarge),
+          elevation: 24.0,
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -585,7 +618,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                if (!context.mounted) return;
+                Navigator.pop(context);
+              },
               child: const Text('キャンセル'),
             ),
             ElevatedButton(
@@ -634,11 +670,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final budgetController = TextEditingController(
       text: currentBudget?.toString() ?? '',
     );
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('$year年$month月の予算設定'),
+        title: Text('$year年$month月の予算設定', style: textTheme.titleLarge),
+        elevation: 24.0,
         content: TextField(
           controller: budgetController,
           decoration: const InputDecoration(
@@ -683,4 +722,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 

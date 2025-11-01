@@ -33,25 +33,40 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
     final currentMonth = DateTime.now().month;
     final selectedYear = _selectedMonth.year;
     final selectedMonth = _selectedMonth.month;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('カード比較'),
+        title: Text('カード比較', style: textTheme.titleLarge),
+        elevation: 0,
+        surfaceTintColor: colorScheme.surfaceTint,
         actions: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
+            icon: const Icon(Icons.arrow_back_ios, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: _previousMonth,
             tooltip: '前の月',
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               '$selectedYear年$selectedMonth月',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_forward_ios),
+            icon: const Icon(Icons.arrow_forward_ios, size: 24.0),
+            constraints: const BoxConstraints(
+              minWidth: 48.0,
+              minHeight: 48.0,
+            ),
             onPressed: _nextMonth,
             tooltip: '次の月',
           ),
@@ -60,10 +75,12 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
           if (provider.cards.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'カードが登録されていません',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             );
           }
@@ -146,7 +163,10 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Text('当月と比較'),
+                    Text(
+                      '当月と比較',
+                      style: textTheme.bodyLarge,
+                    ),
                     Switch(
                       value: _compareWithCurrentMonth,
                       onChanged: (value) {
@@ -166,11 +186,16 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildLegend('$selectedYear年$selectedMonth月', Colors.blue),
+                      _buildLegend(
+                        '$selectedYear年$selectedMonth月',
+                        Colors.blue,
+                        textTheme.bodySmall,
+                      ),
                       const SizedBox(width: 16),
                       _buildLegend(
                         '$currentYear年$currentMonth月（当月）',
                         Colors.blue.withValues(alpha: 0.5),
+                        textTheme.bodySmall,
                       ),
                     ],
                   ),
@@ -180,10 +205,12 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: barGroups.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
                             'データがありません',
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         )
                       : BarChart(
@@ -263,7 +290,7 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
     );
   }
 
-  Widget _buildLegend(String label, Color color) {
+  Widget _buildLegend(String label, Color color, TextStyle? textStyle) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -278,7 +305,7 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(fontSize: 12),
+          style: textStyle,
         ),
       ],
     );
