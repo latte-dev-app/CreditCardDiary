@@ -565,6 +565,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAddCardDialog(BuildContext context) {
+    // 親contextを保持（StatefulBuilder内のcontextと区別するため）
+    final parentContext = context;
+    
     final nameController = TextEditingController();
     final customNameController = TextEditingController();
     final typeController = TextEditingController();
@@ -594,13 +597,13 @@ class _HomeScreenState extends State<HomeScreen> {
       'その他',
     ];
 
-    final theme = Theme.of(context);
+    final theme = Theme.of(parentContext);
     final textTheme = theme.textTheme;
     
     showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+      context: parentContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
           title: Text('カード追加', style: textTheme.titleLarge),
           elevation: 24.0,
           content: SingleChildScrollView(
@@ -611,8 +614,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 GestureDetector(
                   onTap: () async {
                     final source = await showDialog<ImageSource>(
-                      context: context,
-                      builder: (context) => AlertDialog(
+                      context: dialogContext,
+                      builder: (sourceDialogContext) => AlertDialog(
                         title: const Text('画像を選択'),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -620,12 +623,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             ListTile(
                               leading: const Icon(Icons.camera_alt),
                               title: const Text('カメラで撮影'),
-                              onTap: () => Navigator.pop(context, ImageSource.camera),
+                              onTap: () => Navigator.pop(sourceDialogContext, ImageSource.camera),
                             ),
                             ListTile(
                               leading: const Icon(Icons.photo_library),
                               title: const Text('ギャラリーから選択'),
-                              onTap: () => Navigator.pop(context, ImageSource.gallery),
+                              onTap: () => Navigator.pop(sourceDialogContext, ImageSource.gallery),
                             ),
                           ],
                         ),
@@ -633,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                     if (source != null) {
                       final imageFile = await ImageStorage.pickImage(source);
-                      if (imageFile != null && context.mounted) {
+                      if (imageFile != null && dialogContext.mounted) {
                         setDialogState(() {
                           selectedImageFile = imageFile;
                         });
@@ -756,8 +759,8 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                if (!context.mounted) return;
-                Navigator.pop(context);
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
               },
               child: const Text('キャンセル'),
             ),
@@ -785,10 +788,46 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: selectedColor,
                     imagePath: imagePath,
                   );
-                  if (!context.mounted) return;
-                  await context.read<CardProvider>().addCard(card);
-                  if (context.mounted) {
-                    Navigator.pop(context);
+                  if (!parentContext.mounted) return;
+                  await parentContext.read<CardProvider>().addCard(card);
+                  if (!parentContext.mounted) return;
+                  
+                  // カード追加ダイアログを閉じる
+                  Navigator.pop(dialogContext);
+                  
+                  // 確認ダイアログを表示（少し待ってから）
+                  await Future.delayed(const Duration(milliseconds: 300));
+                  if (!parentContext.mounted) return;
+                  
+                  final addExpense = await showDialog<bool>(
+                    context: parentContext,
+                    builder: (confirmDialogContext) => AlertDialog(
+                      title: Text('${card.name}を追加しました', style: textTheme.titleLarge),
+                      content: const Text('支出を追加しますか？'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(confirmDialogContext, false),
+                          child: const Text('いいえ'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(confirmDialogContext, true),
+                          child: const Text('はい'),
+                        ),
+                      ],
+                    ),
+                  );
+                  
+                  // 「はい」が選択された場合、カード詳細画面に遷移（支出追加ダイアログを自動表示）
+                  if (addExpense == true && parentContext.mounted) {
+                    Navigator.push(
+                      parentContext,
+                      MaterialPageRoute(
+                        builder: (_) => CardDetailScreen(
+                          card: card,
+                          autoOpenAddTransactionDialog: true,
+                        ),
+                      ),
+                    );
                   }
                 }
               },
@@ -927,6 +966,190 @@ class _HomeScreenState extends State<HomeScreen> {
       '#4CAF50',
     ],
   };
+
+  // 支出追加ダイアログを表示
+  void _showAddTransactionDialog(BuildContext context, CreditCard card) {
+    // 親contextを保持（StatefulBuilder内のcontextと区別するため）
+    final parentContext = context;
+    final amountController = TextEditingController();
+    
+    // 状態変数を外部スコープで定義（StatefulBuilderの再ビルドでも保持される）
+    int selectedYear = DateTime.now().year;
+    int selectedMonth = DateTime.now().month;
+    
+    // 年のリスト（現在年から5年後まで）
+    final years = List.generate(
+      10,
+      (index) => DateTime.now().year - 5 + index,
+    );
+    
+    // 月のリスト
+    final months = List.generate(12, (index) => index + 1);
+    final theme = Theme.of(parentContext);
+    final textTheme = theme.textTheme;
+    
+    showDialog(
+      context: parentContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text('${card.name}の支出追加', style: textTheme.titleLarge),
+          elevation: 24.0,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(
+                    labelText: '金額',
+                    hintText: '例: 3,500',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _NumberTextInputFormatter(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedYear,
+                        decoration: const InputDecoration(
+                          labelText: '年',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: years.map((year) {
+                          return DropdownMenuItem(
+                            value: year,
+                            child: Text('$year年'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setDialogState(() {
+                              selectedYear = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedMonth,
+                        decoration: const InputDecoration(
+                          labelText: '月',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: months.map((month) {
+                          return DropdownMenuItem(
+                            value: month,
+                            child: Text('$month月'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setDialogState(() {
+                              selectedMonth = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('キャンセル'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                // カード詳細画面に遷移（支出追加ダイアログを自動表示）
+                if (!parentContext.mounted) return;
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(
+                    builder: (_) => CardDetailScreen(
+                      card: card,
+                      autoOpenAddTransactionDialog: true,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.open_in_new),
+              label: const Text('詳細画面で追加'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                final amountStr = amountController.text.trim().replaceAll(',', '');
+                
+                if (amountStr.isNotEmpty) {
+                  final amount = int.tryParse(amountStr);
+                  if (amount != null && amount > 0) {
+                    final transaction = Transaction(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      cardId: card.id,
+                      title: '支出',
+                      amount: amount,
+                      year: selectedYear,
+                      month: selectedMonth,
+                    );
+                    dialogContext.read<CardProvider>().addTransaction(transaction);
+                    // フォームをリセット（ダイアログは開いたまま）
+                    amountController.clear();
+                    setDialogState(() {
+                      selectedYear = DateTime.now().year;
+                      selectedMonth = DateTime.now().month;
+                    });
+                  }
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('もう1件追加'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final amountStr = amountController.text.trim().replaceAll(',', '');
+                
+                if (amountStr.isNotEmpty) {
+                  final amount = int.tryParse(amountStr);
+                  if (amount != null && amount > 0) {
+                    final transaction = Transaction(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      cardId: card.id,
+                      title: '支出',
+                      amount: amount,
+                      year: selectedYear,
+                      month: selectedMonth,
+                    );
+                    dialogContext.read<CardProvider>().addTransaction(transaction);
+                    Navigator.pop(dialogContext);
+                  }
+                }
+              },
+              child: const Text('追加して閉じる'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // カラーピッカーウィジェット
   Widget _buildColorPicker(String selectedColor, ValueChanged<String> onColorSelected) {

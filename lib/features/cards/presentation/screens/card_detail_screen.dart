@@ -10,8 +10,13 @@ import '../../infrastructure/image_storage.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
+  final bool autoOpenAddTransactionDialog;
 
-  const CardDetailScreen({super.key, required this.card});
+  const CardDetailScreen({
+    super.key,
+    required this.card,
+    this.autoOpenAddTransactionDialog = false,
+  });
 
   @override
   State<CardDetailScreen> createState() => _CardDetailScreenState();
@@ -24,6 +29,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   void initState() {
     super.initState();
     card = widget.card;
+    
+    // 画面表示後に支出追加ダイアログを自動表示
+    if (widget.autoOpenAddTransactionDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showAddTransactionDialog(context);
+        }
+      });
+    }
   }
 
   @override
@@ -875,6 +889,34 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text('キャンセル'),
             ),
+            TextButton.icon(
+              onPressed: () {
+                final amountStr = amountController.text.trim().replaceAll(',', '');
+                
+                if (amountStr.isNotEmpty) {
+                  final amount = int.tryParse(amountStr);
+                  if (amount != null && amount > 0) {
+                    final transaction = Transaction(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      cardId: card.id,
+                      title: '支出',
+                      amount: amount,
+                      year: selectedYear,
+                      month: selectedMonth,
+                    );
+                    context.read<CardProvider>().addTransaction(transaction);
+                    // フォームをリセット（ダイアログは開いたまま）
+                    amountController.clear();
+                    setDialogState(() {
+                      selectedYear = DateTime.now().year;
+                      selectedMonth = DateTime.now().month;
+                    });
+                  }
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('もう1件追加'),
+            ),
             ElevatedButton(
               onPressed: () {
                 final amountStr = amountController.text.trim().replaceAll(',', '');
@@ -895,7 +937,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   }
                 }
               },
-              child: const Text('追加'),
+              child: const Text('追加して閉じる'),
             ),
           ],
         ),
