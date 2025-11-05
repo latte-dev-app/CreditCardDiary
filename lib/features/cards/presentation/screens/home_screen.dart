@@ -220,6 +220,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       final total = monthTotal;
                       final progress = (total / budget).clamp(0.0, 1.0);
                       final isOverBudget = total > budget;
+                      // 予算額の位置を計算（バーの幅に対する割合、最大100%）
+                      final budgetPosition = 1.0.clamp(0.0, 1.0);
                       
                       return TweenAnimationBuilder<double>(
                         tween: Tween(begin: 0.0, end: progress),
@@ -306,8 +308,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     child: Stack(
                                       children: [
+                                        // 使用額の進捗バー
                                         FractionallySizedBox(
-                                          widthFactor: animatedProgress,
+                                          widthFactor: animatedProgress.clamp(0.0, 1.0),
                                           child: Container(
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
@@ -319,6 +322,67 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ],
                                               ),
                                             ),
+                                          ),
+                                        ),
+                                        // 予算額のタイミングで線を表示（常に100%の位置）
+                                        Positioned.fill(
+                                          child: LayoutBuilder(
+                                            builder: (context, constraints) {
+                                              final budgetLinePosition = constraints.maxWidth * budgetPosition;
+                                              return Stack(
+                                                children: [
+                                                  // 予算ライン（常に表示）
+                                                  Positioned(
+                                                    left: budgetLinePosition - 1,
+                                                    top: -4,
+                                                    bottom: -4,
+                                                    child: Container(
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: isOverBudget 
+                                                            ? colorScheme.error.withValues(alpha: 0.9)
+                                                            : colorScheme.primary.withValues(alpha: 0.9),
+                                                        borderRadius: BorderRadius.circular(1.5),
+                                                        border: Border.all(
+                                                          color: Colors.white,
+                                                          width: 0.5,
+                                                        ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: (isOverBudget 
+                                                                ? colorScheme.error 
+                                                                : colorScheme.primary).withValues(alpha: 0.8),
+                                                            blurRadius: 6,
+                                                            spreadRadius: 2,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  // 予算超過時のラベル表示
+                                                  if (isOverBudget)
+                                                    Positioned(
+                                                      left: budgetLinePosition + 4,
+                                                      top: -16,
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                        decoration: BoxDecoration(
+                                                          color: colorScheme.error,
+                                                          borderRadius: BorderRadius.circular(4),
+                                                        ),
+                                                        child: Text(
+                                                          '予算',
+                                                          style: textTheme.bodySmall?.copyWith(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 10,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              );
+                                            },
                                           ),
                                         ),
                                       ],

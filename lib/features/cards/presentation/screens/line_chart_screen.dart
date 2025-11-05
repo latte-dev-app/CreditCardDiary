@@ -212,6 +212,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
                           child: Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
