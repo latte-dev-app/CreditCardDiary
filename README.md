@@ -130,27 +130,35 @@ creditcarddiary/
 │   ├── main.dart           # アプリケーションのエントリーポイント
 │   ├── app/                # アプリケーション層
 │   │   └── app.dart        # アプリのルート設定とDI
-│   └── features/           # 機能別モジュール（Clean Architecture）
-│       └── cards/          # クレジットカード機能
-│           ├── application/    # アプリケーション層（ビジネスロジック）
-│           │   └── card_provider.dart
-│           ├── domain/         # ドメイン層（エンティティ・モデル）
-│           │   └── card_model.dart
-│           ├── infrastructure/ # インフラ層（データアクセス）
-│           │   └── local_storage.dart
-│           └── presentation/  # プレゼンテーション層（UI）
-│               ├── screens/
-│               │   ├── main_screen.dart
-│               │   ├── home_screen.dart
-│               │   ├── card_detail_screen.dart
-│               │   └── settings_screen.dart
-│               └── widgets/
-│                   ├── monthly_chart.dart
-│                   └── summary_card.dart
+│   ├── features/           # 機能別モジュール（Clean Architecture）
+│   │   └── cards/          # クレジットカード機能
+│   │       ├── application/    # アプリケーション層（ビジネスロジック）
+│   │       │   └── card_provider.dart
+│   │       ├── domain/         # ドメイン層（エンティティ・モデル）
+│   │       │   └── card_model.dart
+│   │       ├── infrastructure/ # インフラ層（データアクセス）
+│   │       │   ├── repositories/
+│   │       │   ├── image_storage.dart
+│   │       │   └── local_storage.dart
+│   │       └── presentation/  # プレゼンテーション層（UI）
+│   │           ├── constants/     # 定数定義
+│   │           ├── dialogs/       # ダイアログ
+│   │           ├── screens/       # 画面
+│   │           └── widgets/       # ウィジェット
+│   └── shared/             # 共有機能
+│       └── notification_service.dart
 ├── web/                    # Web用の設定ファイル
 ├── docs/                   # ドキュメント
-│   └── github-pages-deploy.md # GitHub Pagesデプロイ手順
+│   ├── guides/             # 各種ガイド
+│   │   ├── README.md       # ガイド一覧
+│   │   ├── github-pages-pwa-setup.md
+│   │   ├── icon-creation-guide.md
+│   │   └── ...             # その他のガイド
+│   ├── basic_design_document.md
+│   ├── requirements_definition.md
+│   └── ...                 # その他のドキュメント
 ├── _config.yml             # GitHub Pages用設定
+├── LICENSE                 # ライセンス
 ├── README.md               # プロジェクト説明
 └── pubspec.yaml            # Flutter依存関係
 ```

@@ -1,15 +1,13 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../application/card_provider.dart';
-import '../../domain/card_model.dart';
-import '../../infrastructure/image_storage.dart';
 import '../../../../shared/notification_service.dart';
-import 'card_detail_screen.dart';
 import 'card_comparison_screen.dart';
+import 'card_detail_screen.dart';
+import '../dialogs/add_card_dialog.dart';
+import '../dialogs/budget_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -101,20 +99,26 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                '$year年$month月',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$year年$month月',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, size: 20.0),
+                ],
               ),
             ),
-            itemBuilder: (context) => availableYears.map((y) {
-              return PopupMenuItem(
+            itemBuilder: (context) => [
+              ...availableYears.map((y) => PopupMenuItem(
                 value: y,
                 child: Text('$y年'),
-              );
-            }).toList(),
+              )),
+            ],
           ),
           IconButton(
             icon: const Icon(Icons.arrow_forward_ios, size: 24.0),
@@ -129,285 +133,148 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
-          final monthTotal = provider.getTotalByMonth(year, month);
           final monthTransactions = provider.getTransactionsByMonth(year, month);
+          final totalAmount = monthTransactions.fold(0, (sum, t) => sum + t.amount);
+          
+          // 予算を取得
+          final budgetFuture = provider.getTotalBudget(year, month);
+          
+          return FutureBuilder<int?>(
+            future: budgetFuture,
+            builder: (context, snapshot) {
+              final budget = snapshot.data;
+              final budgetRatio = budget != null && budget > 0 
+                  ? (totalAmount / budget).clamp(0.0, 1.0)
+                  : 0.0;
               
               return Column(
                 children: [
-                  // 月別サマリー
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOutCubic,
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(0, 20 * (1 - value)),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(28),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                margin: const EdgeInsets.all(24),
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.blue[400]!.withValues(alpha: 0.7),
-                                      Colors.purple[400]!.withValues(alpha: 0.7),
-                                      Colors.pink[400]!.withValues(alpha: 0.7),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(28),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.blue.withValues(alpha: 0.3),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '$year年$month月の合計',
-                                  style: textTheme.titleLarge?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  '${monthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                  style: textTheme.headlineSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                  // 予算バー
+                  if (budget != null && budget > 0)
+                    Container(
+                      margin: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '予算進捗',
+                                style: textTheme.titleSmall,
+                              ),
+                              TextButton(
+                                onPressed: () => showBudgetDialog(context, provider, year, month),
+                                child: const Text('設定'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          LinearProgressIndicator(
+                            value: budgetRatio,
+                            backgroundColor: colorScheme.surfaceContainerHighest,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              budgetRatio >= 1.0
+                                  ? Colors.red
+                                  : budgetRatio >= 0.8
+                                      ? Colors.orange
+                                      : Colors.green,
+                            ),
+                            minHeight: 8,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                style: textTheme.bodySmall,
+                              ),
+                              Text(
+                                '${(budgetRatio * 100).toStringAsFixed(1)}%',
+                                style: textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: budgetRatio >= 1.0
+                                      ? Colors.red
+                                      : budgetRatio >= 0.8
+                                          ? Colors.orange
+                                          : Colors.green,
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      margin: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '予算が設定されていません',
+                            style: textTheme.titleSmall,
+                          ),
+                          TextButton(
+                            onPressed: () => showBudgetDialog(context, provider, year, month),
+                            child: const Text('設定'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
+                  // 合計金額表示
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.all(24.0),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primary.withValues(alpha: 0.1),
+                          colorScheme.secondary.withValues(alpha: 0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '$year年$month月の合計',
+                          style: textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                      );
-                    },
-                  ),
-                  
-                  // 予算進捗バー
-                  FutureBuilder<int?>(
-                    future: provider.getTotalBudget(year, month),
-                    builder: (context, snapshot) {
-                      final budget = snapshot.data;
-                      if (budget == null || budget == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: ElevatedButton.icon(
-                            onPressed: () => _showBudgetDialog(context, provider, year, month),
-                            icon: const Icon(Icons.add_chart, size: 24.0),
-                            label: const Text('予算を設定'),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                          style: textTheme.displayMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
                           ),
-                        );
-                      }
-                      
-                      final total = monthTotal;
-                      final progress = (total / budget).clamp(0.0, 1.0);
-                      final isOverBudget = total > budget;
-                      // 予算額の位置を計算（バーの幅に対する割合、最大100%）
-                      final budgetPosition = 1.0.clamp(0.0, 1.0);
-                      
-                      return TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: progress),
-                        duration: const Duration(milliseconds: 800),
-                        curve: Curves.easeInOutCubic,
-                        builder: (context, animatedProgress, child) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surface.withValues(alpha: 0.8),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: isOverBudget 
-                                        ? colorScheme.error.withValues(alpha: 0.6)
-                                        : colorScheme.outline.withValues(alpha: 0.3),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '予算進捗',
-                                      style: textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, size: 20.0),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 48.0,
-                                        minHeight: 48.0,
-                                      ),
-                                      onPressed: () => _showBudgetDialog(context, provider, year, month),
-                                      tooltip: '予算を編集',
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円 / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: isOverBudget ? colorScheme.error : colorScheme.onSurface,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    if (isOverBudget)
-                                      Text(
-                                        '超過: ${(total - budget).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                        style: textTheme.bodySmall?.copyWith(
-                                          color: colorScheme.error,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        // 使用額の進捗バー
-                                        FractionallySizedBox(
-                                          widthFactor: animatedProgress.clamp(0.0, 1.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: isOverBudget
-                                                    ? [colorScheme.error, colorScheme.errorContainer]
-                                                    : [
-                                                        colorScheme.primary,
-                                                        colorScheme.tertiary,
-                                                      ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        // 予算額のタイミングで線を表示（常に100%の位置）
-                                        Positioned.fill(
-                                          child: LayoutBuilder(
-                                            builder: (context, constraints) {
-                                              final budgetLinePosition = constraints.maxWidth * budgetPosition;
-                                              return Stack(
-                                                children: [
-                                                  // 予算ライン（常に表示）
-                                                  Positioned(
-                                                    left: budgetLinePosition - 1,
-                                                    top: -4,
-                                                    bottom: -4,
-                                                    child: Container(
-                                                      width: 3,
-                                                      decoration: BoxDecoration(
-                                                        color: isOverBudget 
-                                                            ? colorScheme.error.withValues(alpha: 0.9)
-                                                            : colorScheme.primary.withValues(alpha: 0.9),
-                                                        borderRadius: BorderRadius.circular(1.5),
-                                                        border: Border.all(
-                                                          color: Colors.white,
-                                                          width: 0.5,
-                                                        ),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: (isOverBudget 
-                                                                ? colorScheme.error 
-                                                                : colorScheme.primary).withValues(alpha: 0.8),
-                                                            blurRadius: 6,
-                                                            spreadRadius: 2,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  // 予算超過時のラベル表示
-                                                  if (isOverBudget)
-                                                    Positioned(
-                                                      left: budgetLinePosition + 4,
-                                                      top: -16,
-                                                      child: Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                        decoration: BoxDecoration(
-                                                          color: colorScheme.error,
-                                                          borderRadius: BorderRadius.circular(4),
-                                                        ),
-                                                        child: Text(
-                                                          '予算',
-                                                          style: textTheme.bodySmall?.copyWith(
-                                                            color: Colors.white,
-                                                            fontWeight: FontWeight.bold,
-                                                            fontSize: 10,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${(progress * 100).toStringAsFixed(1)}%',
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+                        ),
+                      ],
+                    ),
                   ),
                   
-                  // カード別の月別合計
+                  const SizedBox(height: 16),
+                  
+                  // カード一覧
                   Expanded(
                     child: provider.cards.isEmpty
                     ? Center(
@@ -449,60 +316,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: Card(
                                     elevation: 2.0,
                                     margin: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 8,
+                                      horizontal: 16.0,
+                                      vertical: 8.0,
                                     ),
-                                    child: ListTile(
-                              leading: card.imagePath != null && File(card.imagePath!).existsSync()
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Image.file(
-                                        File(card.imagePath!),
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return CircleAvatar(
-                                            backgroundColor: _parseColor(card.color),
-                                            radius: 20,
-                                            child: const Icon(
-                                              Icons.credit_card,
-                                              color: Colors.white,
-                                              size: 24.0,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : CircleAvatar(
-                                      backgroundColor: _parseColor(card.color),
-                                      radius: 20,
-                                      child: const Icon(
-                                        Icons.credit_card,
-                                        color: Colors.white,
-                                        size: 24.0,
-                                      ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
                                     ),
-                              title: Text(
-                                card.name,
-                                style: textTheme.titleMedium,
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    card.type,
-                                    style: textTheme.bodySmall,
-                                  ),
-                                  Text(
-                                    '$year年$month月: ${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                    style: textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: const Icon(Icons.arrow_forward_ios, size: 20.0),
+                                    child: InkWell(
                                       onTap: () {
                                         Navigator.push(
                                           context,
@@ -511,6 +331,76 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         );
                                       },
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Row(
+                                          children: [
+                                            // カード色の円
+                                            Container(
+                                              width: 48.0,
+                                              height: 48.0,
+                                              decoration: BoxDecoration(
+                                                color: Color(int.parse(card.color.replaceFirst('#', '0xFF'))),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Color(int.parse(card.color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.3),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: card.imagePath != null
+                                                  ? ClipOval(
+                                                      child: Image.file(
+                                                        File(card.imagePath!),
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (context, error, stackTrace) {
+                                                          return Icon(
+                                                            Icons.credit_card,
+                                                            color: Colors.white,
+                                                            size: 24.0,
+                                                          );
+                                                        },
+                                                      ),
+                                                    )
+                                                  : Icon(
+                                                      Icons.credit_card,
+                                                      color: Colors.white,
+                                                      size: 24.0,
+                                                    ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    card.name,
+                                                    style: textTheme.titleMedium?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    '${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
+                                                    style: textTheme.bodyLarge?.copyWith(
+                                                      color: colorScheme.primary,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 16.0,
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -523,7 +413,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               );
             },
-          ),
+          );
+        },
+      ),
       floatingActionButton: Material(
         elevation: 6,
         shape: const CircleBorder(),
@@ -552,7 +444,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => _showAddCardDialog(context),
+              onTap: () => showAddCardDialog(
+                    context,
+                    onCardAdded: (_) {},
+                  ),
               borderRadius: BorderRadius.circular(28),
               child: const Center(
                 child: Icon(Icons.add, color: Colors.white, size: 28),
@@ -563,730 +458,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  void _showAddCardDialog(BuildContext context) {
-    // 親contextを保持（StatefulBuilder内のcontextと区別するため）
-    final parentContext = context;
-    
-    final nameController = TextEditingController();
-    final customNameController = TextEditingController();
-    final typeController = TextEditingController();
-    String selectedColor = '#FF6B6B';
-    String selectedType = 'Visa';
-    bool isCustomType = false;
-    bool isCustomName = false;
-    File? selectedImageFile;
-
-    // 主要なクレジットカード名
-    final List<String> cardNames = [
-      '楽天カード',
-      'PayPayカード',
-      '三井住友カード',
-      'JALカード',
-      'UCSカード',
-      'その他',
-    ];
-
-    final List<String> cardTypes = [
-      'Visa',
-      'Mastercard',
-      'American Express',
-      'JCB',
-      'Diners Club',
-      'Discover',
-      'その他',
-    ];
-
-    final theme = Theme.of(parentContext);
-    final textTheme = theme.textTheme;
-    
-    showDialog(
-      context: parentContext,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text('カード追加', style: textTheme.titleLarge),
-          elevation: 24.0,
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 画像選択
-                GestureDetector(
-                  onTap: () async {
-                    final source = await showDialog<ImageSource>(
-                      context: dialogContext,
-                      builder: (sourceDialogContext) => AlertDialog(
-                        title: const Text('画像を選択'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.camera_alt),
-                              title: const Text('カメラで撮影'),
-                              onTap: () => Navigator.pop(sourceDialogContext, ImageSource.camera),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.photo_library),
-                              title: const Text('ギャラリーから選択'),
-                              onTap: () => Navigator.pop(sourceDialogContext, ImageSource.gallery),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                    if (source != null) {
-                      final imageFile = await ImageStorage.pickImage(source);
-                      if (imageFile != null && dialogContext.mounted) {
-                        setDialogState(() {
-                          selectedImageFile = imageFile;
-                        });
-                      }
-                    }
-                  },
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: selectedImageFile != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(selectedImageFile!, fit: BoxFit.cover),
-                          )
-                        : const Icon(Icons.add_photo_alternate, size: 32),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text('カード名'),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: null,
-                  hint: const Text('カード名を選択'),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  items: cardNames.map((name) {
-                    return DropdownMenuItem(
-                      value: name,
-                      child: Text(name),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() {
-                        isCustomName = value == 'その他';
-                        if (isCustomName) {
-                          customNameController.text = '';
-                          nameController.text = '';
-                        } else {
-                          nameController.text = value;
-                        }
-                      });
-                    }
-                  },
-                ),
-                if (isCustomName) ...[
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: customNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'カード名を入力',
-                      hintText: '例: その他のカード名',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                const Text('カード種類'),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: selectedType,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  items: cardTypes.map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() {
-                        selectedType = value;
-                        isCustomType = value == 'その他';
-                        if (isCustomType) {
-                          typeController.text = '';
-                        } else {
-                          typeController.text = value;
-                        }
-                      });
-                    }
-                  },
-                ),
-                if (isCustomType) ...[
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: typeController,
-                    decoration: const InputDecoration(
-                      labelText: 'カード種類を入力',
-                      hintText: '例: その他のカード種類',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                const Text('色を選択'),
-                const SizedBox(height: 8),
-                _buildColorPicker(selectedColor, (color) {
-                  setDialogState(() {
-                    selectedColor = color;
-                  });
-                }),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                if (!dialogContext.mounted) return;
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('キャンセル'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final cardName = isCustomName
-                    ? customNameController.text.trim()
-                    : nameController.text.trim();
-                final type = isCustomType
-                    ? typeController.text.trim()
-                    : selectedType;
-                if (cardName.isNotEmpty && type.isNotEmpty) {
-                  final cardId = DateTime.now().millisecondsSinceEpoch.toString();
-                  String? imagePath;
-                  
-                  // 画像が選択されている場合、保存
-                  if (selectedImageFile != null) {
-                    imagePath = await ImageStorage.saveImage(selectedImageFile!, cardId);
-                  }
-                  
-                  final card = CreditCard(
-                    id: cardId,
-                    name: cardName,
-                    type: type,
-                    color: selectedColor,
-                    imagePath: imagePath,
-                  );
-                  if (!parentContext.mounted) return;
-                  await parentContext.read<CardProvider>().addCard(card);
-                  if (!parentContext.mounted) return;
-                  
-                  // カード追加ダイアログを閉じる
-                  Navigator.pop(dialogContext);
-                  
-                  // 確認ダイアログを表示（少し待ってから）
-                  await Future.delayed(const Duration(milliseconds: 300));
-                  if (!parentContext.mounted) return;
-                  
-                  final addExpense = await showDialog<bool>(
-                    context: parentContext,
-                    builder: (confirmDialogContext) => AlertDialog(
-                      title: Text('${card.name}を追加しました', style: textTheme.titleLarge),
-                      content: const Text('支出を追加しますか？'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(confirmDialogContext, false),
-                          child: const Text('いいえ'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(confirmDialogContext, true),
-                          child: const Text('はい'),
-                        ),
-                      ],
-                    ),
-                  );
-                  
-                  // 「はい」が選択された場合、カード詳細画面に遷移（支出追加ダイアログを自動表示）
-                  if (addExpense == true && parentContext.mounted) {
-                    Navigator.push(
-                      parentContext,
-                      MaterialPageRoute(
-                        builder: (_) => CardDetailScreen(
-                          card: card,
-                          autoOpenAddTransactionDialog: true,
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('追加'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showBudgetDialog(BuildContext context, CardProvider provider, int year, int month) async {
-    final currentBudget = await provider.getTotalBudget(year, month);
-    if (!context.mounted) return;
-    
-    final budgetController = TextEditingController(
-      text: currentBudget != null 
-          ? currentBudget.toString().replaceAllMapped(
-              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), 
-              (Match m) => '${m[1]},',
-            )
-          : '',
-    );
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('$year年$month月の予算設定', style: textTheme.titleLarge),
-        elevation: 24.0,
-        content: TextField(
-          controller: budgetController,
-          decoration: const InputDecoration(
-            labelText: '予算額',
-            hintText: '例: 50,000',
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            _NumberTextInputFormatter(),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
-          ),
-          if (currentBudget != null)
-            TextButton(
-              onPressed: () async {
-                await provider.setTotalBudget(year, month, 0);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('削除', style: TextStyle(color: Colors.red)),
-            ),
-          ElevatedButton(
-            onPressed: () async {
-              final budgetStr = budgetController.text.trim().replaceAll(',', '');
-              if (budgetStr.isNotEmpty) {
-                final budget = int.tryParse(budgetStr);
-                if (budget != null && budget > 0) {
-                  await provider.setTotalBudget(year, month, budget);
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                }
-              }
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      return Color(int.parse(colorString.replaceFirst('#', '0xFF')));
-    } catch (e) {
-      return Colors.blue;
-    }
-  }
-
-  // カテゴリ別カラーパレット
-  static const Map<String, List<String>> _colorPalettes = {
-    '基本色': [
-      '#FF6B6B',
-      '#4ECDC4',
-      '#95E1D3',
-      '#F38181',
-      '#AA96DA',
-      '#FCBAD3',
-    ],
-    '金融系': [
-      '#003366',
-      '#004C99',
-      '#0066CC',
-      '#1E88E5',
-      '#42A5F5',
-      '#64B5F6',
-    ],
-    '暖色系': [
-      '#FF5722',
-      '#FF9800',
-      '#FFC107',
-      '#FFEB3B',
-      '#FF6B9D',
-      '#E91E63',
-    ],
-    '寒色系': [
-      '#2196F3',
-      '#03A9F4',
-      '#00BCD4',
-      '#009688',
-      '#4CAF50',
-      '#8BC34A',
-    ],
-    '落ち着いた色': [
-      '#5D4037',
-      '#6D4C41',
-      '#795548',
-      '#8D6E63',
-      '#A1887F',
-      '#BCAAA4',
-    ],
-    '鮮やかな色': [
-      '#E91E63',
-      '#9C27B0',
-      '#673AB7',
-      '#3F51B5',
-      '#00BCD4',
-      '#4CAF50',
-    ],
-  };
-
-  // 支出追加ダイアログを表示
-  void _showAddTransactionDialog(BuildContext context, CreditCard card) {
-    // 親contextを保持（StatefulBuilder内のcontextと区別するため）
-    final parentContext = context;
-    final amountController = TextEditingController();
-    
-    // 状態変数を外部スコープで定義（StatefulBuilderの再ビルドでも保持される）
-    int selectedYear = DateTime.now().year;
-    int selectedMonth = DateTime.now().month;
-    
-    // 年のリスト（現在年から5年後まで）
-    final years = List.generate(
-      10,
-      (index) => DateTime.now().year - 5 + index,
-    );
-    
-    // 月のリスト
-    final months = List.generate(12, (index) => index + 1);
-    final theme = Theme.of(parentContext);
-    final textTheme = theme.textTheme;
-    
-    showDialog(
-      context: parentContext,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text('${card.name}の支出追加', style: textTheme.titleLarge),
-          elevation: 24.0,
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: amountController,
-                  decoration: const InputDecoration(
-                    labelText: '金額',
-                    hintText: '例: 3,500',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    _NumberTextInputFormatter(),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        value: selectedYear,
-                        decoration: const InputDecoration(
-                          labelText: '年',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        items: years.map((year) {
-                          return DropdownMenuItem(
-                            value: year,
-                            child: Text('$year年'),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setDialogState(() {
-                              selectedYear = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        value: selectedMonth,
-                        decoration: const InputDecoration(
-                          labelText: '月',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        items: months.map((month) {
-                          return DropdownMenuItem(
-                            value: month,
-                            child: Text('$month月'),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setDialogState(() {
-                              selectedMonth = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('キャンセル'),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                // カード詳細画面に遷移（支出追加ダイアログを自動表示）
-                if (!parentContext.mounted) return;
-                Navigator.push(
-                  parentContext,
-                  MaterialPageRoute(
-                    builder: (_) => CardDetailScreen(
-                      card: card,
-                      autoOpenAddTransactionDialog: true,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('詳細画面で追加'),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                final amountStr = amountController.text.trim().replaceAll(',', '');
-                
-                if (amountStr.isNotEmpty) {
-                  final amount = int.tryParse(amountStr);
-                  if (amount != null && amount > 0) {
-                    final transaction = Transaction(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      cardId: card.id,
-                      title: '支出',
-                      amount: amount,
-                      year: selectedYear,
-                      month: selectedMonth,
-                    );
-                    dialogContext.read<CardProvider>().addTransaction(transaction);
-                    // フォームをリセット（ダイアログは開いたまま）
-                    amountController.clear();
-                    setDialogState(() {
-                      selectedYear = DateTime.now().year;
-                      selectedMonth = DateTime.now().month;
-                    });
-                  }
-                }
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('もう1件追加'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final amountStr = amountController.text.trim().replaceAll(',', '');
-                
-                if (amountStr.isNotEmpty) {
-                  final amount = int.tryParse(amountStr);
-                  if (amount != null && amount > 0) {
-                    final transaction = Transaction(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      cardId: card.id,
-                      title: '支出',
-                      amount: amount,
-                      year: selectedYear,
-                      month: selectedMonth,
-                    );
-                    dialogContext.read<CardProvider>().addTransaction(transaction);
-                    Navigator.pop(dialogContext);
-                  }
-                }
-              },
-              child: const Text('追加して閉じる'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // カラーピッカーウィジェット
-  Widget _buildColorPicker(String selectedColor, ValueChanged<String> onColorSelected) {
-    // 選択された色がどのカテゴリに属するか確認
-    String initialCategory = _colorPalettes.keys.first;
-    for (var entry in _colorPalettes.entries) {
-      if (entry.value.contains(selectedColor)) {
-        initialCategory = entry.key;
-        break;
-      }
-    }
-    
-    return StatefulBuilder(
-      builder: (context, setPickerState) {
-        // カテゴリ状態を保持（既存の色がカテゴリにない場合は最初のカテゴリを維持）
-        final currentCategoryNotifier = ValueNotifier<String>(initialCategory);
-        
-        return ValueListenableBuilder<String>(
-          valueListenable: currentCategoryNotifier,
-          builder: (context, currentCategory, _) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // カテゴリ選択（SegmentedButton風）
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _colorPalettes.keys.map((category) {
-                      final isSelected = currentCategory == category;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(category),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            currentCategoryNotifier.value = category;
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // カラーチップ
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _colorPalettes[currentCategory]!.map((color) {
-                final isSelected = selectedColor == color;
-                return GestureDetector(
-                  onTap: () => onColorSelected(color),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(
-                        int.parse(color.replaceFirst('#', '0xFF')),
-                      ),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected ? Colors.black : Colors.grey[400]!,
-                        width: isSelected ? 3 : 1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 20,
-                          )
-                        : null,
-                  ),
-                );
-              }).toList(),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 }
-
-// 数値入力時にカンマを自動で追加するTextInputFormatter
-class _NumberTextInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    // 数字のみを抽出
-    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    
-    if (digitsOnly.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-    
-    // カンマを追加
-    final formatted = digitsOnly.replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-    
-    // カーソル位置を調整（カンマの数を考慮）
-    final oldDigits = oldValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    final newDigits = digitsOnly;
-    final cursorOffset = newValue.selection.baseOffset;
-    
-    // カーソル位置を計算（カンマの数を考慮）
-    int newCursorOffset = cursorOffset;
-    if (oldDigits.length != newDigits.length) {
-      // 文字が追加/削除された場合、カーソル位置を調整
-      final digitsBeforeCursor = oldValue.text.substring(0, cursorOffset).replaceAll(RegExp(r'[^\d]'), '').length;
-      final formattedBeforeCursor = digitsOnly.substring(0, digitsBeforeCursor.clamp(0, digitsOnly.length)).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]},',
-      );
-      newCursorOffset = formattedBeforeCursor.length;
-    } else {
-      // カーソル位置を維持
-      newCursorOffset = formatted.length;
-    }
-    
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: newCursorOffset.clamp(0, formatted.length)),
-    );
-  }
-}
-
