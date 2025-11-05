@@ -38,36 +38,39 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       bottomNavigationBar: SafeArea(
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          iconSize: 24.0,
-          selectedFontSize: 14.0,
-          unselectedFontSize: 12.0,
-          selectedItemColor: colorScheme.primary,
-          unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          elevation: 8.0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'ホーム',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.show_chart),
-              label: '支出推移',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: '設定',
-            ),
-          ],
+        child: SizedBox(
+          height:80,
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            iconSize: 24.0,
+            selectedFontSize: 14.0,
+            unselectedFontSize: 12.0,
+            selectedItemColor: colorScheme.primary,
+            unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            elevation: 8.0,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'ホーム',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.show_chart),
+                label: '支出推移',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                label: '設定',
+              ),
+            ],
+          ),
         ),
       ),
     );
