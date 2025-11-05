@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../domain/card_model.dart';
@@ -586,17 +587,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     }
                   },
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: selectedImageFile != null
-                        ? Image.file(selectedImageFile!, fit: BoxFit.cover)
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(selectedImageFile!, fit: BoxFit.cover),
+                          )
                         : currentImagePath != null && File(currentImagePath!).existsSync()
-                            ? Image.file(File(currentImagePath!), fit: BoxFit.cover)
-                            : const Icon(Icons.add_photo_alternate, size: 40),
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(File(currentImagePath!), fit: BoxFit.cover),
+                              )
+                            : const Icon(Icons.add_photo_alternate, size: 32),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -618,40 +625,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 const SizedBox(height: 16),
                 const Text('色を選択'),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    '#FF6B6B',
-                    '#4ECDC4',
-                    '#95E1D3',
-                    '#F38181',
-                    '#AA96DA',
-                    '#FCBAD3',
-                  ].map((color) {
-                    final isSelected = selectedColor == color;
-                    return GestureDetector(
-                      onTap: () {
-                        setDialogState(() {
-                          selectedColor = color;
-                        });
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Color(
-                            int.parse(color.replaceFirst('#', '0xFF')),
-                          ),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected ? Colors.black : Colors.grey,
-                            width: isSelected ? 3 : 1,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                _buildColorPicker(selectedColor, (color) {
+                  setDialogState(() {
+                    selectedColor = color;
+                  });
+                }),
               ],
             ),
           ),
@@ -822,10 +800,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   controller: amountController,
                   decoration: const InputDecoration(
                     labelText: '金額',
-                    hintText: '例: 3500',
+                    hintText: '例: 3,500',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _NumberTextInputFormatter(),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -895,7 +877,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                final amountStr = amountController.text.trim();
+                final amountStr = amountController.text.trim().replaceAll(',', '');
                 
                 if (amountStr.isNotEmpty) {
                   final amount = int.tryParse(amountStr);
@@ -923,7 +905,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   void _showEditTransactionDialog(
       BuildContext context, Transaction transaction) {
-    final amountController = TextEditingController(text: transaction.amount.toString());
+    final amountController = TextEditingController(
+      text: transaction.amount.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      ),
+    );
     int selectedYear = transaction.year;
     int selectedMonth = transaction.month;
     
@@ -952,10 +939,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   controller: amountController,
                   decoration: const InputDecoration(
                     labelText: '金額',
-                    hintText: '例: 3500',
+                    hintText: '例: 3,500',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _NumberTextInputFormatter(),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -1025,7 +1016,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                final amountStr = amountController.text.trim();
+                final amountStr = amountController.text.trim().replaceAll(',', '');
                 
                 if (amountStr.isNotEmpty) {
                   final amount = int.tryParse(amountStr);
@@ -1094,7 +1085,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     if (!context.mounted) return;
     
     final budgetController = TextEditingController(
-      text: currentBudget?.toString() ?? '',
+      text: currentBudget != null
+          ? currentBudget.toString().replaceAllMapped(
+              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+              (Match m) => '${m[1]},',
+            )
+          : '',
     );
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
@@ -1108,10 +1104,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           controller: budgetController,
           decoration: const InputDecoration(
             labelText: '予算額',
-            hintText: '例: 50000',
+            hintText: '例: 50,000',
             border: OutlineInputBorder(),
           ),
           keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            _NumberTextInputFormatter(),
+          ],
         ),
         actions: [
           TextButton(
@@ -1130,7 +1130,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
           ElevatedButton(
             onPressed: () async {
-              final budgetStr = budgetController.text.trim();
+              final budgetStr = budgetController.text.trim().replaceAll(',', '');
               if (budgetStr.isNotEmpty) {
                 final budget = int.tryParse(budgetStr);
                 if (budget != null && budget > 0) {
@@ -1147,6 +1147,195 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       ),
     );
   }
+
+  // カテゴリ別カラーパレット
+  static const Map<String, List<String>> _colorPalettes = {
+    '基本色': [
+      '#FF6B6B',
+      '#4ECDC4',
+      '#95E1D3',
+      '#F38181',
+      '#AA96DA',
+      '#FCBAD3',
+    ],
+    '金融系': [
+      '#003366',
+      '#004C99',
+      '#0066CC',
+      '#1E88E5',
+      '#42A5F5',
+      '#64B5F6',
+    ],
+    '暖色系': [
+      '#FF5722',
+      '#FF9800',
+      '#FFC107',
+      '#FFEB3B',
+      '#FF6B9D',
+      '#E91E63',
+    ],
+    '寒色系': [
+      '#2196F3',
+      '#03A9F4',
+      '#00BCD4',
+      '#009688',
+      '#4CAF50',
+      '#8BC34A',
+    ],
+    '落ち着いた色': [
+      '#5D4037',
+      '#6D4C41',
+      '#795548',
+      '#8D6E63',
+      '#A1887F',
+      '#BCAAA4',
+    ],
+    '鮮やかな色': [
+      '#E91E63',
+      '#9C27B0',
+      '#673AB7',
+      '#3F51B5',
+      '#00BCD4',
+      '#4CAF50',
+    ],
+  };
+
+  // カラーピッカーウィジェット
+  Widget _buildColorPicker(String selectedColor, ValueChanged<String> onColorSelected) {
+    // 選択された色がどのカテゴリに属するか確認
+    String initialCategory = _colorPalettes.keys.first;
+    for (var entry in _colorPalettes.entries) {
+      if (entry.value.contains(selectedColor)) {
+        initialCategory = entry.key;
+        break;
+      }
+    }
+    
+    return StatefulBuilder(
+      builder: (context, setPickerState) {
+        // カテゴリ状態を保持（既存の色がカテゴリにない場合は最初のカテゴリを維持）
+        final currentCategoryNotifier = ValueNotifier<String>(initialCategory);
+        
+        return ValueListenableBuilder<String>(
+          valueListenable: currentCategoryNotifier,
+          builder: (context, currentCategory, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // カテゴリ選択（SegmentedButton風）
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _colorPalettes.keys.map((category) {
+                      final isSelected = currentCategory == category;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(category),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            currentCategoryNotifier.value = category;
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // カラーチップ
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _colorPalettes[currentCategory]!.map((color) {
+                final isSelected = selectedColor == color;
+                return GestureDetector(
+                  onTap: () => onColorSelected(color),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Color(
+                        int.parse(color.replaceFirst('#', '0xFF')),
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? Colors.black : Colors.grey[400]!,
+                        width: isSelected ? 3 : 1,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: isSelected
+                        ? const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 20,
+                          )
+                        : null,
+                  ),
+                );
+              }).toList(),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
+// 数値入力時にカンマを自動で追加するTextInputFormatter
+class _NumberTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // 数字のみを抽出
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    
+    if (digitsOnly.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+    
+    // カンマを追加
+    final formatted = digitsOnly.replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+    
+    // カーソル位置を調整（カンマの数を考慮）
+    final oldDigits = oldValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    final newDigits = digitsOnly;
+    final cursorOffset = newValue.selection.baseOffset;
+    
+    // カーソル位置を計算（カンマの数を考慮）
+    int newCursorOffset = cursorOffset;
+    if (oldDigits.length != newDigits.length) {
+      // 文字が追加/削除された場合、カーソル位置を調整
+      final digitsBeforeCursor = oldValue.text.substring(0, cursorOffset).replaceAll(RegExp(r'[^\d]'), '').length;
+      final formattedBeforeCursor = digitsOnly.substring(0, digitsBeforeCursor.clamp(0, digitsOnly.length)).replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
+      newCursorOffset = formattedBeforeCursor.length;
+    } else {
+      // カーソル位置を維持
+      newCursorOffset = formatted.length;
+    }
+    
+    return newValue.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: newCursorOffset.clamp(0, formatted.length)),
+    );
+  }
+}
 

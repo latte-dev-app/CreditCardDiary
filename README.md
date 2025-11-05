@@ -43,6 +43,40 @@ cd build/web
 python -m http.server 8000
 ```
 
+### 📚 Widgetbook（コンポーネントカタログ）
+
+各画面を視覚的に確認・テストできるWidgetbookが利用可能です。
+
+#### 開発中に確認
+
+```bash
+# Widgetbookを起動（ホットリロード対応）
+flutter run -d chrome lib/main_widgetbook.dart
+```
+
+#### Webビルドして静的にホスト（推奨）
+
+```bash
+# WidgetbookをWebビルド
+flutter build web --target lib/main_widgetbook.dart --release
+
+# ビルドされたファイルをホスト
+cd build/web
+python -m http.server 8000
+# ブラウザで http://localhost:8000 にアクセス
+```
+
+**確認可能な画面:**
+- MainScreen（ボトムナビ付きの全体画面）
+- HomeScreen（ホーム画面）
+- LineChartScreen（支出推移画面）
+- SettingsScreen（設定画面）
+- CardDetailScreen（カード詳細画面）
+
+各画面は複数のUseCase（デフォルト、サンプルデータ付きなど）で確認できます。
+
+**詳細:** [docs/widgetbook_usage.md](docs/widgetbook_usage.md) を参照してください。
+
 ### 🚀 デプロイ方法
 
 #### GitHub Pages（現在のデプロイ方法）

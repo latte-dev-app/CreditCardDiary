@@ -222,20 +222,54 @@ class _LineChartScreenState extends State<LineChartScreen> {
                                 width: 1.5,
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                Text(
-                                  '合計: ${formatter.format(monthlyTotals.fold<int>(0, (s, v) => s + v))}円',
-                                  style: textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '合計',
+                                        style: textTheme.titleSmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${formatter.format(monthlyTotals.fold<int>(0, (s, v) => s + v))}円',
+                                        style: textTheme.headlineSmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '平均: ${formatter.format((monthlyTotals.fold<int>(0, (s, v) => s + v) / 12).round())}円',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
+                                Container(
+                                  width: 1,
+                                  height: 60,
+                                  color: colorScheme.outline.withValues(alpha: 0.2),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '平均',
+                                        style: textTheme.titleSmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${formatter.format((monthlyTotals.fold<int>(0, (s, v) => s + v) / 12).round())}円',
+                                        style: textTheme.headlineSmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
