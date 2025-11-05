@@ -105,7 +105,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
                                 side: BorderSide(
-                                  color: colorScheme.outline.withOpacity(0.2),
+                                  color: colorScheme.outline.withValues(alpha: 0.2),
                                   width: 1.5,
                                 ),
                               ),
@@ -217,7 +217,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: colorScheme.outline.withOpacity(0.2),
+                                color: colorScheme.outline.withValues(alpha: 0.2),
                                 width: 1.5,
                               ),
                             ),

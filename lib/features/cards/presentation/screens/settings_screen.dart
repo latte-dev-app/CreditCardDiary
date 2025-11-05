@@ -31,7 +31,7 @@ class SettingsScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.2),
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),
@@ -64,7 +64,7 @@ class SettingsScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.2),
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),
@@ -98,7 +98,7 @@ class SettingsScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.2),
+                    color: colorScheme.outline.withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),

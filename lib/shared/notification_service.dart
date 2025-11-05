@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../features/cards/application/card_provider.dart';
 
 // Web専用のインポート
+// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 
 class NotificationService {

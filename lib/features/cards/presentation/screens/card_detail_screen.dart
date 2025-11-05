@@ -144,7 +144,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           border: Border.all(
                             color: isOverBudget 
                                 ? colorScheme.error.withValues(alpha: 0.6)
-                                : colorScheme.outline.withOpacity(0.3),
+                                : colorScheme.outline.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                           boxShadow: [

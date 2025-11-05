@@ -1,0 +1,112 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- グラデーション定義 -->
+  <defs>
+    <!-- 背景グラデーション（虹色系） -->
+    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="33%" style="stop-color:#6B73FF;stop-opacity:1" />
+      <stop offset="66%" style="stop-color:#9B59B6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E91E63;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- カード表面のグラデーション -->
+    <linearGradient id="cardSurfaceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.98" />
+      <stop offset="100%" style="stop-color:#F8F8F8;stop-opacity:0.95" />
+    </linearGradient>
+    
+    <!-- 磁気ストライプのグラデーション -->
+    <linearGradient id="stripeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1A1A1A;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2A2A2A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1A1A;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- EMVチップのグラデーション -->
+    <linearGradient id="chipGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- シャドウ用フィルター -->
+    <filter id="cardShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dx="0" dy="6" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.4"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 光沢効果用フィルター -->
+    <filter id="gloss" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.2"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  
+  <!-- 背景（角丸、グラデーション） -->
+  <rect width="512" height="512" rx="120" ry="120" fill="url(#backgroundGradient)"/>
+  
+  <!-- 装飾的な光沢効果 -->
+  <ellipse cx="256" cy="150" rx="220" ry="120" fill="rgba(255,255,255,0.12)" filter="url(#gloss)"/>
+  <ellipse cx="256" cy="400" rx="200" ry="100" fill="rgba(255,255,255,0.06)"/>
+  
+  <!-- クレジットカード本体（中央に配置、3D効果） -->
+  <g transform="translate(64, 96)">
+    <!-- カードの影（少し下にずらして立体感） -->
+    <rect x="8" y="308" width="376" height="32" rx="16" fill="rgba(0,0,0,0.2)" filter="url(#cardShadow)"/>
+    
+    <!-- カード本体 -->
+    <rect x="0" y="64" width="384" height="256" rx="24" ry="24" fill="url(#cardSurfaceGradient)" filter="url(#cardShadow)"/>
+    
+    <!-- カードの上部（光沢効果） -->
+    <rect x="0" y="64" width="384" height="100" rx="24" ry="24" fill="rgba(255,255,255,0.3)" filter="url(#gloss)"/>
+    
+    <!-- 磁気ストライプ（黒い帯） -->
+    <rect x="0" y="140" width="384" height="40" fill="url(#stripeGradient)"/>
+    
+    <!-- EMVチップ（金色のチップ） -->
+    <rect x="296" y="200" width="64" height="48" rx="6" ry="6" fill="url(#chipGradient)"/>
+    <rect x="300" y="204" width="56" height="40" rx="4" ry="4" fill="#FFA500" opacity="0.8"/>
+    <!-- チップの内部パターン（線） -->
+    <rect x="304" y="212" width="48" height="2" fill="#FFD700" opacity="0.6"/>
+    <rect x="304" y="218" width="48" height="2" fill="#FFD700" opacity="0.6"/>
+    <rect x="304" y="224" width="48" height="2" fill="#FFD700" opacity="0.6"/>
+    
+    <!-- カード番号（4桁×4本の線） -->
+    <rect x="16" y="220" width="48" height="10" rx="5" fill="#333333" opacity="0.7"/>
+    <rect x="80" y="220" width="48" height="10" rx="5" fill="#333333" opacity="0.7"/>
+    <rect x="144" y="220" width="48" height="10" rx="5" fill="#333333" opacity="0.7"/>
+    <rect x="208" y="220" width="48" height="10" rx="5" fill="#333333" opacity="0.7"/>
+    
+    <!-- 有効期限ラベルと値 -->
+    <text x="16" y="260" font-family="Arial, sans-serif" font-size="12" fill="#666666" opacity="0.6">VALID THRU</text>
+    <rect x="16" y="268" width="60" height="8" rx="4" fill="#666666" opacity="0.5"/>
+    
+    <!-- カード名（プレースホルダー） -->
+    <rect x="16" y="288" width="120" height="10" rx="5" fill="#666666" opacity="0.5"/>
+    
+    <!-- ロゴ/ブランドエリア（右上） -->
+    <circle cx="336" cy="100" r="24" fill="#4A90E2" opacity="0.3"/>
+    <circle cx="336" cy="100" r="16" fill="#6B73FF" opacity="0.5"/>
+    
+    <!-- カードの下部（装飾的なパターン） -->
+    <rect x="0" y="280" width="384" height="40" rx="0" ry="0" fill="rgba(255,255,255,0.05)"/>
+    
+    <!-- セキュリティマーク風（小さな点） -->
+    <circle cx="236" cy="250" r="3" fill="#4A90E2" opacity="0.4"/>
+    <circle cx="256" cy="250" r="3" fill="#6B73FF" opacity="0.4"/>
+    <circle cx="276" cy="250" r="3" fill="#9B59B6" opacity="0.4"/>
+  </g>
+  
+  <!-- カードの立体的な見た目のためのハイライト -->
+  <rect x="64" y="96" width="384" height="256" rx="24" ry="24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+</svg>

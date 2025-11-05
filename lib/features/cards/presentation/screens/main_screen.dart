@@ -49,7 +49,7 @@ class _MainScreenState extends State<MainScreen> {
         selectedFontSize: 14.0,
         unselectedFontSize: 12.0,
         selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
+        unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
         showSelectedLabels: true,
         showUnselectedLabels: true,
         elevation: 8.0,
