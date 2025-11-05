@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../application/card_provider.dart';
@@ -8,6 +7,8 @@ import 'card_comparison_screen.dart';
 import 'card_detail_screen.dart';
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';
+import '../widgets/summary_card.dart';
+import '../widgets/budget_progress_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,14 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '$year年$month月',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                '$year年$month月',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
                   const Icon(Icons.arrow_drop_down, size: 20.0),
                 ],
-              ),
+            ),
             ),
             itemBuilder: (context) => [
               ...availableYears.map((y) => PopupMenuItem(
@@ -133,9 +134,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
+          // 月の合計金額を取得（getTotalByMonthメソッドを使用）
+          final totalAmount = provider.getTotalByMonth(year, month);
           final monthTransactions = provider.getTransactionsByMonth(year, month);
-          final totalAmount = monthTransactions.fold(0, (sum, t) => sum + t.amount);
-          
+              
           // 予算を取得
           final budgetFuture = provider.getTotalBudget(year, month);
           
@@ -143,73 +145,23 @@ class _HomeScreenState extends State<HomeScreen> {
             future: budgetFuture,
             builder: (context, snapshot) {
               final budget = snapshot.data;
-              final budgetRatio = budget != null && budget > 0 
-                  ? (totalAmount / budget).clamp(0.0, 1.0)
-                  : 0.0;
               
               return Column(
                 children: [
+                  // 合計金額表示（SummaryCardを使用）
+                  SummaryCard(
+                    total: totalAmount,
+                    year: year,
+                    month: month,
+                    transactionCount: monthTransactions.length,
+                  ),
+                  
                   // 予算バー
                   if (budget != null && budget > 0)
-                    Container(
-                      margin: const EdgeInsets.all(16.0),
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '予算進捗',
-                                style: textTheme.titleSmall,
-                              ),
-                              TextButton(
-                                onPressed: () => showBudgetDialog(context, provider, year, month),
-                                child: const Text('設定'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(
-                            value: budgetRatio,
-                            backgroundColor: colorScheme.surfaceContainerHighest,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              budgetRatio >= 1.0
-                                  ? Colors.red
-                                  : budgetRatio >= 0.8
-                                      ? Colors.orange
-                                      : Colors.green,
-                            ),
-                            minHeight: 8,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} / ${budget.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                style: textTheme.bodySmall,
-                              ),
-                              Text(
-                                '${(budgetRatio * 100).toStringAsFixed(1)}%',
-                                style: textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: budgetRatio >= 1.0
-                                      ? Colors.red
-                                      : budgetRatio >= 0.8
-                                          ? Colors.orange
-                                          : Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    BudgetProgressBar(
+                      totalAmount: totalAmount,
+                      budget: budget,
+                      onEditPressed: () => showBudgetDialog(context, provider, year, month),
                     )
                   else
                     Container(
@@ -233,44 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                  
-                  // 合計金額表示
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                    padding: const EdgeInsets.all(24.0),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.primary.withValues(alpha: 0.1),
-                          colorScheme.secondary.withValues(alpha: 0.1),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16.0),
-                      border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          '$year年$month月の合計',
-                          style: textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${totalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                          style: textTheme.displayMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   
                   const SizedBox(height: 16),
                   
@@ -353,45 +267,45 @@ class _HomeScreenState extends State<HomeScreen> {
                                               ),
                                               child: card.imagePath != null
                                                   ? ClipOval(
-                                                      child: Image.file(
-                                                        File(card.imagePath!),
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (context, error, stackTrace) {
+                                      child: Image.file(
+                                        File(card.imagePath!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
                                                           return Icon(
-                                                            Icons.credit_card,
-                                                            color: Colors.white,
-                                                            size: 24.0,
-                                                          );
-                                                        },
-                                                      ),
-                                                    )
+                                              Icons.credit_card,
+                                              color: Colors.white,
+                                              size: 24.0,
+                                          );
+                                        },
+                                      ),
+                                    )
                                                   : Icon(
-                                                      Icons.credit_card,
-                                                      color: Colors.white,
-                                                      size: 24.0,
-                                                    ),
-                                            ),
+                                        Icons.credit_card,
+                                        color: Colors.white,
+                                        size: 24.0,
+                                      ),
+                                    ),
                                             const SizedBox(width: 16),
                                             Expanded(
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
                                                     card.name,
                                                     style: textTheme.titleMedium?.copyWith(
                                                       fontWeight: FontWeight.bold,
-                                                    ),
+                                  ),
                                                   ),
                                                   const SizedBox(height: 4),
-                                                  Text(
+                                  Text(
                                                     '${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
                                                     style: textTheme.bodyLarge?.copyWith(
                                                       color: colorScheme.primary,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                                             ),
                                             Icon(
                                               Icons.arrow_forward_ios,
@@ -413,9 +327,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               );
             },
-          );
-        },
-      ),
+              );
+            },
+          ),
       floatingActionButton: Material(
         elevation: 6,
         shape: const CircleBorder(),

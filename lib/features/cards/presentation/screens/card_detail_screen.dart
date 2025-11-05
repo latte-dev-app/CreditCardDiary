@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../domain/card_model.dart';
 import '../../application/card_provider.dart';
 import '../../infrastructure/image_storage.dart';
+import '../widgets/number_input_formatter.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
@@ -820,7 +821,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    _NumberTextInputFormatter(),
+                    NumberTextInputFormatter(),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -987,7 +988,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    _NumberTextInputFormatter(),
+                    NumberTextInputFormatter(),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -1152,7 +1153,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           keyboardType: TextInputType.number,
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
-            _NumberTextInputFormatter(),
+            NumberTextInputFormatter(),
           ],
         ),
         actions: [
@@ -1334,50 +1335,4 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 }
 
-// 数値入力時にカンマを自動で追加するTextInputFormatter
-class _NumberTextInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    // 数字のみを抽出
-    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    
-    if (digitsOnly.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-    
-    // カンマを追加
-    final formatted = digitsOnly.replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
-    
-    // カーソル位置を調整（カンマの数を考慮）
-    final oldDigits = oldValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    final newDigits = digitsOnly;
-    final cursorOffset = newValue.selection.baseOffset;
-    
-    // カーソル位置を計算（カンマの数を考慮）
-    int newCursorOffset = cursorOffset;
-    if (oldDigits.length != newDigits.length) {
-      // 文字が追加/削除された場合、カーソル位置を調整
-      final digitsBeforeCursor = oldValue.text.substring(0, cursorOffset).replaceAll(RegExp(r'[^\d]'), '').length;
-      final formattedBeforeCursor = digitsOnly.substring(0, digitsBeforeCursor.clamp(0, digitsOnly.length)).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]},',
-      );
-      newCursorOffset = formattedBeforeCursor.length;
-    } else {
-      // カーソル位置を維持
-      newCursorOffset = formatted.length;
-    }
-    
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: newCursorOffset.clamp(0, formatted.length)),
-    );
-  }
-}
 
