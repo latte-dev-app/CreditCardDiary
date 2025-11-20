@@ -1,15 +1,23 @@
 import 'package:flutter/foundation.dart';
 import '../domain/card_model.dart' as dm;
-import '../infrastructure/local_storage.dart';
-import '../infrastructure/repositories/card_repository.dart';
+import '../domain/repositories/card_repository.dart';
+import '../domain/repositories/transaction_repository.dart';
+import '../infrastructure/local_storage.dart'; // For SharedPreferencesRepository if needed for aggregation mode, but better to use repo
 
 class CardProvider with ChangeNotifier {
-  late final CardRepository _cardRepo = SharedPreferencesCardRepository();
-  late final TransactionRepository _txRepo = SharedPreferencesTransactionRepository();
+  final CardRepository _cardRepo;
+  final TransactionRepository _txRepo;
+
+  CardProvider({
+    required CardRepository cardRepo,
+    required TransactionRepository txRepo,
+  })  : _cardRepo = cardRepo,
+        _txRepo = txRepo;
 
   List<dm.CreditCard> _cards = [];
   List<dm.Transaction> _transactions = [];
   bool _useBillingMonth = false; // 請求月ベース集計フラグ
+  final Map<String, int> _budgetCache = {}; // 予算キャッシュ
 
   List<dm.CreditCard> get cards => _cards;
   List<dm.Transaction> get transactions => _transactions;
@@ -23,13 +31,14 @@ class CardProvider with ChangeNotifier {
 
   // 集計モードの読み込み
   Future<void> _loadAggregationMode() async {
-    final prefs = await LocalStorage.getSharedPreferences();
+    // TODO: Move this to a repository
+    final prefs = await SharedPreferencesRepository.getSharedPreferences();
     _useBillingMonth = prefs.getBool('use_billing_month') ?? false;
   }
 
   // 集計モードの保存
   Future<void> _saveAggregationMode() async {
-    final prefs = await LocalStorage.getSharedPreferences();
+    final prefs = await SharedPreferencesRepository.getSharedPreferences();
     await prefs.setBool('use_billing_month', _useBillingMonth);
   }
 
@@ -46,10 +55,6 @@ class CardProvider with ChangeNotifier {
     _cards = c;
     _transactions = t;
     notifyListeners();
-  }
-
-  Future<void> _saveData() async {
-    await LocalStorage.saveData(_cards, _transactions);
   }
 
   // カード追加/更新/削除
@@ -70,10 +75,22 @@ class CardProvider with ChangeNotifier {
 
   // 全データ削除
   Future<void> deleteAllData() async {
-    _cards.clear();
-    _transactions.clear();
-    await _saveData();
-    notifyListeners();
+    // This logic might need to be in the repository or handled one by one
+    // For now, let's just clear memory and save empty lists?
+    // Or better, add deleteAll to repository.
+    // Since repository doesn't have deleteAll, we'll iterate or add it.
+    // For now, let's implement it by deleting all.
+    // Actually, the previous implementation just cleared lists and saved.
+    // But we don't have direct save access anymore.
+    // Let's add deleteAll to repository interfaces? Or just loop delete.
+    // Looping delete is safe.
+    for (var card in _cards) {
+      await _cardRepo.deleteCard(card.id);
+    }
+    for (var tx in _transactions) {
+      await _txRepo.deleteTransaction(tx.id);
+    }
+    await _loadFromDb();
   }
 
   // 支出追加/更新/削除
@@ -108,17 +125,19 @@ class CardProvider with ChangeNotifier {
   Map<String, int> getMonthlyTotalByCardId(String cardId) {
     final Map<String, int> monthlyTotal = {};
     for (final transaction in _transactions.where((t) => t.cardId == cardId)) {
-      final monthKey = '${transaction.year}-${transaction.month.toString().padLeft(2, '0')}';
-      monthlyTotal[monthKey] = (monthlyTotal[monthKey] ?? 0) + transaction.amount;
+      final monthKey =
+          '${transaction.year}-${transaction.month.toString().padLeft(2, '0')}';
+      monthlyTotal[monthKey] =
+          (monthlyTotal[monthKey] ?? 0) + transaction.amount;
     }
     return monthlyTotal;
   }
 
   // 指定月の支出（カレンダー月）
   List<dm.Transaction> getTransactionsByMonth(int year, int month) {
-    return _transactions.where((t) => 
-      t.year == year && t.month == month
-    ).toList();
+    return _transactions
+        .where((t) => t.year == year && t.month == month)
+        .toList();
   }
 
   // 指定月の合計金額（カレンダー月）
@@ -132,12 +151,12 @@ class CardProvider with ChangeNotifier {
   Map<String, int> getCardTotalsByMonth(int year, int month) {
     final Map<String, int> cardTotals = {};
     final monthTransactions = getTransactionsByMonth(year, month);
-    
+
     for (final transaction in monthTransactions) {
-      cardTotals[transaction.cardId] = 
+      cardTotals[transaction.cardId] =
           (cardTotals[transaction.cardId] ?? 0) + transaction.amount;
     }
-    
+
     return cardTotals;
   }
 
@@ -146,7 +165,9 @@ class CardProvider with ChangeNotifier {
   // （取引日に日付が無いための近似。closingDay未設定/31日はカレンダー月のまま）
   Map<String, int> getBillingMonthlyTotalByCardId(String cardId) {
     final Map<String, int> monthlyTotal = {};
-    final card = _cards.firstWhere((c) => c.id == cardId, orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+    final card = _cards.firstWhere((c) => c.id == cardId,
+        orElse: () =>
+            dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
     for (final t in _transactions.where((x) => x.cardId == cardId)) {
       final shifted = _shiftByClosing(card, t.year, t.month);
       final key = '${shifted.$1}-${shifted.$2.toString().padLeft(2, '0')}';
@@ -158,7 +179,9 @@ class CardProvider with ChangeNotifier {
   int getBillingTotalByMonth(int year, int month) {
     int sum = 0;
     for (final t in _transactions) {
-      final card = _cards.firstWhere((c) => c.id == t.cardId, orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+      final card = _cards.firstWhere((c) => c.id == t.cardId,
+          orElse: () =>
+              dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
       final shifted = _shiftByClosing(card, t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         sum += t.amount;
@@ -170,7 +193,9 @@ class CardProvider with ChangeNotifier {
   List<dm.Transaction> getTransactionsByBillingMonth(int year, int month) {
     final List<dm.Transaction> list = [];
     for (final t in _transactions) {
-      final card = _cards.firstWhere((c) => c.id == t.cardId, orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+      final card = _cards.firstWhere((c) => c.id == t.cardId,
+          orElse: () =>
+              dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
       final shifted = _shiftByClosing(card, t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         list.add(t);
@@ -202,37 +227,57 @@ class CardProvider with ChangeNotifier {
 
   // 互換: 既存エクスポートはそのまま
   String exportToJson() {
-    return LocalStorage.exportToJson(_cards, _transactions);
+    return SharedPreferencesRepository.exportToJson(_cards, _transactions);
   }
 
   // 予算関連操作
   // カード別予算を設定
-  Future<void> setCardBudget(String cardId, int year, int month, int amount) async {
-    await LocalStorage.setCardBudget(cardId, year, month, amount);
+  Future<void> setCardBudget(
+      String cardId, int year, int month, int amount) async {
+    await _cardRepo.setCardBudget(cardId, year, month, amount);
     notifyListeners();
   }
 
   // カード別予算を取得
   Future<int?> getCardBudget(String cardId, int year, int month) async {
-    return await LocalStorage.getCardBudget(cardId, year, month);
+    return await _cardRepo.getCardBudget(cardId, year, month);
   }
 
   // 全体予算を設定
   Future<void> setTotalBudget(int year, int month, int amount) async {
-    await LocalStorage.setTotalBudget(year, month, amount);
+    await _txRepo.setTotalBudget(year, month, amount);
+    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    _budgetCache[monthKey] = amount;
     notifyListeners();
   }
 
-  // 全体予算を取得
+  // 全体予算を取得 (Repositoryから)
   Future<int?> getTotalBudget(int year, int month) async {
-    return await LocalStorage.getTotalBudget(year, month);
+    return await _txRepo.getTotalBudget(year, month);
+  }
+
+  // 予算をロードしてキャッシュする
+  Future<void> loadTotalBudget(int year, int month) async {
+    final budget = await _txRepo.getTotalBudget(year, month);
+    if (budget != null) {
+      final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+      _budgetCache[monthKey] = budget;
+      notifyListeners();
+    }
+  }
+
+  // キャッシュから予算を取得
+  int? getCachedTotalBudget(int year, int month) {
+    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    return _budgetCache[monthKey];
   }
 
   // カード別予算の進捗率を計算（0.0-1.0、超過時は1.0を超える）
-  Future<double> getCardBudgetProgress(String cardId, int year, int month) async {
+  Future<double> getCardBudgetProgress(
+      String cardId, int year, int month) async {
     final budget = await getCardBudget(cardId, year, month);
     if (budget == null || budget == 0) return 0.0;
-    
+
     final total = getCardTotalsByMonth(year, month)[cardId] ?? 0;
     return (total / budget).clamp(0.0, double.infinity);
   }
@@ -241,9 +286,8 @@ class CardProvider with ChangeNotifier {
   Future<double> getTotalBudgetProgress(int year, int month) async {
     final budget = await getTotalBudget(year, month);
     if (budget == null || budget == 0) return 0.0;
-    
+
     final total = getTotalByMonth(year, month);
     return (total / budget).clamp(0.0, double.infinity);
   }
 }
-

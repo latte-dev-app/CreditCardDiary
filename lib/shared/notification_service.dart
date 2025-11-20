@@ -4,8 +4,9 @@ import 'package:flutter/foundation.dart';
 import '../features/cards/application/card_provider.dart';
 
 // Web専用のインポート
-// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
-import 'dart:html' as html;
+// Conditional import to handle platform-specific code
+import 'notification_service_stub.dart'
+    if (dart.library.html) 'notification_service_web.dart';
 
 class NotificationService {
   static bool _permissionRequested = false;
@@ -13,18 +14,18 @@ class NotificationService {
   // 通知権限をリクエスト
   static Future<bool> requestPermission() async {
     if (!kIsWeb) return false;
-    
+
     if (_permissionRequested) {
-      return html.Notification.permission == 'granted';
+      return NotificationImpl.permission == 'granted';
     }
 
     try {
-      if (html.Notification.permission == 'granted') {
+      if (NotificationImpl.permission == 'granted') {
         _permissionRequested = true;
         return true;
       }
 
-      if (html.Notification.permission == 'default') {
+      if (NotificationImpl.permission == 'default') {
         // 権限をリクエスト（ユーザーインタラクションが必要な場合がある）
         // 実際の権限リクエストはユーザーのアクション（ボタンクリックなど）から呼び出す必要がある
         // ここでは既存の権限状態のみをチェック
@@ -45,15 +46,15 @@ class NotificationService {
     String? tag,
   }) async {
     if (!kIsWeb) return;
-    
+
     // 権限がない場合は通知を表示しない
-    if (html.Notification.permission != 'granted') {
-      debugPrint('通知権限がありません（permission: ${html.Notification.permission}）');
+    if (NotificationImpl.permission != 'granted') {
+      debugPrint('通知権限がありません(permission: ${NotificationImpl.permission})');
       return;
     }
 
     try {
-      html.Notification(
+      NotificationImpl.showNotification(
         title,
         body: body,
         tag: tag,
@@ -69,11 +70,11 @@ class NotificationService {
     if (!kIsWeb) return false;
 
     try {
-      if (html.Notification.permission == 'granted') {
+      if (NotificationImpl.permission == 'granted') {
         return true;
       }
 
-      if (html.Notification.permission == 'default') {
+      if (NotificationImpl.permission == 'default') {
         // 権限リクエストはブラウザが自動的に処理する
         // 実際の権限リクエストは通知を表示しようとしたときに自動的に表示される
         return false;
@@ -92,7 +93,7 @@ class NotificationService {
 
     final now = DateTime.now();
     final cards = provider.cards;
-    
+
     // 支払日が設定されているカードをチェック
     for (final card in cards) {
       if (card.paymentDay == null) continue;
@@ -142,10 +143,10 @@ class NotificationService {
         await showNotification(
           title: '支払日リマインド',
           body: message,
-          tag: 'payment_reminder_${card.id}_${paymentDate.millisecondsSinceEpoch}',
+          tag:
+              'payment_reminder_${card.id}_${paymentDate.millisecondsSinceEpoch}',
         );
       }
     }
   }
 }
-

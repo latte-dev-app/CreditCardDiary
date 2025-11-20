@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../application/card_provider.dart';
 import '../../../../shared/notification_service.dart';
 import 'card_comparison_screen.dart';
@@ -8,7 +9,6 @@ import 'card_detail_screen.dart';
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';
 import '../widgets/summary_card.dart';
-import '../widgets/budget_progress_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,15 +20,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedMonth = DateTime.now();
   int? _selectedYear;
-  
+
   @override
   void initState() {
     super.initState();
-    // データを読み込む
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<CardProvider>();
       await provider.init();
-      // 支払日リマインド通知をチェック
+      // Load budget for current month
+      final year = _selectedYear ?? _selectedMonth.year;
+      final month = _selectedMonth.month;
+      await provider.loadTotalBudget(year, month);
       await NotificationService.checkPaymentReminders(provider);
     });
   }
@@ -37,14 +39,23 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
     });
+    _loadBudget();
   }
-  
+
   void _nextMonth() {
     setState(() {
       _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
     });
+    _loadBudget();
   }
-  
+
+  void _loadBudget() {
+    final provider = context.read<CardProvider>();
+    final year = _selectedYear ?? _selectedMonth.year;
+    final month = _selectedMonth.month;
+    provider.loadTotalBudget(year, month);
+  }
+
   List<int> _getAvailableYears() {
     final provider = context.read<CardProvider>();
     final years = provider.transactions.map((t) => t.year).toSet().toList();
@@ -58,21 +69,59 @@ class _HomeScreenState extends State<HomeScreen> {
     final month = _selectedMonth.month;
     final availableYears = _getAvailableYears();
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-    
+    final currencyFormat = NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(''),
-        elevation: 0,
-        surfaceTintColor: colorScheme.surfaceTint,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _previousMonth,
+              tooltip: '前の月',
+            ),
+            PopupMenuButton<int>(
+              onSelected: (selectedYear) {
+                setState(() {
+                  _selectedYear = selectedYear;
+                  _selectedMonth = DateTime(selectedYear, month);
+                });
+                _loadBudget();
+              },
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Text(
+                      '$year年$month月',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+              ),
+              itemBuilder: (context) => [
+                ...availableYears.map((y) => PopupMenuItem(
+                      value: y,
+                      child: Text('$y年'),
+                    )),
+              ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _nextMonth,
+              tooltip: '次の月',
+            ),
+          ],
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart, size: 24.0),
-            constraints: const BoxConstraints(
-              minWidth: 48.0,
-              minHeight: 48.0,
-            ),
+            icon: const Icon(Icons.bar_chart_rounded),
             onPressed: () {
               Navigator.push(
                 context,
@@ -81,294 +130,226 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            tooltip: 'カード比較',
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 24.0),
-            constraints: const BoxConstraints(
-              minWidth: 48.0,
-              minHeight: 48.0,
-            ),
-            onPressed: _previousMonth,
-            tooltip: '前の月',
-          ),
-          PopupMenuButton<int>(
-            onSelected: (selectedYear) {
-              setState(() {
-                _selectedYear = selectedYear;
-                _selectedMonth = DateTime(selectedYear, month);
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                '$year年$month月',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-                  const Icon(Icons.arrow_drop_down, size: 20.0),
-                ],
-            ),
-            ),
-            itemBuilder: (context) => [
-              ...availableYears.map((y) => PopupMenuItem(
-                value: y,
-                child: Text('$y年'),
-              )),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 24.0),
-            constraints: const BoxConstraints(
-              minWidth: 48.0,
-              minHeight: 48.0,
-            ),
-            onPressed: _nextMonth,
-            tooltip: '次の月',
+            tooltip: '分析',
           ),
         ],
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
-          // 月の合計金額を取得（getTotalByMonthメソッドを使用）
           final totalAmount = provider.getTotalByMonth(year, month);
-          final monthTransactions = provider.getTransactionsByMonth(year, month);
-              
-          // 予算を取得
-          final budgetFuture = provider.getTotalBudget(year, month);
-          
-          return FutureBuilder<int?>(
-            future: budgetFuture,
-            builder: (context, snapshot) {
-              final budget = snapshot.data;
-              
-              return Column(
-                children: [
-                  // 合計金額表示（SummaryCardを使用）
-                  SummaryCard(
-                    total: totalAmount,
-                    year: year,
-                    month: month,
-                    transactionCount: monthTransactions.length,
-                  ),
-                  
-                  // 予算バー
-                  if (budget != null && budget > 0)
-                    BudgetProgressBar(
-                      totalAmount: totalAmount,
-                      budget: budget,
-                      onEditPressed: () => showBudgetDialog(context, provider, year, month),
-                    )
-                  else
-                    Container(
-                      margin: const EdgeInsets.all(16.0),
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '予算が設定されていません',
-                            style: textTheme.titleSmall,
-                          ),
-                          TextButton(
-                            onPressed: () => showBudgetDialog(context, provider, year, month),
-                            child: const Text('設定'),
-                          ),
-                        ],
+          final monthTransactions =
+              provider.getTransactionsByMonth(year, month);
+          final budget = provider.getCachedTotalBudget(year, month);
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: SummaryCard(
+                        title: '今月の請求',
+                        amount: totalAmount.toDouble(),
+                        icon: Icons.receipt_long_rounded,
+                        subtitle: '${monthTransactions.length} 件の取引',
                       ),
                     ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // カード一覧
-                  Expanded(
-                    child: provider.cards.isEmpty
-                    ? Center(
-                        child: Column(
+                    if (budget != null && budget > 0) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SummaryCard(
+                          title: '残り予算',
+                          amount: (budget - totalAmount).toDouble(),
+                          icon: Icons.account_balance_wallet_rounded,
+                          color: (budget - totalAmount) < 0
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.secondary,
+                          subtitle: '予算: ${currencyFormat.format(budget)}',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 24),
+                if (budget == null || budget == 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: InkWell(
+                      onTap: () =>
+                          showBudgetDialog(context, provider, year, month),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.credit_card,
-                              size: 48.0,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(height: 16),
+                            Icon(Icons.add_circle_outline,
+                                color: theme.colorScheme.primary),
+                            const SizedBox(width: 8),
                             Text(
-                              'カードが登録されていません',
-                              style: textTheme.bodyLarge?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
+                              '予算を設定する',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: provider.cards.length,
-                        itemBuilder: (context, index) {
-                          final card = provider.cards[index];
-                          // その月のカード別合計を計算
-                          final cardMonthTotal = monthTransactions
-                              .where((t) => t.cardId == card.id)
-                              .fold(0, (sum, t) => sum + t.amount);
-                          return TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: Duration(milliseconds: 300 + (index * 50)),
-                            curve: Curves.easeInOutCubic,
-                            builder: (context, value, child) {
-                              return Opacity(
-                                opacity: value,
-                                child: Transform.translate(
-                                  offset: Offset(20 * (1 - value), 0),
-                                  child: Card(
-                                    elevation: 2.0,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 16.0,
-                                      vertical: 8.0,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    child: InkWell(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => CardDetailScreen(card: card),
-                                          ),
-                                        );
-                                      },
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
-                                          children: [
-                                            // カード色の円
-                                            Container(
-                                              width: 48.0,
-                                              height: 48.0,
-                                              decoration: BoxDecoration(
-                                                color: Color(int.parse(card.color.replaceFirst('#', '0xFF'))),
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Color(int.parse(card.color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.3),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: card.imagePath != null
-                                                  ? ClipOval(
-                                      child: Image.file(
-                                        File(card.imagePath!),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                                          return Icon(
-                                              Icons.credit_card,
-                                              color: Colors.white,
-                                              size: 24.0,
-                                          );
-                                        },
-                                      ),
-                                    )
-                                                  : Icon(
-                                        Icons.credit_card,
-                                        color: Colors.white,
-                                        size: 24.0,
-                                      ),
-                                    ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                                    card.name,
-                                                    style: textTheme.titleMedium?.copyWith(
-                                                      fontWeight: FontWeight.bold,
-                                  ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                  Text(
-                                                    '${cardMonthTotal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}円',
-                                                    style: textTheme.bodyLarge?.copyWith(
-                                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                      ),
+                    ),
+                  ),
+                Text(
+                  '登録カード',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (provider.cards.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.credit_card_off_rounded,
+                            size: 48,
+                            color: theme.colorScheme.outline,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'カードが登録されていません',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: provider.cards.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final card = provider.cards[index];
+                      final cardMonthTotal = monthTransactions
+                          .where((t) => t.cardId == card.id)
+                          .fold(0, (sum, t) => sum + t.amount);
+
+                      return Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                              color: theme.colorScheme.outlineVariant
+                                  .withValues(alpha: 0.5)),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CardDetailScreen(card: card),
                               ),
-                                            ),
-                                            Icon(
-                                              Icons.arrow_forward_ios,
-                                              size: 16.0,
-                                              color: colorScheme.onSurfaceVariant,
-                                            ),
-                                          ],
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(
+                                        card.color.replaceFirst('#', '0xFF'))),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: card.imagePath != null
+                                      ? ClipOval(
+                                          child: Image.file(
+                                            File(card.imagePath!),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                const Icon(Icons.credit_card,
+                                                    color: Colors.white,
+                                                    size: 20),
+                                          ),
+                                        )
+                                      : const Icon(Icons.credit_card,
+                                          color: Colors.white, size: 20),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        card.name,
+                                        style:
+                                            theme.textTheme.bodyLarge?.copyWith(
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                    ),
+                                      Text(
+                                        '${monthTransactions.where((t) => t.cardId == card.id).length} 件の利用',
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+                                Text(
+                                  currencyFormat.format(cardMonthTotal),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ],
-              );
-            },
-              );
-            },
-          ),
-      floatingActionButton: Material(
-        elevation: 6,
-        shape: const CircleBorder(),
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.blue[400]!.withValues(alpha: 0.9),
-                Colors.purple[400]!.withValues(alpha: 0.9),
-                Colors.pink[400]!.withValues(alpha: 0.9),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
             ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.withValues(alpha: 0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => showAddCardDialog(
-                    context,
-                    onCardAdded: (_) {},
-                  ),
-              borderRadius: BorderRadius.circular(28),
-              child: const Center(
-                child: Icon(Icons.add, color: Colors.white, size: 28),
-              ),
-            ),
-          ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showAddCardDialog(
+          context,
+          onCardAdded: (_) {},
         ),
+        icon: const Icon(Icons.add),
+        label: const Text('カード追加'),
       ),
     );
   }

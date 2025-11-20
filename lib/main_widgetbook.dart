@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:widgetbook/widgetbook.dart';
+import 'package:creditcarddiary/l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'features/cards/application/card_provider.dart';
 import 'features/cards/domain/card_model.dart';
+import 'features/cards/domain/repositories/card_repository.dart';
+import 'features/cards/domain/repositories/transaction_repository.dart';
 import 'features/cards/presentation/screens/main_screen.dart';
 import 'features/cards/presentation/screens/home_screen.dart';
 import 'features/cards/presentation/screens/line_chart_screen.dart';
 import 'features/cards/presentation/screens/settings_screen.dart';
 import 'features/cards/presentation/screens/card_detail_screen.dart';
+import 'app/app_theme.dart';
 
 void main() {
   runApp(const WidgetbookApp());
@@ -165,8 +170,8 @@ class WidgetbookApp extends StatelessWidget {
     CardProvider? provider,
     bool includeScaffold = true,
   }) {
-    final cardProvider = provider ?? CardProvider();
-    
+    final cardProvider = provider ?? _createMockProvider();
+
     Widget wrappedScreen = screen;
 
     if (includeScaffold) {
@@ -175,10 +180,19 @@ class WidgetbookApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Widgetbook',
-      theme: _createTheme(Brightness.light),
-      darkTheme: _createTheme(Brightness.dark),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ja'),
+      ],
       // 画面遷移時もProviderが利用可能になるように
       builder: (context, child) {
         return ChangeNotifierProvider.value(
@@ -193,56 +207,46 @@ class WidgetbookApp extends StatelessWidget {
     );
   }
 
-  // テーマを作成
-  ThemeData _createTheme(Brightness brightness) {
-    return ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
-        brightness: brightness,
-      ),
-      useMaterial3: true,
-      cardTheme: CardThemeData(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 16,
-          ),
-        ),
-      ),
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        },
-      ),
-    );
-  }
-
   // モックデータを持つProviderを作成
   CardProvider _createMockProvider() {
-    final provider = CardProvider();
-    
-    // 注意: CardProviderの内部メソッドを直接呼び出すことはできないため、
-    // 実際のデータは初期化時に空の状態で表示されます
-    // より詳細なモックが必要な場合は、CardProviderにモックメソッドを追加するか、
-    // テスト用のProviderを作成する必要があります
-    
-    return provider;
+    return CardProvider(
+      cardRepo: FakeCardRepository(),
+      txRepo: FakeTransactionRepository(),
+    );
   }
 }
 
+class FakeCardRepository implements CardRepository {
+  @override
+  Future<List<CreditCard>> getAllCards() async => [];
+  @override
+  Future<void> addCard(CreditCard card) async {}
+  @override
+  Future<void> updateCard(CreditCard card) async {}
+  @override
+  Future<void> upsertCard(CreditCard card) async {}
+  @override
+  Future<void> deleteCard(String cardId) async {}
+  @override
+  Future<void> setCardBudget(
+      String cardId, int year, int month, int amount) async {}
+  @override
+  Future<int?> getCardBudget(String cardId, int year, int month) async => null;
+}
+
+class FakeTransactionRepository implements TransactionRepository {
+  @override
+  Future<List<Transaction>> getAllTransactions() async => [];
+  @override
+  Future<void> addTransaction(Transaction transaction) async {}
+  @override
+  Future<void> updateTransaction(Transaction transaction) async {}
+  @override
+  Future<void> upsertTransaction(Transaction transaction) async {}
+  @override
+  Future<void> deleteTransaction(String transactionId) async {}
+  @override
+  Future<void> setTotalBudget(int year, int month, int amount) async {}
+  @override
+  Future<int?> getTotalBudget(int year, int month) async => null;
+}

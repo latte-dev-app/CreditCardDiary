@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:creditcarddiary/l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
 import 'line_chart_screen.dart';
@@ -22,7 +23,8 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
@@ -38,7 +40,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       bottomNavigationBar: SizedBox(
-        height:80,
+        height: 80,
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
@@ -55,18 +57,18 @@ class _MainScreenState extends State<MainScreen> {
           showSelectedLabels: true,
           showUnselectedLabels: true,
           elevation: 8.0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'ホーム',
+              icon: const Icon(Icons.home),
+              label: l10n.home,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.show_chart),
-              label: '支出推移',
+              icon: const Icon(Icons.show_chart),
+              label: l10n.spendingTrend,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: '設定',
+              icon: const Icon(Icons.settings),
+              label: l10n.settings,
             ),
           ],
         ),
@@ -74,4 +76,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-
