@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:creditcarddiary/l10n/app_localizations.dart';
 import 'home_screen.dart';
@@ -26,51 +27,60 @@ class _MainScreenState extends State<MainScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      extendBody: true,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
         child: Container(
           key: ValueKey<int>(_currentIndex),
           child: _screens[_currentIndex],
         ),
       ),
-      bottomNavigationBar: SizedBox(
-        height: 80,
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          iconSize: 24.0,
-          selectedFontSize: 14.0,
-          unselectedFontSize: 12.0,
-          selectedItemColor: colorScheme.primary,
-          unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          elevation: 8.0,
-          items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.home),
-              label: l10n.home,
+      bottomNavigationBar: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            color: colorScheme.surface.withValues(alpha: 0.8),
+            child: SafeArea(
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                currentIndex: _currentIndex,
+                onTap: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                iconSize: 24.0,
+                selectedFontSize: 14.0,
+                unselectedFontSize: 12.0,
+                selectedItemColor: colorScheme.primary,
+                unselectedItemColor: colorScheme.onSurface.withValues(
+                  alpha: 0.6,
+                ),
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+                elevation: 0,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.home),
+                    label: l10n.home,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.show_chart),
+                    label: l10n.spendingTrend,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.settings),
+                    label: l10n.settings,
+                  ),
+                ],
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.show_chart),
-              label: l10n.spendingTrend,
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.settings),
-              label: l10n.settings,
-            ),
-          ],
+          ),
         ),
       ),
     );

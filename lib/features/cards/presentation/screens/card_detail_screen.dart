@@ -116,7 +116,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           ),
                           Color(
                             int.parse(card.color.replaceFirst('#', '0xFF')),
-                          ).withOpacity(0.8),
+                          ).withValues(alpha: 0.8),
                         ],
                       ),
                       borderRadius: const BorderRadius.only(
@@ -136,10 +136,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                   width: 64,
                                   height: 64,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       width: 2,
                                     ),
                                   ),
@@ -373,7 +375,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             border: Border.all(color: theme.colorScheme.outline),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -628,7 +630,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               updatedCard,
                             );
                             setState(() => this.card = updatedCard);
-                            Navigator.pop(context);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
                           }
                         }
                       },

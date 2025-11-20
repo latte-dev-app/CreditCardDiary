@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -219,7 +219,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Text(
                                       '$year年$month月',
                                       style: GoogleFonts.plusJakartaSans(
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.9,
+                                        ),
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -227,7 +229,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(width: 4),
                                     Icon(
                                       Icons.keyboard_arrow_down_rounded,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       size: 24,
                                     ),
                                   ],
@@ -246,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 '今月の請求総額',
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -279,10 +283,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                               ),
                             ),
                             child: Column(
@@ -305,7 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Text(
                                         '${(budgetProgress * 100).toInt()}%',
                                         style: GoogleFonts.plusJakartaSans(
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -320,7 +326,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         height: 12,
                                         width: double.infinity,
                                         decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.2),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.2,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -349,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         : const Color(
                                                           0xFF34D399,
                                                         ))
-                                                    .withOpacity(0.5),
+                                                    .withValues(alpha: 0.5),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -471,10 +479,13 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
-        icon: const Icon(Icons.add_card),
-        label: const Text('カード追加'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 110),
+        child: FloatingActionButton.extended(
+          onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
+          icon: const Icon(Icons.add_card),
+          label: const Text('カード追加'),
+        ),
       ),
     );
   }
@@ -526,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final borderColor =
         isPaymentApproaching
             ? theme.colorScheme.error
-            : theme.colorScheme.outline.withOpacity(0.5);
+            : theme.colorScheme.outline.withValues(alpha: 0.5);
     final borderWidth = isPaymentApproaching ? 2.0 : 1.0;
 
     return Container(
@@ -538,8 +549,8 @@ class _HomeScreenState extends State<HomeScreen> {
           BoxShadow(
             color:
                 isPaymentApproaching
-                    ? theme.colorScheme.error.withOpacity(0.15)
-                    : Colors.black.withOpacity(0.03),
+                    ? theme.colorScheme.error.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.03),
             blurRadius: isPaymentApproaching ? 20 : 16,
             offset: const Offset(0, 8),
           ),
@@ -571,13 +582,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       BoxShadow(
                         color: Color(
                           int.parse(card.color.replaceFirst('#', '0xFF')),
-                        ).withOpacity(0.3),
+                        ).withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),
                     ],
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
