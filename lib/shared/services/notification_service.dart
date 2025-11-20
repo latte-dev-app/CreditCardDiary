@@ -1,7 +1,7 @@
 // Webブラウザ通知サービス（PWA対応）
 
 import 'package:flutter/foundation.dart';
-import '../features/cards/application/card_provider.dart';
+import '../../features/cards/application/card_provider.dart';
 
 // Web専用のインポート
 // Conditional import to handle platform-specific code

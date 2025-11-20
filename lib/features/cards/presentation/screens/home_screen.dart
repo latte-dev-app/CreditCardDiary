@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../application/card_provider.dart';
-import '../../../../shared/notification_service.dart';
+import '../../../../shared/services/notification_service.dart';
 import 'card_detail_screen.dart';
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';

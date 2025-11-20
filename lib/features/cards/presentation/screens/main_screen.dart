@@ -45,39 +45,47 @@ class _MainScreenState extends State<MainScreen> {
           child: Container(
             color: colorScheme.surface.withValues(alpha: 0.8),
             child: SafeArea(
-              child: BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: Colors.transparent,
-                currentIndex: _currentIndex,
-                onTap: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                iconSize: 24.0,
-                selectedFontSize: 14.0,
-                unselectedFontSize: 12.0,
-                selectedItemColor: colorScheme.primary,
-                unselectedItemColor: colorScheme.onSurface.withValues(
-                  alpha: 0.6,
+              bottom: false,
+              child: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  padding: MediaQuery.of(context).padding.copyWith(
+                    bottom: MediaQuery.of(context).padding.bottom + 40,
+                  ),
                 ),
-                showSelectedLabels: true,
-                showUnselectedLabels: true,
-                elevation: 0,
-                items: [
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.home),
-                    label: l10n.home,
+                child: BottomNavigationBar(
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: Colors.transparent,
+                  currentIndex: _currentIndex,
+                  onTap: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  iconSize: 24.0,
+                  selectedFontSize: 14.0,
+                  unselectedFontSize: 12.0,
+                  selectedItemColor: colorScheme.primary,
+                  unselectedItemColor: colorScheme.onSurface.withValues(
+                    alpha: 0.6,
                   ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.show_chart),
-                    label: l10n.spendingTrend,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.settings),
-                    label: l10n.settings,
-                  ),
-                ],
+                  showSelectedLabels: true,
+                  showUnselectedLabels: true,
+                  elevation: 0,
+                  items: [
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.home),
+                      label: l10n.home,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.show_chart),
+                      label: l10n.spendingTrend,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.settings),
+                      label: l10n.settings,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../domain/card_model.dart' as dm;
 import '../domain/repositories/card_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
-import '../infrastructure/local_storage.dart'; // For SharedPreferencesRepository if needed for aggregation mode, but better to use repo
+import '../infrastructure/local_storage.dart';
 
 class CardProvider with ChangeNotifier {
   final CardRepository _cardRepo;
@@ -11,8 +11,8 @@ class CardProvider with ChangeNotifier {
   CardProvider({
     required CardRepository cardRepo,
     required TransactionRepository txRepo,
-  })  : _cardRepo = cardRepo,
-        _txRepo = txRepo;
+  }) : _cardRepo = cardRepo,
+       _txRepo = txRepo;
 
   List<dm.CreditCard> _cards = [];
   List<dm.Transaction> _transactions = [];
@@ -31,7 +31,6 @@ class CardProvider with ChangeNotifier {
 
   // 集計モードの読み込み
   Future<void> _loadAggregationMode() async {
-    // TODO: Move this to a repository
     final prefs = await SharedPreferencesRepository.getSharedPreferences();
     _useBillingMonth = prefs.getBool('use_billing_month') ?? false;
   }
@@ -165,9 +164,10 @@ class CardProvider with ChangeNotifier {
   // （取引日に日付が無いための近似。closingDay未設定/31日はカレンダー月のまま）
   Map<String, int> getBillingMonthlyTotalByCardId(String cardId) {
     final Map<String, int> monthlyTotal = {};
-    final card = _cards.firstWhere((c) => c.id == cardId,
-        orElse: () =>
-            dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+    final card = _cards.firstWhere(
+      (c) => c.id == cardId,
+      orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'),
+    );
     for (final t in _transactions.where((x) => x.cardId == cardId)) {
       final shifted = _shiftByClosing(card, t.year, t.month);
       final key = '${shifted.$1}-${shifted.$2.toString().padLeft(2, '0')}';
@@ -179,9 +179,11 @@ class CardProvider with ChangeNotifier {
   int getBillingTotalByMonth(int year, int month) {
     int sum = 0;
     for (final t in _transactions) {
-      final card = _cards.firstWhere((c) => c.id == t.cardId,
-          orElse: () =>
-              dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+      final card = _cards.firstWhere(
+        (c) => c.id == t.cardId,
+        orElse:
+            () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'),
+      );
       final shifted = _shiftByClosing(card, t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         sum += t.amount;
@@ -193,9 +195,11 @@ class CardProvider with ChangeNotifier {
   List<dm.Transaction> getTransactionsByBillingMonth(int year, int month) {
     final List<dm.Transaction> list = [];
     for (final t in _transactions) {
-      final card = _cards.firstWhere((c) => c.id == t.cardId,
-          orElse: () =>
-              dm.CreditCard(id: '', name: '', type: '', color: '#000000'));
+      final card = _cards.firstWhere(
+        (c) => c.id == t.cardId,
+        orElse:
+            () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'),
+      );
       final shifted = _shiftByClosing(card, t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         list.add(t);
@@ -233,7 +237,11 @@ class CardProvider with ChangeNotifier {
   // 予算関連操作
   // カード別予算を設定
   Future<void> setCardBudget(
-      String cardId, int year, int month, int amount) async {
+    String cardId,
+    int year,
+    int month,
+    int amount,
+  ) async {
     await _cardRepo.setCardBudget(cardId, year, month, amount);
     notifyListeners();
   }
@@ -274,7 +282,10 @@ class CardProvider with ChangeNotifier {
 
   // カード別予算の進捗率を計算（0.0-1.0、超過時は1.0を超える）
   Future<double> getCardBudgetProgress(
-      String cardId, int year, int month) async {
+    String cardId,
+    int year,
+    int month,
+  ) async {
     final budget = await getCardBudget(cardId, year, month);
     if (budget == null || budget == 0) return 0.0;
 

@@ -3,16 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:creditcarddiary/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'features/cards/application/card_provider.dart';
-import 'features/cards/domain/card_model.dart';
-import 'features/cards/domain/repositories/card_repository.dart';
-import 'features/cards/domain/repositories/transaction_repository.dart';
-import 'features/cards/presentation/screens/main_screen.dart';
-import 'features/cards/presentation/screens/home_screen.dart';
-import 'features/cards/presentation/screens/line_chart_screen.dart';
-import 'features/cards/presentation/screens/settings_screen.dart';
-import 'features/cards/presentation/screens/card_detail_screen.dart';
-import 'app/app_theme.dart';
+import '../features/cards/application/card_provider.dart';
+import '../features/cards/domain/card_model.dart';
+import '../features/cards/domain/repositories/card_repository.dart';
+import '../features/cards/domain/repositories/transaction_repository.dart';
+import '../features/cards/presentation/screens/main_screen.dart';
+import '../features/cards/presentation/screens/home_screen.dart';
+import '../features/cards/presentation/screens/line_chart_screen.dart';
+import '../features/cards/presentation/screens/settings_screen.dart';
+import '../features/cards/presentation/screens/card_detail_screen.dart';
+import '../app/app_theme.dart';
 
 void main() {
   runApp(const WidgetbookApp());
@@ -34,10 +34,11 @@ class WidgetbookApp extends StatelessWidget {
               useCases: [
                 WidgetbookUseCase(
                   name: 'Default',
-                  builder: (context) => _wrapWithProviders(
-                    const MainScreen(),
-                    includeScaffold: false,
-                  ),
+                  builder:
+                      (context) => _wrapWithProviders(
+                        const MainScreen(),
+                        includeScaffold: false,
+                      ),
                 ),
               ],
             ),
@@ -47,9 +48,7 @@ class WidgetbookApp extends StatelessWidget {
               useCases: [
                 WidgetbookUseCase(
                   name: 'Default',
-                  builder: (context) => _wrapWithProviders(
-                    const HomeScreen(),
-                  ),
+                  builder: (context) => _wrapWithProviders(const HomeScreen()),
                 ),
                 WidgetbookUseCase(
                   name: 'With Sample Data',
@@ -69,9 +68,8 @@ class WidgetbookApp extends StatelessWidget {
               useCases: [
                 WidgetbookUseCase(
                   name: 'Default',
-                  builder: (context) => _wrapWithProviders(
-                    const LineChartScreen(),
-                  ),
+                  builder:
+                      (context) => _wrapWithProviders(const LineChartScreen()),
                 ),
                 WidgetbookUseCase(
                   name: 'With Sample Data',
@@ -91,9 +89,8 @@ class WidgetbookApp extends StatelessWidget {
               useCases: [
                 WidgetbookUseCase(
                   name: 'Default',
-                  builder: (context) => _wrapWithProviders(
-                    const SettingsScreen(),
-                  ),
+                  builder:
+                      (context) => _wrapWithProviders(const SettingsScreen()),
                 ),
                 WidgetbookUseCase(
                   name: 'With Sample Data',
@@ -120,9 +117,7 @@ class WidgetbookApp extends StatelessWidget {
                       type: 'Visa',
                       color: '#FF6B6B',
                     );
-                    return _wrapWithProviders(
-                      CardDetailScreen(card: mockCard),
-                    );
+                    return _wrapWithProviders(CardDetailScreen(card: mockCard));
                   },
                 ),
                 WidgetbookUseCase(
@@ -135,9 +130,7 @@ class WidgetbookApp extends StatelessWidget {
                       color: '#4ECDC4',
                       imagePath: null, // 画像パスは実際には存在しないためnull
                     );
-                    return _wrapWithProviders(
-                      CardDetailScreen(card: mockCard),
-                    );
+                    return _wrapWithProviders(CardDetailScreen(card: mockCard));
                   },
                 ),
                 WidgetbookUseCase(
@@ -151,9 +144,7 @@ class WidgetbookApp extends StatelessWidget {
                       closingDay: 25,
                       paymentDay: 10,
                     );
-                    return _wrapWithProviders(
-                      CardDetailScreen(card: mockCard),
-                    );
+                    return _wrapWithProviders(CardDetailScreen(card: mockCard));
                   },
                 ),
               ],
@@ -190,9 +181,7 @@ class WidgetbookApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ja'),
-      ],
+      supportedLocales: const [Locale('ja')],
       // 画面遷移時もProviderが利用可能になるように
       builder: (context, child) {
         return ChangeNotifierProvider.value(
@@ -229,7 +218,11 @@ class FakeCardRepository implements CardRepository {
   Future<void> deleteCard(String cardId) async {}
   @override
   Future<void> setCardBudget(
-      String cardId, int year, int month, int amount) async {}
+    String cardId,
+    int year,
+    int month,
+    int amount,
+  ) async {}
   @override
   Future<int?> getCardBudget(String cardId, int year, int month) async => null;
 }
