@@ -51,6 +51,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     }
   }
 
+  bool _isPaymentDayApproaching(int? paymentDay) {
+    if (paymentDay == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Check current month's payment day
+    DateTime paymentDate = DateTime(now.year, now.month, paymentDay);
+
+    // If passed, check next month
+    if (paymentDate.isBefore(today)) {
+      paymentDate = DateTime(now.year, now.month + 1, paymentDay);
+    }
+
+    final difference = paymentDate.difference(today).inDays;
+    return difference >= 0 && difference <= 3;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -187,6 +204,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                   card.paymentDay != null
                                       ? '${card.paymentDay}日'
                                       : '未設定',
+                                  valueColor:
+                                      _isPaymentDayApproaching(card.paymentDay)
+                                          ? theme.colorScheme.error
+                                          : null,
+                                  icon:
+                                      _isPaymentDayApproaching(card.paymentDay)
+                                          ? Icons.warning_rounded
+                                          : null,
                                 ),
                               ],
                             ),
@@ -265,7 +290,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
+  Widget _buildInfoItem(
+    String label,
+    String value, {
+    Color? valueColor,
+    IconData? icon,
+  }) {
     return Column(
       children: [
         Text(
@@ -276,13 +306,22 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: valueColor, size: 18),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              value,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: valueColor ?? Colors.white,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -459,21 +498,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     _showDateSettingsDialog(context);
                   },
                 ),
-                ListTile(
-                  leading: Icon(
-                    Icons.pie_chart,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  title: Text('予算設定', style: GoogleFonts.plusJakartaSans()),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showCardBudgetDialog(
-                      context,
-                      context.read<CardProvider>(),
-                      card,
-                    );
-                  },
-                ),
+
                 ListTile(
                   leading: Icon(Icons.delete, color: theme.colorScheme.error),
                   title: Text(
@@ -746,61 +771,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     ),
                   ],
                 ),
-          ),
-    );
-  }
-
-  void _showCardBudgetDialog(
-    BuildContext context,
-    CardProvider provider,
-    CreditCard card,
-  ) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              '予算設定',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
-            ),
-            content: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                NumberTextInputFormatter(),
-              ],
-              decoration: InputDecoration(
-                labelText: '月予算 (円)',
-                suffixText: '円',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  final amount =
-                      int.tryParse(controller.text.replaceAll(',', '')) ?? 0;
-                  if (amount > 0) {
-                    provider.setCardBudget(
-                      card.id,
-                      DateTime.now().year,
-                      DateTime.now().month,
-                      amount,
-                    );
-                  }
-                  Navigator.pop(context);
-                },
-                child: const Text('保存'),
-              ),
-            ],
           ),
     );
   }

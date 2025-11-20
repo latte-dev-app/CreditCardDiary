@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../application/card_provider.dart';
 import '../../../../shared/notification_service.dart';
-import 'card_comparison_screen.dart';
 import 'card_detail_screen.dart';
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';
@@ -128,6 +127,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  bool _isPaymentDayApproaching(int? paymentDay) {
+    if (paymentDay == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Check current month's payment day
+    DateTime paymentDate = DateTime(now.year, now.month, paymentDay);
+
+    // If passed, check next month
+    if (paymentDate.isBefore(today)) {
+      paymentDate = DateTime(now.year, now.month + 1, paymentDay);
+    }
+
+    final difference = paymentDate.difference(today).inDays;
+    return difference >= 0 && difference <= 3;
+  }
+
   @override
   Widget build(BuildContext context) {
     final year = _selectedYear ?? _selectedMonth.year;
@@ -135,6 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final availableYears = _getAvailableYears();
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
+
+    final prevMonthDate = DateTime(year, month - 1);
+    final nextMonthDate = DateTime(year, month + 1);
 
     return Scaffold(
       body: Consumer<CardProvider>(
@@ -218,56 +237,32 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        // Total Amount (Tappable for Comparison)
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const CardComparisonScreen(),
+                        // Total Amount (Static)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '今月の請求総額',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '今月の請求総額',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          color: Colors.white.withOpacity(0.8),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        color: Colors.white.withOpacity(0.5),
-                                        size: 12,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    currencyFormat.format(totalAmount),
-                                    style: GoogleFonts.plusJakartaSans(
-                                      color: Colors.white,
-                                      fontSize: 42,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.1,
-                                      letterSpacing: -1.0,
-                                    ),
-                                  ),
-                                ],
                               ),
-                            ),
+                              const SizedBox(height: 4),
+                              Text(
+                                currencyFormat.format(totalAmount),
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.1,
+                                  letterSpacing: -1.0,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -398,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const Icon(Icons.chevron_left, size: 20),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '前の月',
+                                  '${prevMonthDate.month}月',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -426,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Row(
                               children: [
                                 Text(
-                                  '次の月',
+                                  '${nextMonthDate.month}月',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -527,15 +522,25 @@ class _HomeScreenState extends State<HomeScreen> {
     NumberFormat currencyFormat,
   ) {
     final theme = Theme.of(context);
+    final isPaymentApproaching = _isPaymentDayApproaching(card.paymentDay);
+    final borderColor =
+        isPaymentApproaching
+            ? theme.colorScheme.error
+            : theme.colorScheme.outline.withOpacity(0.5);
+    final borderWidth = isPaymentApproaching ? 2.0 : 1.0;
+
     return Container(
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.5)),
+        border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 16,
+            color:
+                isPaymentApproaching
+                    ? theme.colorScheme.error.withOpacity(0.15)
+                    : Colors.black.withOpacity(0.03),
+            blurRadius: isPaymentApproaching ? 20 : 16,
             offset: const Offset(0, 8),
           ),
         ],
@@ -601,13 +606,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        card.name,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            card.name,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          if (isPaymentApproaching) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.warning_rounded,
+                              size: 18,
+                              color: theme.colorScheme.error,
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -629,7 +646,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.primary,
+                        color:
+                            isPaymentApproaching
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.primary,
                         letterSpacing: -0.5,
                       ),
                     ),
