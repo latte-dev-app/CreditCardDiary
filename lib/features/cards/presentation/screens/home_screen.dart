@@ -8,6 +8,7 @@ import '../../../../shared/services/notification_service.dart';
 import 'card_detail_screen.dart';
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';
+import '../widgets/animated_fab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -480,11 +481,11 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 110),
-        child: FloatingActionButton.extended(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: AnimatedFab(
           onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
-          icon: const Icon(Icons.add_card),
-          label: const Text('カード追加'),
+          icon: Icons.add_card,
+          label: 'カード追加',
         ),
       ),
     );

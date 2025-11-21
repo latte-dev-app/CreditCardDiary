@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/card_model.dart';
 import '../domain/repositories/card_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
+import '../domain/fixed_cost_model.dart';
 
-class SharedPreferencesRepository implements CardRepository, TransactionRepository {
+class SharedPreferencesRepository
+    implements CardRepository, TransactionRepository {
   static const String _keyCards = 'cards_data';
   static const String _keyTransactions = 'transactions_data';
   static const String _keyCardBudgets = 'card_budgets_data';
@@ -19,12 +21,14 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
 
   // データを保存
   Future<void> _saveData(
-      List<CreditCard> cards, List<Transaction> transactions) async {
+    List<CreditCard> cards,
+    List<Transaction> transactions,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     final cardsJson = cards.map((card) => card.toJson()).toList();
     final transactionsJson = transactions.map((t) => t.toJson()).toList();
-    
+
     await prefs.setString(_keyCards, jsonEncode(cardsJson));
     await prefs.setString(_keyTransactions, jsonEncode(transactionsJson));
   }
@@ -32,34 +36,32 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
   // データを読み込み
   Future<Map<String, dynamic>> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     final cardsJsonString = prefs.getString(_keyCards);
     final transactionsJsonString = prefs.getString(_keyTransactions);
-    
+
     List<CreditCard> cards = [];
     List<Transaction> transactions = [];
-    
+
     if (cardsJsonString != null) {
       final cardsJson = jsonDecode(cardsJsonString) as List;
       cards = cardsJson.map((json) => CreditCard.fromJson(json)).toList();
     }
-    
+
     if (transactionsJsonString != null) {
       final transactionsJson = jsonDecode(transactionsJsonString) as List;
-      transactions = transactionsJson
-          .map((json) => Transaction.fromJson(json))
-          .toList();
+      transactions =
+          transactionsJson.map((json) => Transaction.fromJson(json)).toList();
     }
-    
-    return {
-      'cards': cards,
-      'transactions': transactions,
-    };
+
+    return {'cards': cards, 'transactions': transactions};
   }
 
   // JSONエクスポート (Static helper)
   static String exportToJson(
-      List<CreditCard> cards, List<Transaction> transactions) {
+    List<CreditCard> cards,
+    List<Transaction> transactions,
+  ) {
     final Map<String, dynamic> data = {
       'cards': cards.map((card) => card.toJson()).toList(),
       'transactions': transactions.map((t) => t.toJson()).toList(),
@@ -91,7 +93,8 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
     final index = cards.indexWhere((c) => c.id == card.id);
     if (index != -1) {
       cards[index] = card;
-      final transactions = prefsData['transactions'] as List<Transaction>? ?? [];
+      final transactions =
+          prefsData['transactions'] as List<Transaction>? ?? [];
       await _saveData(cards, transactions);
     }
   }
@@ -113,12 +116,14 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
   @override
   Future<void> deleteCard(String cardId) async {
     final prefsData = await _loadData();
-    final cards = (prefsData['cards'] as List<CreditCard>? ?? [])
-        .where((c) => c.id != cardId)
-        .toList();
-    final transactions = (prefsData['transactions'] as List<Transaction>? ?? [])
-        .where((t) => t.cardId != cardId)
-        .toList();
+    final cards =
+        (prefsData['cards'] as List<CreditCard>? ?? [])
+            .where((c) => c.id != cardId)
+            .toList();
+    final transactions =
+        (prefsData['transactions'] as List<Transaction>? ?? [])
+            .where((t) => t.cardId != cardId)
+            .toList();
     await _saveData(cards, transactions);
   }
 
@@ -134,7 +139,8 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
   Future<void> addTransaction(Transaction transaction) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions = (prefsData['transactions'] as List<Transaction>? ?? []).toList();
+    final transactions =
+        (prefsData['transactions'] as List<Transaction>? ?? []).toList();
     transactions.add(transaction);
     await _saveData(cards, transactions);
   }
@@ -143,7 +149,8 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
   Future<void> updateTransaction(Transaction transaction) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions = (prefsData['transactions'] as List<Transaction>? ?? []).toList();
+    final transactions =
+        (prefsData['transactions'] as List<Transaction>? ?? []).toList();
     final index = transactions.indexWhere((t) => t.id == transaction.id);
     if (index != -1) {
       transactions[index] = transaction;
@@ -155,7 +162,8 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
   Future<void> upsertTransaction(Transaction transaction) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions = (prefsData['transactions'] as List<Transaction>? ?? []).toList();
+    final transactions =
+        (prefsData['transactions'] as List<Transaction>? ?? []).toList();
     final index = transactions.indexWhere((t) => t.id == transaction.id);
     if (index != -1) {
       transactions[index] = transaction;
@@ -169,9 +177,10 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
   Future<void> deleteTransaction(String transactionId) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions = (prefsData['transactions'] as List<Transaction>? ?? [])
-        .where((t) => t.id != transactionId)
-        .toList();
+    final transactions =
+        (prefsData['transactions'] as List<Transaction>? ?? [])
+            .where((t) => t.id != transactionId)
+            .toList();
     await _saveData(cards, transactions);
   }
 
@@ -186,12 +195,16 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
     final prefs = await SharedPreferences.getInstance();
     final budgetsJsonString = prefs.getString(_keyCardBudgets);
     if (budgetsJsonString == null) return {};
-    
+
     final decoded = jsonDecode(budgetsJsonString) as Map<String, dynamic>;
-    return decoded.map((key, value) => MapEntry(
-      key,
-      Map<String, int>.from((value as Map).map((k, v) => MapEntry(k.toString(), v as int))),
-    ));
+    return decoded.map(
+      (key, value) => MapEntry(
+        key,
+        Map<String, int>.from(
+          (value as Map).map((k, v) => MapEntry(k.toString(), v as int)),
+        ),
+      ),
+    );
   }
 
   Future<void> _saveTotalBudgets(Map<String, int> budgets) async {
@@ -203,16 +216,21 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
     final prefs = await SharedPreferences.getInstance();
     final budgetsJsonString = prefs.getString(_keyTotalBudgets);
     if (budgetsJsonString == null) return {};
-    
+
     final decoded = jsonDecode(budgetsJsonString) as Map<String, dynamic>;
     return decoded.map((key, value) => MapEntry(key, value as int));
   }
 
   @override
-  Future<void> setCardBudget(String cardId, int year, int month, int amount) async {
+  Future<void> setCardBudget(
+    String cardId,
+    int year,
+    int month,
+    int amount,
+  ) async {
     final budgets = await _loadCardBudgets();
     final monthKey = '$year-${month.toString().padLeft(2, '0')}';
-    
+
     if (!budgets.containsKey(cardId)) {
       budgets[cardId] = {};
     }
@@ -241,5 +259,97 @@ class SharedPreferencesRepository implements CardRepository, TransactionReposito
     final monthKey = '$year-${month.toString().padLeft(2, '0')}';
     return budgets[monthKey];
   }
-}
+  // ---- FixedCost Implementation ----
 
+  static const String _keyFixedCosts = 'fixed_costs_data';
+
+  Future<void> _saveFixedCosts(List<FixedCost> fixedCosts) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = fixedCosts.map((fc) => fc.toJson()).toList();
+    await prefs.setString(_keyFixedCosts, jsonEncode(jsonList));
+  }
+
+  Future<List<FixedCost>> getFixedCosts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_keyFixedCosts);
+    if (jsonString == null) return [];
+
+    final jsonList = jsonDecode(jsonString) as List;
+    return jsonList.map((json) => FixedCost.fromJson(json)).toList();
+  }
+
+  Future<void> addFixedCost(FixedCost fixedCost) async {
+    final list = await getFixedCosts();
+    list.add(fixedCost);
+    await _saveFixedCosts(list);
+  }
+
+  Future<void> updateFixedCost(FixedCost fixedCost) async {
+    final list = await getFixedCosts();
+    final index = list.indexWhere((fc) => fc.id == fixedCost.id);
+    if (index != -1) {
+      list[index] = fixedCost;
+      await _saveFixedCosts(list);
+    }
+  }
+
+  Future<void> deleteFixedCost(String id) async {
+    final list = await getFixedCosts();
+    list.removeWhere((fc) => fc.id == id);
+    await _saveFixedCosts(list);
+  }
+
+  // ---- Import/Export ----
+
+  static Future<String> exportAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cards = prefs.getString(_keyCards) ?? '[]';
+    final transactions = prefs.getString(_keyTransactions) ?? '[]';
+    final fixedCosts = prefs.getString(_keyFixedCosts) ?? '[]';
+    final cardBudgets = prefs.getString(_keyCardBudgets) ?? '{}';
+    final totalBudgets = prefs.getString(_keyTotalBudgets) ?? '{}';
+
+    final data = {
+      'cards': jsonDecode(cards),
+      'transactions': jsonDecode(transactions),
+      'fixedCosts': jsonDecode(fixedCosts),
+      'cardBudgets': jsonDecode(cardBudgets),
+      'totalBudgets': jsonDecode(totalBudgets),
+      'version': 1,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    return jsonEncode(data);
+  }
+
+  static Future<void> importAllData(String jsonString) async {
+    try {
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
+      final prefs = await SharedPreferences.getInstance();
+
+      if (data.containsKey('cards')) {
+        await prefs.setString(_keyCards, jsonEncode(data['cards']));
+      }
+      if (data.containsKey('transactions')) {
+        await prefs.setString(
+          _keyTransactions,
+          jsonEncode(data['transactions']),
+        );
+      }
+      if (data.containsKey('fixedCosts')) {
+        await prefs.setString(_keyFixedCosts, jsonEncode(data['fixedCosts']));
+      }
+      if (data.containsKey('cardBudgets')) {
+        await prefs.setString(_keyCardBudgets, jsonEncode(data['cardBudgets']));
+      }
+      if (data.containsKey('totalBudgets')) {
+        await prefs.setString(
+          _keyTotalBudgets,
+          jsonEncode(data['totalBudgets']),
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to import data: $e');
+    }
+  }
+}

@@ -1,6 +1,7 @@
 // Webブラウザ通知サービス（PWA対応）
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/cards/application/card_provider.dart';
 
 // Web専用のインポート
@@ -87,9 +88,27 @@ class NotificationService {
     }
   }
 
+  static const String _keyNotificationEnabled = 'notification_enabled';
+
+  // 通知設定を取得
+  static Future<bool> getNotificationEnabled() async {
+    if (!kIsWeb) return false;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyNotificationEnabled) ?? true; // Default to true
+  }
+
+  static Future<void> setNotificationEnabled(bool enabled) async {
+    if (!kIsWeb) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyNotificationEnabled, enabled);
+  }
+
   // 支払日前のリマインド通知をチェック
   static Future<void> checkPaymentReminders(CardProvider provider) async {
     if (!kIsWeb) return;
+
+    // Check if notifications are enabled
+    if (!await getNotificationEnabled()) return;
 
     final now = DateTime.now();
     final cards = provider.cards;

@@ -231,7 +231,24 @@ class CardProvider with ChangeNotifier {
 
   // 互換: 既存エクスポートはそのまま
   String exportToJson() {
+    // Use the comprehensive export method
+    // Since this method is synchronous and the other is async, we might need to change this signature
+    // or keep using the old way for now if we can't change the signature easily.
+    // However, SharedPreferencesRepository.exportToJson is static and synchronous for cards/txs.
+    // But exportAllData is async.
+    // Let's stick to the old one for now or update the UI to handle async export.
+    // The UI calls context.read<CardProvider>().exportToJson() which returns String.
+    // Let's update this to be async and use exportAllData.
     return SharedPreferencesRepository.exportToJson(_cards, _transactions);
+  }
+
+  Future<String> exportAllData() async {
+    return await SharedPreferencesRepository.exportAllData();
+  }
+
+  Future<void> importFromJson(String jsonString) async {
+    await SharedPreferencesRepository.importAllData(jsonString);
+    await init(); // Reload all data
   }
 
   // 予算関連操作

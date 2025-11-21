@@ -224,6 +224,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   ),
                 ),
               ),
+              // Pie Chart removed as per user request
               SliverPadding(
                 padding: const EdgeInsets.all(20),
                 sliver:
@@ -284,10 +285,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddTransactionDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('支出記録'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddTransactionDialog(context),
+          icon: const Icon(Icons.add),
+          label: const Text('支出記録'),
+        ),
       ),
     );
   }

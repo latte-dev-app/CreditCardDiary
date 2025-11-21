@@ -4,6 +4,7 @@ import 'package:creditcarddiary/l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
 import 'line_chart_screen.dart';
+import 'fixed_cost_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const LineChartScreen(),
+    const FixedCostScreen(),
     const SettingsScreen(),
   ];
 
@@ -81,6 +83,10 @@ class _MainScreenState extends State<MainScreen> {
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.show_chart),
                         label: l10n.spendingTrend,
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.repeat),
+                        label: '固定費',
                       ),
                       BottomNavigationBarItem(
                         icon: const Icon(Icons.settings),
