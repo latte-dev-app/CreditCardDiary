@@ -42,8 +42,12 @@ void main() {
     });
 
     test('addCard calls repository', () async {
-      final card =
-          CreditCard(id: '1', name: 'Test', type: 'Visa', color: '#000000');
+      final card = CreditCard(
+        id: '1',
+        name: 'Test',
+        type: 'Visa',
+        color: '#000000',
+      );
       when(mockCardRepo.upsertCard(card)).thenAnswer((_) async {});
       when(mockCardRepo.getAllCards()).thenAnswer((_) async => [card]);
       when(mockTxRepo.getAllTransactions()).thenAnswer((_) async => []);

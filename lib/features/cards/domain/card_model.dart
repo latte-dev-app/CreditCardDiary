@@ -20,24 +20,24 @@ class CreditCard {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type,
-        'color': color,
-        'imagePath': imagePath,
-        'closingDay': closingDay,
-        'paymentDay': paymentDay,
-      };
+    'id': id,
+    'name': name,
+    'type': type,
+    'color': color,
+    'imagePath': imagePath,
+    'closingDay': closingDay,
+    'paymentDay': paymentDay,
+  };
 
   factory CreditCard.fromJson(Map<String, dynamic> json) => CreditCard(
-        id: json['id'],
-        name: json['name'],
-        type: json['type'] ?? 'その他',
-        color: json['color'],
-        imagePath: json['imagePath'],
-        closingDay: json['closingDay'],
-        paymentDay: json['paymentDay'],
-      );
+    id: json['id'],
+    name: json['name'],
+    type: json['type'] ?? 'その他',
+    color: json['color'],
+    imagePath: json['imagePath'],
+    closingDay: json['closingDay'],
+    paymentDay: json['paymentDay'],
+  );
 
   CreditCard copyWith({
     String? id,
@@ -81,18 +81,18 @@ class Transaction {
   String get monthString => '$year-${month.toString().padLeft(2, '0')}';
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'cardId': cardId,
-        'title': title,
-        'amount': amount,
-        'year': year,
-        'month': month,
-      };
+    'id': id,
+    'cardId': cardId,
+    'title': title,
+    'amount': amount,
+    'year': year,
+    'month': month,
+  };
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     int year;
     int month;
-    
+
     if (json['year'] != null) {
       year = json['year'];
     } else if (json['date'] != null) {
@@ -100,7 +100,7 @@ class Transaction {
     } else {
       year = DateTime.now().year;
     }
-    
+
     if (json['month'] != null) {
       month = json['month'];
     } else if (json['date'] != null) {
@@ -108,7 +108,7 @@ class Transaction {
     } else {
       month = DateTime.now().month;
     }
-    
+
     return Transaction(
       id: json['id'],
       cardId: json['cardId'],

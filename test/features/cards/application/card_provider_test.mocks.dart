@@ -36,53 +36,50 @@ class MockCardRepository extends _i1.Mock implements _i2.CardRepository {
   }
 
   @override
-  _i3.Future<List<_i4.CreditCard>> getAllCards() => (super.noSuchMethod(
-        Invocation.method(
-          #getAllCards,
-          [],
-        ),
-        returnValue: _i3.Future<List<_i4.CreditCard>>.value(<_i4.CreditCard>[]),
-      ) as _i3.Future<List<_i4.CreditCard>>);
+  _i3.Future<List<_i4.CreditCard>> getAllCards() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllCards, []),
+            returnValue: _i3.Future<List<_i4.CreditCard>>.value(
+              <_i4.CreditCard>[],
+            ),
+          )
+          as _i3.Future<List<_i4.CreditCard>>);
 
   @override
-  _i3.Future<void> addCard(_i4.CreditCard? card) => (super.noSuchMethod(
-        Invocation.method(
-          #addCard,
-          [card],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> addCard(_i4.CreditCard? card) =>
+      (super.noSuchMethod(
+            Invocation.method(#addCard, [card]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> updateCard(_i4.CreditCard? card) => (super.noSuchMethod(
-        Invocation.method(
-          #updateCard,
-          [card],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> updateCard(_i4.CreditCard? card) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateCard, [card]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> upsertCard(_i4.CreditCard? card) => (super.noSuchMethod(
-        Invocation.method(
-          #upsertCard,
-          [card],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> upsertCard(_i4.CreditCard? card) =>
+      (super.noSuchMethod(
+            Invocation.method(#upsertCard, [card]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteCard(String? cardId) => (super.noSuchMethod(
-        Invocation.method(
-          #deleteCard,
-          [cardId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> deleteCard(String? cardId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteCard, [cardId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> setCardBudget(
@@ -92,36 +89,19 @@ class MockCardRepository extends _i1.Mock implements _i2.CardRepository {
     int? amount,
   ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setCardBudget,
-          [
-            cardId,
-            year,
-            month,
-            amount,
-          ],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#setCardBudget, [cardId, year, month, amount]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<int?> getCardBudget(
-    String? cardId,
-    int? year,
-    int? month,
-  ) =>
+  _i3.Future<int?> getCardBudget(String? cardId, int? year, int? month) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getCardBudget,
-          [
-            cardId,
-            year,
-            month,
-          ],
-        ),
-        returnValue: _i3.Future<int?>.value(),
-      ) as _i3.Future<int?>);
+            Invocation.method(#getCardBudget, [cardId, year, month]),
+            returnValue: _i3.Future<int?>.value(),
+          )
+          as _i3.Future<int?>);
 }
 
 /// A class which mocks [TransactionRepository].
@@ -134,91 +114,65 @@ class MockTransactionRepository extends _i1.Mock
   }
 
   @override
-  _i3.Future<List<_i4.Transaction>> getAllTransactions() => (super.noSuchMethod(
-        Invocation.method(
-          #getAllTransactions,
-          [],
-        ),
-        returnValue:
-            _i3.Future<List<_i4.Transaction>>.value(<_i4.Transaction>[]),
-      ) as _i3.Future<List<_i4.Transaction>>);
+  _i3.Future<List<_i4.Transaction>> getAllTransactions() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllTransactions, []),
+            returnValue: _i3.Future<List<_i4.Transaction>>.value(
+              <_i4.Transaction>[],
+            ),
+          )
+          as _i3.Future<List<_i4.Transaction>>);
 
   @override
   _i3.Future<void> addTransaction(_i4.Transaction? transaction) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #addTransaction,
-          [transaction],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#addTransaction, [transaction]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> updateTransaction(_i4.Transaction? transaction) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #updateTransaction,
-          [transaction],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#updateTransaction, [transaction]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> upsertTransaction(_i4.Transaction? transaction) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #upsertTransaction,
-          [transaction],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#upsertTransaction, [transaction]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> deleteTransaction(String? transactionId) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #deleteTransaction,
-          [transactionId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#deleteTransaction, [transactionId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> setTotalBudget(
-    int? year,
-    int? month,
-    int? amount,
-  ) =>
+  _i3.Future<void> setTotalBudget(int? year, int? month, int? amount) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setTotalBudget,
-          [
-            year,
-            month,
-            amount,
-          ],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#setTotalBudget, [year, month, amount]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<int?> getTotalBudget(
-    int? year,
-    int? month,
-  ) =>
+  _i3.Future<int?> getTotalBudget(int? year, int? month) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getTotalBudget,
-          [
-            year,
-            month,
-          ],
-        ),
-        returnValue: _i3.Future<int?>.value(),
-      ) as _i3.Future<int?>);
+            Invocation.method(#getTotalBudget, [year, month]),
+            returnValue: _i3.Future<int?>.value(),
+          )
+          as _i3.Future<int?>);
 }

@@ -15,10 +15,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => CardProvider(
-        cardRepo: getIt<CardRepository>(),
-        txRepo: getIt<TransactionRepository>(),
-      )..init(), // Initialize data loading
+      create:
+          (_) => CardProvider(
+            cardRepo: getIt<CardRepository>(),
+            txRepo: getIt<TransactionRepository>(),
+          )..init(), // Initialize data loading
       child: MaterialApp(
         onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
         debugShowCheckedModeBanner: false,

@@ -10,7 +10,7 @@ void setupServiceLocator() {
   // Note: We will register the implementation as a singleton
   // For now, we are using the refactored LocalStorage which will implement both interfaces
   final localStorage = SharedPreferencesRepository();
-  
+
   getIt.registerSingleton<CardRepository>(localStorage);
   getIt.registerSingleton<TransactionRepository>(localStorage);
 }
