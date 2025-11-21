@@ -20,19 +20,9 @@ class GlassModal extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-          left: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
-            width: 0.5,
-          ),
-          right: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
-            width: 0.5,
-          ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(

@@ -8,6 +8,7 @@ import '../../infrastructure/image_storage.dart';
 import '../constants/card_constants.dart';
 import '../widgets/color_picker.dart';
 import '../widgets/glass_modal.dart';
+import '../widgets/glass_text_field.dart';
 import '../screens/card_detail_screen.dart';
 
 /// カード追加ダイアログを表示
@@ -218,24 +219,9 @@ Future<void> showAddCardDialog(
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
+                                GlassDropdown<String>(
                                   value: null,
-                                  hint: const Text('カード名を選択'),
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: theme
-                                        .colorScheme
-                                        .surfaceContainerHighest
-                                        .withValues(alpha: 0.5),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                  ),
+                                  hintText: 'カード名を選択',
                                   items:
                                       CardConstants.cardNames.map((name) {
                                         return DropdownMenuItem(
@@ -259,21 +245,10 @@ Future<void> showAddCardDialog(
                                 ),
                                 if (isCustomName) ...[
                                   const SizedBox(height: 12),
-                                  TextField(
+                                  GlassTextField(
                                     controller: customNameController,
-                                    decoration: InputDecoration(
-                                      labelText: 'カード名を入力',
-                                      hintText: '例: その他のカード名',
-                                      filled: true,
-                                      fillColor: theme
-                                          .colorScheme
-                                          .surfaceContainerHighest
-                                          .withValues(alpha: 0.5),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                    ),
+                                    labelText: 'カード名を入力',
+                                    hintText: '例: その他のカード名',
                                   ),
                                 ],
 
@@ -287,23 +262,8 @@ Future<void> showAddCardDialog(
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
+                                GlassDropdown<String>(
                                   value: selectedType,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: theme
-                                        .colorScheme
-                                        .surfaceContainerHighest
-                                        .withValues(alpha: 0.5),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                  ),
                                   items:
                                       CardConstants.cardTypes.map((type) {
                                         return DropdownMenuItem(
@@ -327,21 +287,10 @@ Future<void> showAddCardDialog(
                                 ),
                                 if (isCustomType) ...[
                                   const SizedBox(height: 12),
-                                  TextField(
+                                  GlassTextField(
                                     controller: typeController,
-                                    decoration: InputDecoration(
-                                      labelText: 'カード種類を入力',
-                                      hintText: '例: その他のカード種類',
-                                      filled: true,
-                                      fillColor: theme
-                                          .colorScheme
-                                          .surfaceContainerHighest
-                                          .withValues(alpha: 0.5),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                    ),
+                                    labelText: 'カード種類を入力',
+                                    hintText: '例: その他のカード種類',
                                   ),
                                 ],
 

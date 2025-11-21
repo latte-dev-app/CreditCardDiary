@@ -18,8 +18,8 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const LineChartScreen(),
     const FixedCostScreen(),
+    const LineChartScreen(),
     const SettingsScreen(),
   ];
 
@@ -77,19 +77,21 @@ class _MainScreenState extends State<MainScreen> {
                     elevation: 0,
                     items: [
                       BottomNavigationBarItem(
-                        icon: const Icon(Icons.home),
+                        icon: const Icon(Icons.home_outlined),
+                        activeIcon: const Icon(Icons.home),
                         label: l10n.home,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: const Icon(Icons.show_chart),
-                        label: l10n.spendingTrend,
                       ),
                       const BottomNavigationBarItem(
                         icon: Icon(Icons.repeat),
                         label: '固定費',
                       ),
                       BottomNavigationBarItem(
-                        icon: const Icon(Icons.settings),
+                        icon: const Icon(Icons.show_chart),
+                        label: '推移',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.settings_outlined),
+                        activeIcon: const Icon(Icons.settings),
                         label: l10n.settings,
                       ),
                     ],

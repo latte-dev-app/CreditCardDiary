@@ -1,11 +1,19 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../../domain/card_model.dart';
+
+class PieData {
+  final String name;
+  final double value;
+  final Color? color;
+
+  PieData({required this.name, required this.value, this.color});
+}
 
 class PieChartWidget extends StatefulWidget {
-  final List<Transaction> transactions;
+  final List<PieData> data;
+  final double? totalAmount; // Optional override, otherwise sum of data
 
-  const PieChartWidget({super.key, required this.transactions});
+  const PieChartWidget({super.key, required this.data, this.totalAmount});
 
   @override
   State<PieChartWidget> createState() => _PieChartWidgetState();
@@ -16,34 +24,38 @@ class _PieChartWidgetState extends State<PieChartWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.transactions.isEmpty) {
+    if (widget.data.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final groupedTransactions = <String, int>{};
-    for (var t in widget.transactions) {
-      // Use title as category for now, since we don't have a dedicated category field yet
-      // Ideally we should add a category field to Transaction model later
-      final key = t.title;
-      groupedTransactions[key] = (groupedTransactions[key] ?? 0) + t.amount;
+    final double totalAmount =
+        widget.totalAmount ??
+        widget.data.fold<double>(0.0, (sum, item) => sum + item.value);
+
+    // Sort by value descending
+    final sortedData = List<PieData>.from(widget.data)
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    // Limit to top 5 and group others if needed
+    final topEntries = <PieData>[];
+    double otherAmount = 0;
+
+    if (sortedData.length > 5) {
+      topEntries.addAll(sortedData.take(5));
+      otherAmount = sortedData.skip(5).fold(0, (sum, item) => sum + item.value);
+      topEntries.add(
+        PieData(
+          name: 'その他',
+          value: otherAmount,
+          color: const Color(0xFFdcdcdc),
+        ),
+      );
+    } else {
+      topEntries.addAll(sortedData);
     }
 
-    final totalAmount = widget.transactions.fold(0, (sum, t) => sum + t.amount);
-    final sortedEntries =
-        groupedTransactions.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
-
-    // Limit to top 5 and group others
-    final topEntries = sortedEntries.take(5).toList();
-    if (sortedEntries.length > 5) {
-      final otherAmount = sortedEntries
-          .skip(5)
-          .fold(0, (sum, e) => sum + e.value);
-      topEntries.add(MapEntry('その他', otherAmount));
-    }
-
-    return AspectRatio(
-      aspectRatio: 1.3,
+    return SizedBox(
+      height: 220,
       child: Row(
         children: [
           const SizedBox(height: 18),
@@ -78,14 +90,14 @@ class _PieChartWidgetState extends State<PieChartWidget> {
           ),
           const SizedBox(width: 28),
           Column(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children:
                 topEntries.asMap().entries.map((entry) {
                   final index = entry.key;
                   final data = entry.value;
                   final isTouched = index == touchedIndex;
-                  final color = _getColor(index);
+                  final color = data.color ?? _getColor(index);
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -101,9 +113,9 @@ class _PieChartWidgetState extends State<PieChartWidget> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          data.key.length > 10
-                              ? '${data.key.substring(0, 10)}...'
-                              : data.key,
+                          data.name.length > 10
+                              ? '${data.name.substring(0, 10)}...'
+                              : data.name,
                           style: TextStyle(
                             fontSize: isTouched ? 16 : 14,
                             fontWeight:
@@ -132,8 +144,8 @@ class _PieChartWidgetState extends State<PieChartWidget> {
   }
 
   List<PieChartSectionData> showingSections(
-    List<MapEntry<String, int>> entries,
-    int total,
+    List<PieData> entries,
+    double total,
   ) {
     return List.generate(entries.length, (i) {
       final isTouched = i == touchedIndex;
@@ -141,10 +153,10 @@ class _PieChartWidgetState extends State<PieChartWidget> {
       final radius = isTouched ? 60.0 : 50.0;
       const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
       final entry = entries[i];
-      final value = entry.value.toDouble();
+      final value = entry.value;
 
       return PieChartSectionData(
-        color: _getColor(i),
+        color: entry.color ?? _getColor(i),
         value: value,
         title: '${(value / total * 100).toStringAsFixed(0)}%',
         radius: radius,
