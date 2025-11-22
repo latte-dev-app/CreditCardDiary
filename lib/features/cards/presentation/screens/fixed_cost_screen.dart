@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:fl_chart/fl_chart.dart';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +12,8 @@ import '../widgets/glass_modal.dart';
 import '../widgets/glass_text_field.dart';
 import '../widgets/pie_chart_widget.dart';
 
+enum SortOption { amountDesc, amountAsc, dateAsc, dateDesc }
+
 class FixedCostScreen extends StatefulWidget {
   const FixedCostScreen({super.key});
 
@@ -21,9 +23,7 @@ class FixedCostScreen extends StatefulWidget {
 
 class _FixedCostScreenState extends State<FixedCostScreen> {
   int _viewMode = 0; // 0: List, 1: Trend/Analysis
-  int _analysisMode = 0; // 0: Trend (Line), 1: Analysis (Pie)
-  int? _selectedYear;
-  DateTime _selectedMonth = DateTime.now();
+  SortOption _sortOption = SortOption.amountDesc;
 
   @override
   Widget build(BuildContext context) {
@@ -122,57 +122,81 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SegmentedButton<int>(
-                              segments: const [
-                                ButtonSegment(
-                                  value: 0,
-                                  label: Text('一覧'),
-                                  icon: Icon(Icons.list),
-                                ),
-                                ButtonSegment(
-                                  value: 1,
-                                  label: Text('分析'),
-                                  icon: Icon(Icons.analytics),
-                                ),
-                              ],
-                              selected: {_viewMode},
-                              onSelectionChanged: (Set<int> newSelection) {
+                            GestureDetector(
+                              onTap: () {
                                 setState(() {
-                                  _viewMode = newSelection.first;
+                                  _viewMode = _viewMode == 0 ? 1 : 0;
                                 });
                               },
-                              style: ButtonStyle(
-                                visualDensity: VisualDensity.compact,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                backgroundColor:
-                                    WidgetStateProperty.resolveWith<Color?>((
-                                      states,
-                                    ) {
-                                      if (states.contains(
-                                        WidgetState.selected,
-                                      )) {
-                                        return Colors.white;
-                                      }
-                                      return Colors.white.withValues(
-                                        alpha: 0.1,
-                                      );
-                                    }),
-                                foregroundColor:
-                                    WidgetStateProperty.resolveWith<Color?>((
-                                      states,
-                                    ) {
-                                      if (states.contains(
-                                        WidgetState.selected,
-                                      )) {
-                                        return colorScheme.primary;
-                                      }
-                                      return Colors.white;
-                                    }),
-                                side: WidgetStateProperty.all(BorderSide.none),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _viewMode == 0
+                                          ? Icons.pie_chart
+                                          : Icons.list,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _viewMode == 0 ? '分析' : '一覧',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
+                        if (_viewMode == 0) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: _showSortMenu,
+                                icon: const Icon(
+                                  Icons.sort,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                label: Text(
+                                  _getSortLabel(_sortOption),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         // Total Amount (Always visible)
                         Column(
@@ -242,11 +266,27 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
       );
     }
 
+    final sortedList = List<FixedCost>.from(provider.fixedCosts);
+    switch (_sortOption) {
+      case SortOption.amountDesc:
+        sortedList.sort((a, b) => b.amount.compareTo(a.amount));
+        break;
+      case SortOption.amountAsc:
+        sortedList.sort((a, b) => a.amount.compareTo(b.amount));
+        break;
+      case SortOption.dateAsc:
+        sortedList.sort((a, b) => a.paymentDay.compareTo(b.paymentDay));
+        break;
+      case SortOption.dateDesc:
+        sortedList.sort((a, b) => b.paymentDay.compareTo(a.paymentDay));
+        break;
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 80),
-      itemCount: provider.fixedCosts.length,
+      itemCount: sortedList.length,
       itemBuilder: (context, index) {
-        final item = provider.fixedCosts[index];
+        final item = sortedList[index];
         final cardName =
             item.cardId != null
                 ? cardProvider.cards
@@ -310,254 +350,151 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     BuildContext context,
     FixedCostProvider provider,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Toggle Trend vs Analysis
-          Center(
-            child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(
-                  value: 0,
-                  label: Text('推移'),
-                  icon: Icon(Icons.show_chart),
-                ),
-                ButtonSegment(
-                  value: 1,
-                  label: Text('分析'),
-                  icon: Icon(Icons.pie_chart),
-                ),
-              ],
-              selected: {_analysisMode},
-              onSelectionChanged: (Set<int> newSelection) {
-                setState(() {
-                  _analysisMode = newSelection.first;
-                });
-              },
-              style: ButtonStyle(
-                visualDensity: VisualDensity.comfortable,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                side: WidgetStateProperty.all(
-                  BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
-                ),
-              ),
-            ),
-          ),
+          _buildYearlyTotalCard(context, provider),
           const SizedBox(height: 24),
-
-          if (_analysisMode == 0)
-            _buildLineChart(context, provider)
-          else
-            _buildPieChart(context, provider),
+          _buildPieChart(context, provider),
         ],
       ),
     );
   }
 
-  Widget _buildLineChart(BuildContext context, FixedCostProvider provider) {
+  Widget _buildYearlyTotalCard(
+    BuildContext context,
+    FixedCostProvider provider,
+  ) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    final totalMonthly = provider.totalMonthlyFixedCost;
-    final monthlyTotals = List.filled(12, totalMonthly);
-    final maxValue = totalMonthly.toDouble();
+    final yearlyTotal = provider.totalMonthlyFixedCost * 12;
     final formatter = NumberFormat('#,###');
-    final year = _selectedYear ?? DateTime.now().year;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Year Selector (Simplified for Fixed Cost as it's static for now)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: colorScheme.outline.withValues(alpha: 0.1),
-                ),
-              ),
-              child: DropdownButton<int>(
-                value: year,
-                underline: const SizedBox.shrink(),
-                icon: const Icon(Icons.arrow_drop_down),
-                items:
-                    [year, year - 1, year + 1].map((y) {
-                      return DropdownMenuItem(value: y, child: Text('$y年'));
-                    }).toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() {
-                      _selectedYear = val;
-                    });
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '$year年の固定費推移',
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
+        ],
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
-        const SizedBox(height: 24),
-        SizedBox(
-          height: 320,
-          child: LineChart(
-            LineChartData(
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                horizontalInterval: maxValue > 0 ? maxValue / 5 : 1,
-                getDrawingHorizontalLine: (value) {
-                  return FlLine(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    strokeWidth: 1,
-                    dashArray: [5, 5],
-                  );
-                },
-              ),
-              titlesData: FlTitlesData(
-                show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (value, meta) {
-                      if (value >= 0 && value <= 11) {
-                        final m = value.toInt() + 1;
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            '$m月',
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                    reservedSize: 32,
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.calendar_month_rounded,
+              color: theme.colorScheme.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '年間固定費（見込み）',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              borderData: FlBorderData(show: false),
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  tooltipBgColor: colorScheme.inverseSurface.withValues(
-                    alpha: 0.8,
-                  ),
-                  tooltipRoundedRadius: 12,
-                  tooltipPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  tooltipMargin: 16,
-                  getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                    return touchedSpots.map((LineBarSpot touchedSpot) {
-                      final month = touchedSpot.x.toInt() + 1;
-                      final amount = touchedSpot.y.toInt();
-                      return LineTooltipItem(
-                        '$month月\n',
-                        TextStyle(
-                          color: colorScheme.onInverseSurface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: '${formatter.format(amount)}円',
-                            style: TextStyle(
-                              color: colorScheme.onInverseSurface,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList();
-                  },
+              const SizedBox(height: 4),
+              Text(
+                '¥${formatter.format(yearlyTotal)}',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: -0.5,
                 ),
-                handleBuiltInTouches: true,
               ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: List.generate(12, (index) {
-                    return FlSpot(
-                      index.toDouble(),
-                      monthlyTotals[index].toDouble(),
-                    );
-                  }),
-                  isCurved: true,
-                  curveSmoothness: 0.35,
-                  color: colorScheme.primary,
-                  barWidth: 4,
-                  isStrokeCapRound: true,
-                  shadow: Shadow(
-                    color: colorScheme.primary.withValues(alpha: 0.5),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                  dotData: FlDotData(
-                    show: true,
-                    getDotPainter: (spot, percent, barData, index) {
-                      return FlDotCirclePainter(
-                        radius: 6,
-                        color: colorScheme.surface,
-                        strokeWidth: 3,
-                        strokeColor: colorScheme.primary,
-                      );
-                    },
-                  ),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.3),
-                        colorScheme.primary.withValues(alpha: 0.0),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSortMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => GlassModal(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    '並び替え',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
+                _buildSortOptionItem(SortOption.amountDesc, '金額が高い順'),
+                _buildSortOptionItem(SortOption.amountAsc, '金額が低い順'),
+                _buildSortOptionItem(SortOption.dateAsc, '支払日が早い順'),
+                _buildSortOptionItem(SortOption.dateDesc, '支払日が遅い順'),
+                const SizedBox(height: 24),
               ],
-              minX: 0,
-              maxX: 11,
-              minY: 0,
-              maxY: (maxValue * 1.1).clamp(100, double.infinity),
             ),
           ),
-        ),
-      ],
     );
+  }
+
+  Widget _buildSortOptionItem(SortOption option, String label) {
+    final isSelected = _sortOption == option;
+    final theme = Theme.of(context);
+
+    return ListTile(
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color:
+              isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface,
+        ),
+      ),
+      trailing:
+          isSelected
+              ? Icon(Icons.check, color: theme.colorScheme.primary)
+              : null,
+      onTap: () {
+        setState(() {
+          _sortOption = option;
+        });
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  String _getSortLabel(SortOption option) {
+    switch (option) {
+      case SortOption.amountDesc:
+        return '金額順 (降順)';
+      case SortOption.amountAsc:
+        return '金額順 (昇順)';
+      case SortOption.dateAsc:
+        return '日付順 (昇順)';
+      case SortOption.dateDesc:
+        return '日付順 (降順)';
+    }
   }
 
   Widget _buildPieChart(BuildContext context, FixedCostProvider provider) {
@@ -580,21 +517,28 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
           return PieData(name: fc.title, value: fc.amount.toDouble());
         }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '内訳分析',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 24),
-        PieChartWidget(data: pieData),
-        const SizedBox(height: 24),
-        _buildDetailList(context, pieData),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 600;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '内訳分析',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            PieChartWidget(data: pieData, isWide: isWide),
+            if (!isWide) ...[
+              const SizedBox(height: 24),
+              _buildDetailList(context, pieData),
+            ],
+          ],
+        );
+      },
     );
   }
 

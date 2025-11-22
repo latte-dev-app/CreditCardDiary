@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../application/card_provider.dart';
-import '../../application/fixed_cost_provider.dart';
+
 import '../../domain/card_model.dart';
 import '../widgets/pie_chart_widget.dart';
 
@@ -18,7 +18,6 @@ class LineChartScreen extends StatefulWidget {
 class _LineChartScreenState extends State<LineChartScreen> {
   int? _selectedYear;
   DateTime _selectedMonth = DateTime.now();
-  int _dataType = 0; // 0: Expenditure (Card), 1: Fixed Cost
   int _viewMode = 0; // 0: Trend (Line), 1: Analysis (Pie)
 
   @override
@@ -170,41 +169,6 @@ class _LineChartScreenState extends State<LineChartScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Level Toggle (Expenditure vs Fixed Cost)
-                    SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<int>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 0,
-                            label: Text('カード支出'),
-                            icon: Icon(Icons.credit_card),
-                          ),
-                          ButtonSegment(
-                            value: 1,
-                            label: Text('固定費'),
-                            icon: Icon(Icons.repeat),
-                          ),
-                        ],
-                        selected: {_dataType},
-                        onSelectionChanged: (Set<int> newSelection) {
-                          setState(() {
-                            _dataType = newSelection.first;
-                          });
-                        },
-                        style: ButtonStyle(
-                          visualDensity: VisualDensity.comfortable,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          side: WidgetStateProperty.all(
-                            BorderSide(
-                              color: colorScheme.outline.withValues(alpha: 0.2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
                     // Sub Level Toggle (Trend vs Analysis)
                     Center(
                       child: SegmentedButton<int>(
@@ -241,10 +205,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
 
                     if (_viewMode == 0) ...[
                       // Trend View (Line Chart)
-                      if (_dataType == 0)
-                        _buildCardTrendView(context)
-                      else
-                        _buildFixedCostTrendView(context),
+                      _buildCardTrendView(context),
                     ] else ...[
                       // Analysis View (Pie Chart)
                       _buildMonthlyAnalysis(context),
@@ -424,53 +385,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                   monthlyTotals,
                   maxValue,
                   formatter,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFixedCostTrendView(BuildContext context) {
-    return Consumer<FixedCostProvider>(
-      builder: (context, provider, _) {
-        final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
-        final textTheme = theme.textTheme;
-
-        final totalMonthly = provider.totalMonthlyFixedCost;
-        final totalYearly = totalMonthly * 12;
-        final monthlyTotals = List.filled(12, totalMonthly);
-        final maxValue = totalMonthly.toDouble();
-        final formatter = NumberFormat('#,###');
-
-        final year =
-            _selectedYear ??
-            DateTime.now().year; // Use selected year or current year
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeroSummaryCard(context, totalYearly, totalMonthly),
-            const SizedBox(height: 32),
-            Text(
-              '$year年の固定費推移',
-              style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 320,
-              child: LineChart(
-                _mainLineChartData(
-                  colorScheme,
-                  monthlyTotals,
-                  maxValue,
-                  formatter,
+                  averageAmount,
                 ),
               ),
             ),
@@ -485,8 +400,30 @@ class _LineChartScreenState extends State<LineChartScreen> {
     List<int> monthlyTotals,
     double maxValue,
     NumberFormat formatter,
+    int averageAmount,
   ) {
     return LineChartData(
+      extraLinesData: ExtraLinesData(
+        horizontalLines: [
+          HorizontalLine(
+            y: averageAmount.toDouble(),
+            color: colorScheme.secondary,
+            strokeWidth: 2,
+            dashArray: [5, 5],
+            label: HorizontalLineLabel(
+              show: true,
+              alignment: Alignment.topRight,
+              padding: const EdgeInsets.only(right: 5, bottom: 5),
+              style: TextStyle(
+                color: colorScheme.secondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              labelResolver: (line) => '平均: ${formatter.format(averageAmount)}',
+            ),
+          ),
+        ],
+      ),
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
@@ -676,10 +613,8 @@ class _LineChartScreenState extends State<LineChartScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Content based on _dataType
-        _dataType == 0
-            ? _buildCardAnalysis(context)
-            : _buildFixedCostAnalysis(context),
+        // Content
+        _buildCardAnalysis(context),
       ],
     );
   }
@@ -715,37 +650,19 @@ class _LineChartScreenState extends State<LineChartScreen> {
               );
             }).toList();
 
-        return Column(
-          children: [
-            PieChartWidget(data: pieData),
-            const SizedBox(height: 24),
-            _buildDetailList(context, pieData),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFixedCostAnalysis(BuildContext context) {
-    return Consumer<FixedCostProvider>(
-      builder: (context, provider, _) {
-        final fixedCosts = provider.fixedCosts;
-
-        if (fixedCosts.isEmpty) {
-          return _buildEmptyState(context, '固定費が登録されていません');
-        }
-
-        final pieData =
-            fixedCosts.map((fc) {
-              return PieData(name: fc.title, value: fc.amount.toDouble());
-            }).toList();
-
-        return Column(
-          children: [
-            PieChartWidget(data: pieData),
-            const SizedBox(height: 24),
-            _buildDetailList(context, pieData),
-          ],
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 600;
+            return Column(
+              children: [
+                PieChartWidget(data: pieData, isWide: isWide),
+                if (!isWide) ...[
+                  const SizedBox(height: 24),
+                  _buildDetailList(context, pieData),
+                ],
+              ],
+            );
+          },
         );
       },
     );

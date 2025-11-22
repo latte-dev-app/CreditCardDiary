@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedMonth = DateTime.now();
   int? _selectedYear;
+  bool _isPrivacyMode = false;
 
   @override
   void initState() {
@@ -239,6 +240,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isPrivacyMode = !_isPrivacyMode;
+                                });
+                              },
+                              icon: Icon(
+                                _isPrivacyMode
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -258,7 +272,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                currencyFormat.format(totalAmount),
+                                _isPrivacyMode
+                                    ? '****'
+                                    : currencyFormat.format(totalAmount),
                                 style: GoogleFonts.plusJakartaSans(
                                   color: Colors.white,
                                   fontSize: 42,
@@ -298,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     Text(
                                       budget > 0
-                                          ? '残り予算: ${currencyFormat.format(remainingBudget)}'
+                                          ? '残り予算: ${_isPrivacyMode ? '****' : currencyFormat.format(remainingBudget)}'
                                           : '予算を設定する',
                                       style: GoogleFonts.plusJakartaSans(
                                         color: Colors.white,
@@ -335,36 +351,49 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ),
                                       ),
-                                      FractionallySizedBox(
-                                        widthFactor: budgetProgress,
-                                        child: Container(
-                                          height: 12,
-                                          decoration: BoxDecoration(
-                                            color:
-                                                remainingBudget < 0
-                                                    ? theme.colorScheme.error
-                                                    : const Color(
-                                                      0xFF34D399,
-                                                    ), // Emerald 400
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: (remainingBudget < 0
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: budgetProgress,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 1000,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (context, value, child) {
+                                          return FractionallySizedBox(
+                                            widthFactor: value,
+                                            child: Container(
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    remainingBudget < 0
                                                         ? theme
                                                             .colorScheme
                                                             .error
                                                         : const Color(
                                                           0xFF34D399,
-                                                        ))
-                                                    .withValues(alpha: 0.5),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
+                                                        ), // Emerald 400
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: (remainingBudget < 0
+                                                            ? theme
+                                                                .colorScheme
+                                                                .error
+                                                            : const Color(
+                                                              0xFF34D399,
+                                                            ))
+                                                        .withValues(alpha: 0.5),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                        ),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -654,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      currencyFormat.format(amount),
+                      _isPrivacyMode ? '****' : currencyFormat.format(amount),
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,

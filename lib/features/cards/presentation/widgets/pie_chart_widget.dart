@@ -12,8 +12,14 @@ class PieData {
 class PieChartWidget extends StatefulWidget {
   final List<PieData> data;
   final double? totalAmount; // Optional override, otherwise sum of data
+  final bool isWide;
 
-  const PieChartWidget({super.key, required this.data, this.totalAmount});
+  const PieChartWidget({
+    super.key,
+    required this.data,
+    this.totalAmount,
+    this.isWide = false,
+  });
 
   @override
   State<PieChartWidget> createState() => _PieChartWidgetState();
@@ -54,8 +60,55 @@ class _PieChartWidgetState extends State<PieChartWidget> {
       topEntries.addAll(sortedData);
     }
 
+    if (widget.isWide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 3,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          touchedIndex = -1;
+                          return;
+                        }
+                        touchedIndex =
+                            pieTouchResponse
+                                .touchedSection!
+                                .touchedSectionIndex;
+                      });
+                    },
+                  ),
+                  borderData: FlBorderData(show: false),
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 80,
+                  sections: showingSections(topEntries, totalAmount, true),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 40),
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _buildLegendItems(context, topEntries, totalAmount),
+            ),
+          ),
+        ],
+      );
+    }
+
     return SizedBox(
-      height: 220,
+      height: 300,
       child: Row(
         children: [
           const SizedBox(height: 18),
@@ -83,7 +136,7 @@ class _PieChartWidgetState extends State<PieChartWidget> {
                   borderData: FlBorderData(show: false),
                   sectionsSpace: 0,
                   centerSpaceRadius: 40,
-                  sections: showingSections(topEntries, totalAmount),
+                  sections: showingSections(topEntries, totalAmount, false),
                 ),
               ),
             ),
@@ -92,50 +145,7 @@ class _PieChartWidgetState extends State<PieChartWidget> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                topEntries.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final data = entry.value;
-                  final isTouched = index == touchedIndex;
-                  final color = data.color ?? _getColor(index);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: color,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          data.name.length > 10
-                              ? '${data.name.substring(0, 10)}...'
-                              : data.name,
-                          style: TextStyle(
-                            fontSize: isTouched ? 16 : 14,
-                            fontWeight:
-                                isTouched ? FontWeight.bold : FontWeight.normal,
-                            color:
-                                Theme.of(context).textTheme.bodyMedium?.color,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${(data.value / totalAmount * 100).toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+            children: _buildLegendItems(context, topEntries, totalAmount),
           ),
           const SizedBox(width: 28),
         ],
@@ -143,14 +153,62 @@ class _PieChartWidgetState extends State<PieChartWidget> {
     );
   }
 
+  List<Widget> _buildLegendItems(
+    BuildContext context,
+    List<PieData> entries,
+    double totalAmount,
+  ) {
+    return entries.asMap().entries.map((entry) {
+      final index = entry.key;
+      final data = entry.value;
+      final isTouched = index == touchedIndex;
+      final color = data.color ?? _getColor(index);
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                data.name,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: isTouched ? 16 : 14,
+                  fontWeight: isTouched ? FontWeight.bold : FontWeight.normal,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${(data.value / totalAmount * 100).toStringAsFixed(1)}%',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
   List<PieChartSectionData> showingSections(
     List<PieData> entries,
     double total,
+    bool isWide,
   ) {
     return List.generate(entries.length, (i) {
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 25.0 : 16.0;
-      final radius = isTouched ? 60.0 : 50.0;
+      final radius =
+          isTouched ? (isWide ? 110.0 : 60.0) : (isWide ? 100.0 : 50.0);
       const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
       final entry = entries[i];
       final value = entry.value;

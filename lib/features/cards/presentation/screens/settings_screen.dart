@@ -24,214 +24,134 @@ class SettingsScreen extends StatelessWidget {
         surfaceTintColor: colorScheme.surfaceTint,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
         children: [
-          _buildSectionHeader(context, '表示設定'),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: Card(
-                elevation: 2,
-                color: colorScheme.surface.withValues(alpha: 0.8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    RadioListTile<ThemeMode>(
-                      title: const Text('システム設定に従う'),
-                      value: ThemeMode.system,
-                      groupValue: themeProvider.themeMode,
-                      onChanged: (value) => themeProvider.setThemeMode(value!),
-                    ),
-                    RadioListTile<ThemeMode>(
-                      title: const Text('ライトモード'),
-                      value: ThemeMode.light,
-                      groupValue: themeProvider.themeMode,
-                      onChanged: (value) => themeProvider.setThemeMode(value!),
-                    ),
-                    RadioListTile<ThemeMode>(
-                      title: const Text('ダークモード'),
-                      value: ThemeMode.dark,
-                      groupValue: themeProvider.themeMode,
-                      onChanged: (value) => themeProvider.setThemeMode(value!),
-                    ),
-                  ],
-                ),
+          _SettingsSection(
+            title: '表示設定',
+            children: [
+              RadioListTile<ThemeMode>(
+                title: const Text('システム設定に従う'),
+                value: ThemeMode.system,
+                groupValue: themeProvider.themeMode,
+                onChanged: (value) => themeProvider.setThemeMode(value!),
               ),
-            ),
+              RadioListTile<ThemeMode>(
+                title: const Text('ライトモード'),
+                value: ThemeMode.light,
+                groupValue: themeProvider.themeMode,
+                onChanged: (value) => themeProvider.setThemeMode(value!),
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('ダークモード'),
+                value: ThemeMode.dark,
+                groupValue: themeProvider.themeMode,
+                onChanged: (value) => themeProvider.setThemeMode(value!),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader(context, '通知設定'),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: Card(
-                elevation: 2,
-                color: colorScheme.surface.withValues(alpha: 0.8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
-                ),
-                child: FutureBuilder<bool>(
-                  future: NotificationService.getNotificationEnabled(),
-                  builder: (context, snapshot) {
-                    final isEnabled = snapshot.data ?? false;
-                    return SwitchListTile(
-                      title: const Text('支払日リマインダー'),
-                      subtitle: const Text('支払日の3日前から通知します'),
-                      value: isEnabled,
-                      onChanged: (value) async {
-                        await NotificationService.setNotificationEnabled(value);
-                        // Force rebuild to show new state
+          _SettingsSection(
+            title: '通知設定',
+            children: [
+              FutureBuilder<bool>(
+                future: NotificationService.getNotificationEnabled(),
+                builder: (context, snapshot) {
+                  final isEnabled = snapshot.data ?? false;
+                  return SwitchListTile(
+                    title: const Text('支払日リマインダー'),
+                    subtitle: const Text('支払日の3日前から通知します'),
+                    value: isEnabled,
+                    onChanged: (value) async {
+                      await NotificationService.setNotificationEnabled(value);
+                      // Force rebuild to show new state
+                      if (context.mounted) {
                         (context as Element).markNeedsBuild();
-                      },
-                      secondary: Icon(
-                        Icons.notifications,
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  },
-                ),
+                      }
+                    },
+                    secondary: Icon(
+                      Icons.notifications,
+                      color: colorScheme.primary,
+                    ),
+                  );
+                },
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader(context, 'データ管理'),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: Card(
-                elevation: 2,
-                color: colorScheme.surface.withValues(alpha: 0.8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1.5,
+          _SettingsSection(
+            title: 'データ管理',
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                leading: Icon(
+                  Icons.upload_file,
+                  size: 24.0,
+                  color: colorScheme.onSurface,
+                ),
+                title: Text('データをエクスポート', style: textTheme.titleMedium),
+                subtitle: Text('JSON形式でダウンロード', style: textTheme.bodySmall),
+                onTap: () => _exportData(context),
+              ),
+              Divider(height: 1, color: colorScheme.outlineVariant),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                leading: Icon(
+                  Icons.file_download,
+                  size: 24.0,
+                  color: colorScheme.onSurface,
+                ),
+                title: Text('データをインポート', style: textTheme.titleMedium),
+                subtitle: Text('JSONファイルから復元', style: textTheme.bodySmall),
+                onTap: () => _showImportDialog(context),
+              ),
+              Divider(height: 1, color: colorScheme.outlineVariant),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                leading: Icon(
+                  Icons.delete_forever,
+                  size: 24.0,
+                  color: colorScheme.error,
+                ),
+                title: Text(
+                  '全データを削除',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: colorScheme.error,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      leading: Icon(
-                        Icons.upload_file,
-                        size: 24.0,
-                        color: colorScheme.onSurface,
-                      ),
-                      title: Text('データをエクスポート', style: textTheme.titleMedium),
-                      subtitle: Text(
-                        'JSON形式でダウンロード',
-                        style: textTheme.bodySmall,
-                      ),
-                      onTap: () => _exportData(context),
-                    ),
-                    Divider(height: 1, color: colorScheme.outlineVariant),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      leading: Icon(
-                        Icons.file_download,
-                        size: 24.0,
-                        color: colorScheme.onSurface,
-                      ),
-                      title: Text('データをインポート', style: textTheme.titleMedium),
-                      subtitle: Text(
-                        'JSONファイルから復元',
-                        style: textTheme.bodySmall,
-                      ),
-                      onTap: () => _showImportDialog(context),
-                    ),
-                    Divider(height: 1, color: colorScheme.outlineVariant),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      leading: Icon(
-                        Icons.delete_forever,
-                        size: 24.0,
-                        color: colorScheme.error,
-                      ),
-                      title: Text(
-                        '全データを削除',
-                        style: textTheme.titleMedium?.copyWith(
-                          color: colorScheme.error,
-                        ),
-                      ),
-                      subtitle: Text(
-                        '全てのデータを削除します',
-                        style: textTheme.bodySmall,
-                      ),
-                      onTap: () => _showDeleteAllDataDialog(context),
-                    ),
-                  ],
-                ),
+                subtitle: Text('全てのデータを削除します', style: textTheme.bodySmall),
+                onTap: () => _showDeleteAllDataDialog(context),
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader(context, 'アプリ情報'),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: Card(
-                elevation: 2,
-                color: colorScheme.surface.withValues(alpha: 0.8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
+          _SettingsSection(
+            title: 'アプリ情報',
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  leading: Icon(
-                    Icons.info,
-                    size: 24.0,
-                    color: colorScheme.onSurface,
-                  ),
-                  title: Text('クレカ使用額トラッカー', style: textTheme.titleMedium),
-                  subtitle: Text('バージョン 1.0.0', style: textTheme.bodySmall),
+                leading: Icon(
+                  Icons.info,
+                  size: 24.0,
+                  color: colorScheme.onSurface,
                 ),
+                title: Text('クレカ使用額トラッカー', style: textTheme.titleMedium),
+                subtitle: Text('バージョン 1.0.0', style: textTheme.bodySmall),
               ),
-            ),
+            ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, bottom: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }
@@ -394,6 +314,53 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _SettingsSection({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 8),
+          child: Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+            child: Card(
+              elevation: 2,
+              color: colorScheme.surface.withValues(alpha: 0.8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: colorScheme.outline.withValues(alpha: 0.2),
+                  width: 1.5,
+                ),
+              ),
+              child: Column(children: children),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
