@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -342,24 +342,7 @@ class _SettingsSection extends StatelessWidget {
             ),
           ),
         ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-            child: Card(
-              elevation: 2,
-              color: colorScheme.surface.withValues(alpha: 0.8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(
-                  color: colorScheme.outline.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
-              ),
-              child: Column(children: children),
-            ),
-          ),
-        ),
+        Card(child: Column(children: children)),
       ],
     );
   }

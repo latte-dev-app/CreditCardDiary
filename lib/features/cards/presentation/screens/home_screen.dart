@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../../application/card_provider.dart';
 import '../../../../shared/services/notification_service.dart';
 import 'card_detail_screen.dart';
@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   '年を選択',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: Text(
                           '$year年',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: theme.textTheme.bodyLarge?.copyWith(
                             fontSize: 16,
                             fontWeight:
                                 isSelected
@@ -179,8 +179,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF0F172A), // Deep Navy
-                      Color(0xFF3B82F6), // Vibrant Blue
+                      theme.colorScheme.primary,
+                      theme
+                          .colorScheme
+                          .primaryContainer, // Or a lighter shade of primary
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
@@ -220,13 +222,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     Text(
                                       '$year年$month月',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.9,
-                                        ),
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: theme.textTheme.titleLarge
+                                          ?.copyWith(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.9,
+                                            ),
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                     const SizedBox(width: 4),
                                     Icon(
@@ -264,9 +266,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Text(
                                 '今月の請求総額',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white.withValues(alpha: 0.8),
-                                  fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -274,13 +275,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 _isPrivacyMode
                                     ? '****'
-                                    : currencyFormat.format(totalAmount),
-                                style: GoogleFonts.plusJakartaSans(
+                                    : '¥${NumberFormat('#,###').format(totalAmount)}',
+                                style: theme.textTheme.displaySmall?.copyWith(
                                   color: Colors.white,
-                                  fontSize: 42,
                                   fontWeight: FontWeight.bold,
-                                  height: 1.1,
-                                  letterSpacing: -1.0,
                                 ),
                               ),
                             ],
@@ -316,22 +314,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                       budget > 0
                                           ? '残り予算: ${_isPrivacyMode ? '****' : currencyFormat.format(remainingBudget)}'
                                           : '予算を設定する',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                     if (budget > 0)
                                       Text(
                                         '${(budgetProgress * 100).toInt()}%',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.9,
-                                          ),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.9,
+                                              ),
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                   ],
                                 ),
@@ -432,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(width: 4),
                                 Text(
                                   '${prevMonthDate.month}月',
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: theme.textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -441,8 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Text(
                             '登録カード',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onSurface,
                             ),
@@ -460,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   '${nextMonthDate.month}月',
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: theme.textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -536,8 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             Text(
               'カードが登録されていません',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
+              style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
@@ -545,8 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               '右下のボタンからカードを追加してください',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.outline,
               ),
             ),
@@ -651,8 +646,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             card.name,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 16,
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onSurface,
                             ),
@@ -670,8 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         card.type,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
@@ -684,8 +677,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       _isPrivacyMode ? '****' : currencyFormat.format(amount),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 20,
+                      style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         color:
                             isPaymentApproaching
@@ -697,8 +689,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(
                       '今月の利用',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.outline,
                         fontWeight: FontWeight.w600,
                       ),

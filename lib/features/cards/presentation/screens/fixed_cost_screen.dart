@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,8 +6,7 @@ import '../../application/fixed_cost_provider.dart';
 import '../../domain/fixed_cost_model.dart';
 import '../../application/card_provider.dart';
 import '../widgets/animated_fab.dart';
-import '../widgets/glass_modal.dart';
-import '../widgets/glass_text_field.dart';
+
 import '../widgets/pie_chart_widget.dart';
 
 enum SortOption { amountDesc, amountAsc, dateAsc, dateDesc }
@@ -29,55 +26,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
   Widget build(BuildContext context) {
     final fixedCostProvider = Provider.of<FixedCostProvider>(context);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background (Only visible in Trend/Analysis mode for consistency)
-          if (_viewMode == 1) ...[
-            Positioned(
-              top: -100,
-              left: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      colorScheme.primary.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -50,
-              right: -50,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      colorScheme.secondary.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-          ],
-
           Column(
             children: [
               // Fixed Header
@@ -86,8 +38,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF0F172A), // Deep Navy
-                      const Color(0xFF3B82F6), // Vibrant Blue
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primaryContainer,
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -428,11 +380,15 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
   }
 
   void _showSortMenu() {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
-          (context) => GlassModal(
+          (context) => SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -440,7 +396,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     '並び替え',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -610,193 +566,226 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
           (dialogContext) => StatefulBuilder(
             builder:
-                (context, setState) => GlassModal(
-                  blur: 15,
-                  opacity: 0.6,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
-                    ),
-                    child: DraggableScrollableSheet(
-                      initialChildSize: 0.85,
-                      minChildSize: 0.5,
-                      maxChildSize: 0.95,
-                      expand: false,
-                      builder:
-                          (context, scrollController) => Column(
-                            children: [
-                              // Handle Bar
-                              Center(
-                                child: Container(
-                                  margin: const EdgeInsets.only(
-                                    top: 12,
-                                    bottom: 8,
+                (context, setState) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
+                  ),
+                  child: DraggableScrollableSheet(
+                    initialChildSize: 0.85,
+                    minChildSize: 0.5,
+                    maxChildSize: 0.95,
+                    expand: false,
+                    builder:
+                        (context, scrollController) => Column(
+                          children: [
+                            // Handle Bar
+                            Center(
+                              child: Container(
+                                margin: const EdgeInsets.only(
+                                  top: 12,
+                                  bottom: 8,
+                                ),
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.2,
                                   ),
-                                  width: 40,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
-                              // Title
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 16,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      item == null ? '固定費を追加' : '固定費を編集',
-                                      style: theme.textTheme.headlineSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const Spacer(),
-                                    IconButton(
-                                      icon: const Icon(Icons.close),
-                                      onPressed:
-                                          () => Navigator.pop(dialogContext),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                            // Title
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
                               ),
-                              const Divider(height: 1),
-                              // Content
-                              Expanded(
-                                child: ListView(
-                                  controller: scrollController,
-                                  padding: const EdgeInsets.all(24),
-                                  children: [
-                                    // Title Input
-                                    Text(
-                                      'タイトル',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    GlassTextField(
-                                      controller: titleController,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    item == null ? '固定費を追加' : '固定費を編集',
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed:
+                                        () => Navigator.pop(dialogContext),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1),
+                            // Content
+                            Expanded(
+                              child: ListView(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(24),
+                                children: [
+                                  // Title Input
+                                  Text(
+                                    'タイトル',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: titleController,
+                                    decoration: const InputDecoration(
                                       labelText: '例: 家賃',
                                     ),
-                                    const SizedBox(height: 24),
+                                  ),
+                                  const SizedBox(height: 24),
 
-                                    // Amount Input
-                                    Text(
-                                      '金額',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    GlassTextField(
-                                      controller: amountController,
+                                  // Amount Input
+                                  Text(
+                                    '金額',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: amountController,
+                                    decoration: const InputDecoration(
                                       labelText: '金額を入力',
-                                      keyboardType: TextInputType.number,
                                     ),
-                                    const SizedBox(height: 24),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  const SizedBox(height: 24),
 
-                                    // Payment Day Input
-                                    Text(
-                                      '支払日',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    GlassTextField(
-                                      controller: paymentDayController,
+                                  // Payment Day Input
+                                  Text(
+                                    '支払日',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: paymentDayController,
+                                    decoration: const InputDecoration(
                                       labelText: '日 (1-31)',
-                                      keyboardType: TextInputType.number,
                                     ),
-                                    const SizedBox(height: 24),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  const SizedBox(height: 24),
 
-                                    // Card Selection
-                                    Text(
-                                      '支払いカード',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                  // Card Selection
+                                  Text(
+                                    '支払いカード',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  DropdownButtonFormField<String>(
+                                    value: selectedCardId,
+                                    decoration: const InputDecoration(
+                                      labelText: '支払いカード',
                                     ),
-                                    const SizedBox(height: 12),
-                                    GlassDropdown<String>(
-                                      value: selectedCardId,
-                                      items:
-                                          cardProvider.cards.map((card) {
-                                            return DropdownMenuItem(
-                                              value: card.id,
-                                              child: Text(card.name),
-                                            );
-                                          }).toList(),
-                                      onChanged:
-                                          (value) => setState(
-                                            () => selectedCardId = value,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 40),
-                                  ],
-                                ),
+                                    items:
+                                        cardProvider.cards.map((card) {
+                                          return DropdownMenuItem(
+                                            value: card.id,
+                                            child: Text(card.name),
+                                          );
+                                        }).toList(),
+                                    onChanged:
+                                        (value) => setState(
+                                          () => selectedCardId = value,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 40),
+                                ],
                               ),
-                              // Bottom Buttons
-                              Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  children: [
+                            ),
+                            // Bottom Buttons
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        final title = titleController.text;
+                                        final amount =
+                                            int.tryParse(
+                                              amountController.text,
+                                            ) ??
+                                            0;
+                                        final paymentDay =
+                                            int.tryParse(
+                                              paymentDayController.text,
+                                            ) ??
+                                            1;
+
+                                        if (title.isEmpty || amount <= 0) {
+                                          return;
+                                        }
+
+                                        final newItem = FixedCost(
+                                          id: item?.id ?? const Uuid().v4(),
+                                          title: title,
+                                          amount: amount,
+                                          paymentDay: paymentDay,
+                                          cardId: selectedCardId,
+                                        );
+
+                                        final provider =
+                                            Provider.of<FixedCostProvider>(
+                                              context,
+                                              listen: false,
+                                            );
+                                        if (item == null) {
+                                          provider.addFixedCost(newItem);
+                                        } else {
+                                          provider.updateFixedCost(newItem);
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      style: FilledButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        '保存',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (item != null) ...[
+                                    const SizedBox(height: 12),
                                     SizedBox(
                                       width: double.infinity,
                                       height: 56,
-                                      child: FilledButton(
+                                      child: TextButton(
                                         onPressed: () {
-                                          final title = titleController.text;
-                                          final amount =
-                                              int.tryParse(
-                                                amountController.text,
-                                              ) ??
-                                              0;
-                                          final paymentDay =
-                                              int.tryParse(
-                                                paymentDayController.text,
-                                              ) ??
-                                              1;
-
-                                          if (title.isEmpty || amount <= 0) {
-                                            return;
-                                          }
-
-                                          final newItem = FixedCost(
-                                            id: item?.id ?? const Uuid().v4(),
-                                            title: title,
-                                            amount: amount,
-                                            paymentDay: paymentDay,
-                                            cardId: selectedCardId,
+                                          Navigator.pop(
+                                            context,
+                                          ); // Close bottom sheet first
+                                          _showDeleteConfirmation(
+                                            context,
+                                            item,
                                           );
-
-                                          final provider =
-                                              Provider.of<FixedCostProvider>(
-                                                context,
-                                                listen: false,
-                                              );
-                                          if (item == null) {
-                                            provider.addFixedCost(newItem);
-                                          } else {
-                                            provider.updateFixedCost(newItem);
-                                          }
-                                          Navigator.pop(context);
                                         },
-                                        style: FilledButton.styleFrom(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              theme.colorScheme.error,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
                                               16,
@@ -804,7 +793,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                           ),
                                         ),
                                         child: const Text(
-                                          '保存',
+                                          'この固定費を削除',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -812,45 +801,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (item != null) ...[
-                                      const SizedBox(height: 12),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 56,
-                                        child: TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(
-                                              context,
-                                            ); // Close bottom sheet first
-                                            _showDeleteConfirmation(
-                                              context,
-                                              item,
-                                            );
-                                          },
-                                          style: TextButton.styleFrom(
-                                            foregroundColor:
-                                                theme.colorScheme.error,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'この固定費を削除',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
                                   ],
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                    ),
+                            ),
+                          ],
+                        ),
                   ),
                 ),
           ),

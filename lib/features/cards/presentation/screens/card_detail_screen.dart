@@ -4,11 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../../domain/card_model.dart';
 import '../../application/card_provider.dart';
 import '../../infrastructure/image_storage.dart';
 import '../widgets/number_input_formatter.dart';
+import '../widgets/animated_fab.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
@@ -173,18 +174,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                     children: [
                                       Text(
                                         card.name,
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
                                       ),
                                       Text(
                                         card.type,
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 14,
-                                          color: Colors.white70,
-                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(color: Colors.white70),
                                       ),
                                     ],
                                   ),
@@ -196,12 +195,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 _buildInfoItem(
+                                  theme,
                                   '締め日',
                                   card.closingDay != null
                                       ? '${card.closingDay}日'
                                       : '未設定',
                                 ),
                                 _buildInfoItem(
+                                  theme,
                                   '支払日',
                                   card.paymentDay != null
                                       ? '${card.paymentDay}日'
@@ -243,8 +244,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                   const SizedBox(height: 16),
                                   Text(
                                     '利用履歴がありません',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 16,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -287,16 +287,17 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80),
-        child: FloatingActionButton.extended(
+        child: AnimatedFab(
           onPressed: () => _showAddTransactionDialog(context),
-          icon: const Icon(Icons.add),
-          label: const Text('支出記録'),
+          icon: Icons.add,
+          label: '支出記録',
         ),
       ),
     );
   }
 
   Widget _buildInfoItem(
+    ThemeData theme,
     String label,
     String value, {
     Color? valueColor,
@@ -306,10 +307,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            color: Colors.white70,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
         ),
         const SizedBox(height: 4),
         Row(
@@ -321,8 +319,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ],
             Text(
               value,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: valueColor ?? Colors.white,
               ),
@@ -355,18 +352,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             children: [
               Text(
                 '$year年$month月',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                currencyFormat.format(totalAmount),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -397,8 +385,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         ),
                         title: Text(
                           currencyFormat.format(transaction.amount),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.onSurface,
                           ),
@@ -407,8 +394,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             transaction.title.isNotEmpty
                                 ? Text(
                                   transaction.title,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 14,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 )
@@ -484,7 +470,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 const SizedBox(height: 16),
                 ListTile(
                   leading: Icon(Icons.edit, color: theme.colorScheme.onSurface),
-                  title: Text('カード情報を編集', style: GoogleFonts.plusJakartaSans()),
+                  title: Text('カード情報を編集', style: theme.textTheme.bodyLarge),
                   onTap: () {
                     Navigator.pop(context);
                     _showEditCardDialog(context, card);
@@ -495,10 +481,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     Icons.calendar_today,
                     color: theme.colorScheme.onSurface,
                   ),
-                  title: Text(
-                    '締め日・支払日設定',
-                    style: GoogleFonts.plusJakartaSans(),
-                  ),
+                  title: Text('締め日・支払日設定', style: theme.textTheme.bodyLarge),
                   onTap: () {
                     Navigator.pop(context);
                     _showDateSettingsDialog(context);
@@ -509,7 +492,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   leading: Icon(Icons.delete, color: theme.colorScheme.error),
                   title: Text(
                     'カードを削除',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.error,
                     ),
                   ),
@@ -526,6 +509,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showEditCardDialog(BuildContext context, CreditCard card) async {
+    final theme = Theme.of(context);
     final nameController = TextEditingController(text: card.name);
     final typeController = TextEditingController(text: card.type);
     String selectedColor = card.color;
@@ -540,7 +524,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 (context, setDialogState) => AlertDialog(
                   title: Text(
                     'カード編集',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -696,6 +680,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showDateSettingsDialog(BuildContext context) {
+    final theme = Theme.of(context);
     int? selectedClosingDay = card.closingDay;
     int? selectedPaymentDay = card.paymentDay;
     final days = List.generate(31, (index) => index + 1);
@@ -708,7 +693,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 (context, setDialogState) => AlertDialog(
                   title: Text(
                     '締め日/支払日設定',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -784,13 +769,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
             title: Text(
               'カード削除',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             content: const Text('このカードと全ての支出記録を削除しますか？'),
             actions: [
@@ -815,6 +803,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showAddTransactionDialog(BuildContext context) {
+    final theme = Theme.of(context);
     final amountController = TextEditingController();
     final titleController = TextEditingController();
     int selectedYear = DateTime.now().year;
@@ -830,7 +819,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 (context, setDialogState) => AlertDialog(
                   title: Text(
                     '支出追加',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -960,6 +949,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     BuildContext context,
     Transaction transaction,
   ) {
+    final theme = Theme.of(context);
     final amountController = TextEditingController(
       text: NumberFormat('#,###').format(transaction.amount),
     );
@@ -971,7 +961,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           (context) => AlertDialog(
             title: Text(
               '支出編集',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1035,13 +1027,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     BuildContext context,
     Transaction transaction,
   ) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
             title: Text(
               '支出削除',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             content: const Text('この記録を削除しますか？'),
             actions: [

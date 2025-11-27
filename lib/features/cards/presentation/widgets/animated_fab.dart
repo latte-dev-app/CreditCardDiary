@@ -55,6 +55,7 @@ class _AnimatedFabState extends State<AnimatedFab>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTapDown: _handleTapDown,
       onTapUp: _handleTapUp,
@@ -68,25 +69,13 @@ class _AnimatedFabState extends State<AnimatedFab>
           ),
           width: widget.label != null ? null : 56,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFF3B82F6), // Blue 500
-                Color(0xFF2563EB), // Blue 600
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: theme.colorScheme.primary,
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.4),
+                color: theme.colorScheme.primary.withValues(alpha: 0.4),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: const Color(0xFF2563EB).withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -94,14 +83,13 @@ class _AnimatedFabState extends State<AnimatedFab>
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(widget.icon, color: Colors.white, size: 24),
+              Icon(widget.icon, color: theme.colorScheme.onPrimary, size: 24),
               if (widget.label != null) ...[
                 const SizedBox(width: 8),
                 Text(
                   widget.label!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
