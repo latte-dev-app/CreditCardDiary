@@ -170,12 +170,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 bottomLeft: Radius.circular(32),
                                 bottomRight: Radius.circular(32),
                               ),
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  width: 1,
-                                ),
-                              ),
                             ),
                           ),
                         ),
