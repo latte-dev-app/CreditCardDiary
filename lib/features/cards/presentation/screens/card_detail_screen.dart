@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -106,122 +107,185 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(
-                            int.parse(card.color.replaceFirst('#', '0xFF')),
+                  background: Stack(
+                    children: [
+                      // Base Gradient
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(
+                                int.parse(card.color.replaceFirst('#', '0xFF')),
+                              ),
+                              Color(
+                                int.parse(card.color.replaceFirst('#', '0xFF')),
+                              ).withValues(alpha: 0.8),
+                            ],
                           ),
-                          Color(
-                            int.parse(card.color.replaceFirst('#', '0xFF')),
-                          ).withValues(alpha: 0.8),
-                        ],
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(32),
-                        bottomRight: Radius.circular(32),
-                      ),
-                    ),
-                    child: SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child:
-                                      card.imagePath != null
-                                          ? ClipOval(
-                                            child: Image.file(
-                                              File(card.imagePath!),
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (_, __, ___) => const Icon(
-                                                    Icons.credit_card,
-                                                    color: Colors.white,
-                                                    size: 32,
-                                                  ),
-                                            ),
-                                          )
-                                          : const Icon(
-                                            Icons.credit_card,
-                                            color: Colors.white,
-                                            size: 32,
-                                          ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        card.name,
-                                        style: theme.textTheme.headlineSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                      ),
-                                      Text(
-                                        card.type,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(color: Colors.white70),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildInfoItem(
-                                  theme,
-                                  '締め日',
-                                  card.closingDay != null
-                                      ? '${card.closingDay}日'
-                                      : '未設定',
-                                ),
-                                _buildInfoItem(
-                                  theme,
-                                  '支払日',
-                                  card.paymentDay != null
-                                      ? '${card.paymentDay}日'
-                                      : '未設定',
-                                  valueColor:
-                                      _isPaymentDayApproaching(card.paymentDay)
-                                          ? theme.colorScheme.error
-                                          : null,
-                                  icon:
-                                      _isPaymentDayApproaching(card.paymentDay)
-                                          ? Icons.warning_rounded
-                                          : null,
-                                ),
-                              ],
-                            ),
-                          ],
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(32),
+                            bottomRight: Radius.circular(32),
+                          ),
                         ),
                       ),
-                    ),
+                      // Decorative Blobs
+                      Positioned(
+                        top: -50,
+                        right: -50,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -30,
+                        left: -30,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      ),
+                      // Glass Effect
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
+                        ),
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(32),
+                                bottomRight: Radius.circular(32),
+                              ),
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Card Content
+                      SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child:
+                                        card.imagePath != null
+                                            ? ClipOval(
+                                              child: Image.file(
+                                                File(card.imagePath!),
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (_, __, ___) => const Icon(
+                                                      Icons.credit_card,
+                                                      color: Colors.white,
+                                                      size: 32,
+                                                    ),
+                                              ),
+                                            )
+                                            : const Icon(
+                                              Icons.credit_card,
+                                              color: Colors.white,
+                                              size: 32,
+                                            ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          card.name,
+                                          style: theme.textTheme.headlineSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                        ),
+                                        Text(
+                                          card.type,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(color: Colors.white70),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildInfoItem(
+                                    theme,
+                                    '締め日',
+                                    card.closingDay != null
+                                        ? '${card.closingDay}日'
+                                        : '未設定',
+                                  ),
+                                  _buildInfoItem(
+                                    theme,
+                                    '支払日',
+                                    card.paymentDay != null
+                                        ? '${card.paymentDay}日'
+                                        : '未設定',
+                                    valueColor:
+                                        _isPaymentDayApproaching(
+                                              card.paymentDay,
+                                            )
+                                            ? theme.colorScheme.error
+                                            : null,
+                                    icon:
+                                        _isPaymentDayApproaching(
+                                              card.paymentDay,
+                                            )
+                                            ? Icons.warning_rounded
+                                            : null,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

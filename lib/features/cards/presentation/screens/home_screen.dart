@@ -682,7 +682,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color:
                             isPaymentApproaching
                                 ? theme.colorScheme.error
-                                : theme.colorScheme.primary,
+                                : theme.colorScheme.onSurface,
                         letterSpacing: -0.5,
                       ),
                     ),
