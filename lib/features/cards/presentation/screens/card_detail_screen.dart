@@ -92,6 +92,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 pinned: true,
                 backgroundColor: theme.scaffoldBackgroundColor,
                 surfaceTintColor: Colors.transparent,
+                shape: const Border(), // Remove default AppBar border
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
@@ -166,10 +167,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.1),
-                              borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(32),
-                                bottomRight: Radius.circular(32),
-                              ),
                             ),
                           ),
                         ),
