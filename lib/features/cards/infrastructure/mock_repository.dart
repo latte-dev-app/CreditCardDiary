@@ -65,6 +65,33 @@ class MockRepository
         cardId: card2.id,
       ),
     );
+    _fixedCosts.add(
+      FixedCost(
+        id: const Uuid().v4(),
+        title: '水道代 (Mock)',
+        amount: 3200,
+        paymentDay: 25,
+        cardId: card1.id,
+      ),
+    );
+    _fixedCosts.add(
+      FixedCost(
+        id: const Uuid().v4(),
+        title: '電気代 (Mock)',
+        amount: 5400,
+        paymentDay: 25,
+        cardId: card1.id,
+      ),
+    );
+    _fixedCosts.add(
+      FixedCost(
+        id: const Uuid().v4(),
+        title: 'ガス代 (Mock)',
+        amount: 4100,
+        paymentDay: 25,
+        cardId: card1.id,
+      ),
+    );
 
     // Dummy Transactions (Current Month)
     final now = DateTime.now();

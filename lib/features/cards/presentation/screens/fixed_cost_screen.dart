@@ -170,11 +170,15 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: ReorderableDragStartListener(
-                        index: index,
-                        child: const Icon(
-                          Icons.drag_handle,
-                          color: Colors.grey,
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.repeat,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                       title: Text(
@@ -203,6 +207,14 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                             ),
                             onPressed:
                                 () => _showDeleteConfirmation(context, item),
+                          ),
+                          const SizedBox(width: 8),
+                          ReorderableDragStartListener(
+                            index: index,
+                            child: const Icon(
+                              Icons.drag_handle,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
