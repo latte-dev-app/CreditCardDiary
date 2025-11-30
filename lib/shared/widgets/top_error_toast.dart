@@ -9,7 +9,7 @@ void showTopErrorToast(BuildContext context, String message) {
   overlayEntry = OverlayEntry(
     builder:
         (context) => Positioned(
-          top: MediaQuery.of(context).padding.top + 60,
+          top: MediaQuery.of(context).padding.top + 10,
           left: 0,
           right: 0,
           child: Center(
