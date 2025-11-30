@@ -74,6 +74,7 @@ Future<void> showAddCardDialog(
                                 'カード追加',
                                 style: theme.textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
                               const Spacer(),
@@ -185,7 +186,9 @@ Future<void> showAddCardDialog(
                                                       .add_photo_alternate_outlined,
                                                   size: 32,
                                                   color:
-                                                      theme.colorScheme.primary,
+                                                      theme
+                                                          .colorScheme
+                                                          .onSurface,
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
@@ -197,7 +200,7 @@ Future<void> showAddCardDialog(
                                                         color:
                                                             theme
                                                                 .colorScheme
-                                                                .primary,
+                                                                .onSurface,
                                                       ),
                                                 ),
                                               ],
