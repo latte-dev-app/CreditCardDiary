@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedMonth = DateTime.now();
   int? _selectedYear;
   bool _isPrivacyMode = false;
+  bool _isAmountAscending = false;
 
   @override
   void initState() {
@@ -169,6 +170,31 @@ class _HomeScreenState extends State<HomeScreen> {
           final budgetProgress =
               budget > 0 ? (totalAmount / budget).clamp(0.0, 1.0) : 0.0;
           final remainingBudget = budget - totalAmount;
+
+          // Sorting Logic
+          final sortedCards = List.of(provider.cards);
+          sortedCards.sort((a, b) {
+            final aApproaching = _isPaymentDayApproaching(a.paymentDay);
+            final bApproaching = _isPaymentDayApproaching(b.paymentDay);
+
+            // 1. Approaching payment (High priority)
+            if (aApproaching && !bApproaching) return -1;
+            if (!aApproaching && bApproaching) return 1;
+
+            // 2. Amount (Secondary sort)
+            final aAmount = monthTransactions
+                .where((t) => t.cardId == a.id)
+                .fold(0, (sum, t) => sum + t.amount);
+            final bAmount = monthTransactions
+                .where((t) => t.cardId == b.id)
+                .fold(0, (sum, t) => sum + t.amount);
+
+            if (_isAmountAscending) {
+              return aAmount.compareTo(bAmount);
+            } else {
+              return bAmount.compareTo(aAmount);
+            }
+          });
 
           return Column(
             children: [
@@ -437,11 +463,40 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-                          Text(
-                            '登録カード',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
+                          // Sort Button
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isAmountAscending = !_isAmountAscending;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '登録カード',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: theme.colorScheme.onSurface,
+                                        ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    _isAmountAscending
+                                        ? Icons.arrow_upward_rounded
+                                        : Icons.arrow_downward_rounded,
+                                    size: 18,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           TextButton(
@@ -472,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Card List
                     Expanded(
                       child:
-                          provider.cards.isEmpty
+                          sortedCards.isEmpty
                               ? _buildEmptyState(context)
                               : ListView.builder(
                                 padding: const EdgeInsets.fromLTRB(
@@ -481,9 +536,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   20,
                                   80,
                                 ),
-                                itemCount: provider.cards.length,
+                                itemCount: sortedCards.length,
                                 itemBuilder: (context, index) {
-                                  final card = provider.cards[index];
+                                  final card = sortedCards[index];
                                   final cardMonthTotal = monthTransactions
                                       .where((t) => t.cardId == card.id)
                                       .fold(0, (sum, t) => sum + t.amount);
