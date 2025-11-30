@@ -744,22 +744,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      if (paymentInfo.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          paymentInfo,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color:
-                                isPaymentApproaching
-                                    ? theme.colorScheme.error
-                                    : theme.colorScheme.onSurfaceVariant,
-                            fontWeight:
-                                isPaymentApproaching
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -777,6 +761,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         letterSpacing: -0.5,
                       ),
                     ),
+                    if (paymentInfo.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        paymentInfo,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color:
+                              isPaymentApproaching
+                                  ? theme.colorScheme.error
+                                  : theme.colorScheme.outline,
+                          fontWeight:
+                              isPaymentApproaching
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
