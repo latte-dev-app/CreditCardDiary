@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../domain/card_model.dart';
@@ -59,8 +60,8 @@ Future<void> showAddCardDialog(
                               width: 40,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurface.withOpacity(
-                                  0.2,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.2,
                                 ),
                                 borderRadius: BorderRadius.circular(2),
                               ),
@@ -162,12 +163,12 @@ Future<void> showAddCardDialog(
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: theme.colorScheme.outline
-                                              .withOpacity(0.2),
+                                              .withValues(alpha: 0.2),
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.05,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.05,
                                             ),
                                             blurRadius: 10,
                                             offset: const Offset(0, 5),
@@ -336,6 +337,7 @@ Future<void> showAddCardDialog(
                               height: 56,
                               child: FilledButton(
                                 onPressed: () async {
+                                  HapticFeedback.lightImpact();
                                   final cardName =
                                       isCustomName
                                           ? customNameController.text.trim()
@@ -433,9 +435,11 @@ Future<void> showAddCardDialog(
 
                                       onCardAdded(card);
                                     } finally {
-                                      setDialogState(() {
-                                        isLoading = false;
-                                      });
+                                      if (dialogContext.mounted) {
+                                        setDialogState(() {
+                                          isLoading = false;
+                                        });
+                                      }
                                     }
                                   } else {
                                     showTopErrorToast(

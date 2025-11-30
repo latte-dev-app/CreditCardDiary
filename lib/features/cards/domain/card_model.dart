@@ -58,6 +58,17 @@ class CreditCard {
       paymentDay: paymentDay ?? this.paymentDay,
     );
   }
+
+  // 締め日を考慮して、取引年月を請求年月へシフトする
+  (int, int) shiftByClosing(int year, int month) {
+    if (closingDay == null || closingDay == 31) {
+      return (year, month);
+    }
+    // 近似として、当月の取引は全て翌月の請求月に寄せる
+    final newMonth = month == 12 ? 1 : month + 1;
+    final newYear = month == 12 ? year + 1 : year;
+    return (newYear, newMonth);
+  }
 }
 
 class Transaction {

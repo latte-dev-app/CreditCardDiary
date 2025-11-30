@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../domain/card_model.dart';
 import '../screens/card_detail_screen.dart';
 import '../../domain/logic/payment_logic.dart';
+import '../../../../shared/utils/color_utils.dart';
 
 class HomeCardItem extends StatelessWidget {
   final CreditCard card;
@@ -80,47 +81,48 @@ class HomeCardItem extends StatelessWidget {
             padding: const EdgeInsets.all(24.0),
             child: Row(
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Color(
-                      int.parse(card.color.replaceFirst('#', '0xFF')),
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(
-                          int.parse(card.color.replaceFirst('#', '0xFF')),
-                        ).withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
+                Hero(
+                  tag: 'card_hero_${card.id}',
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.fromHex(card.color),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorUtils.fromHex(
+                            card.color,
+                          ).withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 1.5,
                       ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1.5,
                     ),
-                  ),
-                  child:
-                      card.imagePath != null
-                          ? ClipOval(
-                            child: Image.file(
-                              File(card.imagePath!),
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => const Icon(
-                                    Icons.credit_card,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
+                    child:
+                        card.imagePath != null
+                            ? ClipOval(
+                              child: Image.file(
+                                File(card.imagePath!),
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) => const Icon(
+                                      Icons.credit_card,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                              ),
+                            )
+                            : const Icon(
+                              Icons.credit_card,
+                              color: Colors.white,
+                              size: 28,
                             ),
-                          )
-                          : const Icon(
-                            Icons.credit_card,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                  ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(

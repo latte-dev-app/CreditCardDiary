@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../constants/card_constants.dart';
+import '../../../../shared/utils/color_utils.dart';
 
 /// カラー選択ウィジェット
+/// Apple HIG準拠: タップ領域 44x44pt以上
 class ColorPicker extends StatelessWidget {
   final String selectedColor;
   final ValueChanged<String> onColorSelected;
@@ -73,62 +75,68 @@ class _ColorPickerStatefulState extends State<_ColorPickerStateful> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: CardConstants.colorPalettes.keys.map((category) {
-                  final isSelected = currentCategory == category;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(category),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        currentCategoryNotifier.value = category;
-                      },
-                    ),
-                  );
-                }).toList(),
+                children:
+                    CardConstants.colorPalettes.keys.map((category) {
+                      final isSelected = currentCategory == category;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(category),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            currentCategoryNotifier.value = category;
+                          },
+                          visualDensity: VisualDensity.comfortable,
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             // カラーチップ
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: CardConstants.colorPalettes[currentCategory]!.map((color) {
-                final isSelected = widget.selectedColor == color;
-                return GestureDetector(
-                  onTap: () => widget.onColorSelected(color),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Color(
-                        int.parse(color.replaceFirst('#', '0xFF')),
+              spacing: 12, // 間隔を広げる
+              runSpacing: 12,
+              children:
+                  CardConstants.colorPalettes[currentCategory]!.map((color) {
+                    final isSelected = widget.selectedColor == color;
+                    return GestureDetector(
+                      onTap: () => widget.onColorSelected(color),
+                      child: Container(
+                        width: 48, // HIG推奨(44pt)以上
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: ColorUtils.fromHex(color),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                isSelected ? Colors.black : Colors.grey[300]!,
+                            width: isSelected ? 3 : 1,
+                          ),
+                          boxShadow:
+                              isSelected
+                                  ? [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                  : null,
+                        ),
+                        child:
+                            isSelected
+                                ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 24,
+                                )
+                                : null,
                       ),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected ? Colors.black : Colors.grey[400]!,
-                        width: isSelected ? 3 : 1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 20,
-                          )
-                        : null,
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
           ],
         );
@@ -136,4 +144,3 @@ class _ColorPickerStatefulState extends State<_ColorPickerStateful> {
     );
   }
 }
-

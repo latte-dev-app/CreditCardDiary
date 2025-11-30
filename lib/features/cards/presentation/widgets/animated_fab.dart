@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AnimatedFab extends StatefulWidget {
   final VoidCallback onPressed;
@@ -41,6 +42,7 @@ class _AnimatedFabState extends State<AnimatedFab>
   }
 
   void _handleTapDown(TapDownDetails details) {
+    HapticFeedback.selectionClick();
     _controller.forward();
   }
 

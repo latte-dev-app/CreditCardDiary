@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesDataSource {
@@ -35,14 +36,22 @@ class SharedPreferencesDataSource {
     List<Map<String, dynamic>> cards = [];
     List<Map<String, dynamic>> transactions = [];
 
-    if (cardsJsonString != null) {
-      final cardsJson = jsonDecode(cardsJsonString) as List;
-      cards = cardsJson.cast<Map<String, dynamic>>().toList();
-    }
+    try {
+      if (cardsJsonString != null) {
+        final cardsJson = jsonDecode(cardsJsonString) as List;
+        cards = cardsJson.cast<Map<String, dynamic>>().toList();
+      }
 
-    if (transactionsJsonString != null) {
-      final transactionsJson = jsonDecode(transactionsJsonString) as List;
-      transactions = transactionsJson.cast<Map<String, dynamic>>().toList();
+      if (transactionsJsonString != null) {
+        final transactionsJson = jsonDecode(transactionsJsonString) as List;
+        transactions = transactionsJson.cast<Map<String, dynamic>>().toList();
+      }
+    } catch (e) {
+      // JSONパースエラー時は空のデータを返してアプリのクラッシュを防ぐ
+      // 将来的にはエラーログ送信やバックアップ復元への誘導を検討
+      debugPrint('Error loading data: $e');
+      cards = [];
+      transactions = [];
     }
 
     return {'cards': cards, 'transactions': transactions};

@@ -206,7 +206,7 @@ class CardProvider with ChangeNotifier {
     }
 
     for (final t in _transactions.where((x) => x.cardId == cardId)) {
-      final shifted = _shiftByClosing(card, t.year, t.month);
+      final shifted = card.shiftByClosing(t.year, t.month);
       final key = DateFormatter.toYearMonthString(shifted.$1, shifted.$2);
       monthlyTotal[key] = (monthlyTotal[key] ?? 0) + t.amount;
     }
@@ -226,7 +226,7 @@ class CardProvider with ChangeNotifier {
       final safeCard =
           card ?? dm.CreditCard(id: '', name: '', type: '', color: '#000000');
 
-      final shifted = _shiftByClosing(safeCard, t.year, t.month);
+      final shifted = safeCard.shiftByClosing(t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         sum += t.amount;
       }
@@ -241,22 +241,12 @@ class CardProvider with ChangeNotifier {
       final safeCard =
           card ?? dm.CreditCard(id: '', name: '', type: '', color: '#000000');
 
-      final shifted = _shiftByClosing(safeCard, t.year, t.month);
+      final shifted = safeCard.shiftByClosing(t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         list.add(t);
       }
     }
     return list;
-  }
-
-  (int, int) _shiftByClosing(dm.CreditCard card, int year, int month) {
-    if (card.closingDay == null || card.closingDay == 31) {
-      return (year, month);
-    }
-    // 近似として、当月の取引は全て翌月の請求月に寄せる
-    final newMonth = month == 12 ? 1 : month + 1;
-    final newYear = month == 12 ? year + 1 : year;
-    return (newYear, newMonth);
   }
 
   // 全体の合計金額

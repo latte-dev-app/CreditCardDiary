@@ -13,6 +13,8 @@ import '../widgets/number_input_formatter.dart';
 import '../widgets/animated_fab.dart';
 import '../../domain/logic/payment_logic.dart';
 import '../../../../shared/widgets/top_error_toast.dart';
+import '../../../../shared/utils/color_utils.dart';
+import '../widgets/color_picker.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
@@ -101,23 +103,20 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     child: Stack(
                       children: [
                         // Base Gradient
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(
-                                  int.parse(
-                                    card.color.replaceFirst('#', '0xFF'),
-                                  ),
-                                ),
-                                Color(
-                                  int.parse(
-                                    card.color.replaceFirst('#', '0xFF'),
-                                  ),
-                                ).withValues(alpha: 0.8),
-                              ],
+                        Hero(
+                          tag: 'card_hero_${card.id}',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  ColorUtils.fromHex(card.color),
+                                  ColorUtils.fromHex(
+                                    card.color,
+                                  ).withValues(alpha: 0.8),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -211,14 +210,24 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                             style: theme.textTheme.headlineSmall
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
+                                                  color:
+                                                      ColorUtils.getTextColorForBackground(
+                                                        ColorUtils.fromHex(
+                                                          card.color,
+                                                        ),
+                                                      ),
                                                 ),
                                           ),
                                           Text(
                                             card.type,
                                             style: theme.textTheme.bodyMedium
                                                 ?.copyWith(
-                                                  color: Colors.white70,
+                                                  color:
+                                                      ColorUtils.getTextColorForBackground(
+                                                        ColorUtils.fromHex(
+                                                          card.color,
+                                                        ),
+                                                      ).withValues(alpha: 0.8),
                                                 ),
                                           ),
                                         ],
@@ -237,6 +246,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                       card.closingDay != null
                                           ? '${card.closingDay}日'
                                           : '未設定',
+                                      textColor:
+                                          ColorUtils.getTextColorForBackground(
+                                            ColorUtils.fromHex(card.color),
+                                          ),
                                     ),
                                     _buildInfoItem(
                                       theme,
@@ -256,6 +269,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                               )
                                               ? Icons.warning_rounded
                                               : null,
+                                      textColor:
+                                          ColorUtils.getTextColorForBackground(
+                                            ColorUtils.fromHex(card.color),
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -268,7 +285,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   ),
                 ),
               ),
-              // Pie Chart removed as per user request
               SliverPadding(
                 padding: const EdgeInsets.all(20),
                 sliver:
@@ -345,12 +361,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     String value, {
     Color? valueColor,
     IconData? icon,
+    Color textColor = Colors.white,
   }) {
     return Column(
       children: [
         Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: textColor.withValues(alpha: 0.7),
+          ),
         ),
         const SizedBox(height: 4),
         Row(
@@ -364,7 +383,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               value,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: valueColor ?? Colors.white,
+                color: valueColor ?? textColor,
               ),
             ),
           ],
@@ -448,7 +467,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             IconButton(
                               icon: Icon(
                                 Icons.edit_outlined,
-                                size: 20,
+                                size: 24,
                                 color: theme.colorScheme.primary,
                               ),
                               onPressed:
@@ -460,7 +479,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             IconButton(
                               icon: Icon(
                                 Icons.delete_outline,
-                                size: 20,
+                                size: 24,
                                 color: theme.colorScheme.error,
                               ),
                               onPressed:
@@ -626,10 +645,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildColorPicker(
-                          selectedColor,
-                          (color) =>
-                              setDialogState(() => selectedColor = color),
+                        ColorPicker(
+                          selectedColor: selectedColor,
+                          onColorSelected: (color) {
+                            setDialogState(() => selectedColor = color);
+                          },
                         ),
                       ],
                     ),
@@ -641,6 +661,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     ),
                     FilledButton(
                       onPressed: () async {
+                        HapticFeedback.lightImpact();
                         if (nameController.text.isNotEmpty) {
                           String? imagePath = currentImagePath;
                           if (selectedImageFile != null) {
@@ -674,53 +695,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   ],
                 ),
           ),
-    );
-  }
-
-  Widget _buildColorPicker(
-    String selectedColor,
-    Function(String) onColorSelected,
-  ) {
-    final colors = [
-      '#F44336',
-      '#E91E63',
-      '#9C27B0',
-      '#673AB7',
-      '#3F51B5',
-      '#2196F3',
-      '#009688',
-      '#4CAF50',
-      '#FFC107',
-      '#FF9800',
-      '#795548',
-      '#607D8B',
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children:
-          colors.map((color) {
-            final isSelected = selectedColor == color;
-            return GestureDetector(
-              onTap: () => onColorSelected(color),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
-                  shape: BoxShape.circle,
-                  border:
-                      isSelected
-                          ? Border.all(color: Colors.black, width: 2)
-                          : null,
-                ),
-                child:
-                    isSelected
-                        ? const Icon(Icons.check, color: Colors.white, size: 16)
-                        : null,
-              ),
-            );
-          }).toList(),
     );
   }
 

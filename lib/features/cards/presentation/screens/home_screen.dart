@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -60,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _previousMonth() {
+    HapticFeedback.lightImpact();
     setState(() {
       _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
     });
@@ -67,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _nextMonth() {
+    HapticFeedback.lightImpact();
     setState(() {
       _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
     });
@@ -250,13 +253,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     AnimatedOpacity(
                       opacity: _isSliverCollapsed ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 200),
-                      child: Text(
-                        _isPrivacyMode
-                            ? '****'
-                            : '¥${NumberFormat('#,###').format(totalAmount)}',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          _isPrivacyMode
+                              ? '****'
+                              : '¥${NumberFormat('#,###').format(totalAmount)}',
+                          key: ValueKey(
+                            '${_isPrivacyMode}_${totalAmount}_collapsed',
+                          ),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -313,15 +322,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    _isPrivacyMode
-                                        ? '****'
-                                        : '¥${NumberFormat('#,###').format(totalAmount)}',
-                                    style: theme.textTheme.displaySmall
-                                        ?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    child: Text(
+                                      _isPrivacyMode
+                                          ? '****'
+                                          : '¥${NumberFormat('#,###').format(totalAmount)}',
+                                      key: ValueKey(
+                                        '${_isPrivacyMode}_${totalAmount}_expanded',
+                                      ),
+                                      style: theme.textTheme.displaySmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -452,12 +467,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         .fold(0, (sum, t) => sum + t.amount);
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      child: HomeCardItem(
-                        card: card,
-                        amount: cardMonthTotal,
-                        currencyFormat: currencyFormat,
-                        viewingMonth: month,
-                        isPrivacyMode: _isPrivacyMode,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: HomeCardItem(
+                          key: ValueKey('${card.id}_$month'),
+                          card: card,
+                          amount: cardMonthTotal,
+                          currencyFormat: currencyFormat,
+                          viewingMonth: month,
+                          isPrivacyMode: _isPrivacyMode,
+                        ),
                       ),
                     );
                   }, childCount: sortedCards.length),
