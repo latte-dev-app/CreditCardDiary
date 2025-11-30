@@ -4,8 +4,8 @@ import 'package:uuid/uuid.dart';
 import '../../application/fixed_cost_provider.dart';
 import '../../domain/fixed_cost_model.dart';
 import '../../application/card_provider.dart';
-import '../widgets/animated_fab.dart';
 import '../../../../shared/widgets/top_error_toast.dart';
+import '../../../../shared/widgets/loading_overlay.dart';
 
 class FixedCostScreen extends StatefulWidget {
   const FixedCostScreen({super.key});
@@ -257,9 +257,9 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80),
-        child: AnimatedFab(
+        child: FloatingActionButton(
           onPressed: () => _showAddEditDialog(context, null),
-          icon: Icons.add,
+          child: const Icon(Icons.add),
         ),
       ),
     );
@@ -281,6 +281,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     }
 
     final theme = Theme.of(context);
+    bool isLoading = false;
 
     showModalBottomSheet(
       context: context,
@@ -291,8 +292,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
       ),
       builder:
           (dialogContext) => StatefulBuilder(
-            builder:
-                (context, setState) => Padding(
+            builder: (context, setState) {
+              return LoadingOverlay(
+                isLoading: isLoading,
+                child: Padding(
                   padding: EdgeInsets.only(
                     bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
                   ),
@@ -434,7 +437,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                     width: double.infinity,
                                     height: 56,
                                     child: FilledButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         final title = titleController.text;
                                         final amount =
                                             int.tryParse(
@@ -455,25 +458,36 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                           return;
                                         }
 
-                                        final newItem = FixedCost(
-                                          id: item?.id ?? const Uuid().v4(),
-                                          title: title,
-                                          amount: amount,
-                                          paymentDay: paymentDay,
-                                          cardId: selectedCardId,
-                                        );
+                                        setState(() => isLoading = true);
+                                        try {
+                                          final newItem = FixedCost(
+                                            id: item?.id ?? const Uuid().v4(),
+                                            title: title,
+                                            amount: amount,
+                                            paymentDay: paymentDay,
+                                            cardId: selectedCardId,
+                                          );
 
-                                        final provider =
-                                            Provider.of<FixedCostProvider>(
-                                              context,
-                                              listen: false,
+                                          final provider =
+                                              context.read<FixedCostProvider>();
+                                          if (item == null) {
+                                            await provider.addFixedCost(
+                                              newItem,
                                             );
-                                        if (item == null) {
-                                          provider.addFixedCost(newItem);
-                                        } else {
-                                          provider.updateFixedCost(newItem);
+                                          } else {
+                                            await provider.updateFixedCost(
+                                              newItem,
+                                            );
+                                          }
+
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                          }
+                                        } finally {
+                                          if (context.mounted) {
+                                            setState(() => isLoading = false);
+                                          }
                                         }
-                                        Navigator.pop(context);
                                       },
                                       style: FilledButton.styleFrom(
                                         shape: RoundedRectangleBorder(
@@ -532,6 +546,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                         ),
                   ),
                 ),
+              );
+            },
           ),
     );
   }

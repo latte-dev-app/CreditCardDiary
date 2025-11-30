@@ -11,6 +11,7 @@ import 'app_theme.dart';
 import '../features/cards/application/fixed_cost_provider.dart';
 import '../features/cards/infrastructure/local_storage.dart';
 import 'theme_provider.dart';
+import '../features/cards/presentation/screens/splash_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -52,7 +53,14 @@ class MyApp extends StatelessWidget {
             supportedLocales: const [
               Locale('ja'), // Japanese
             ],
-            home: const MainScreen(),
+            home: Consumer2<CardProvider, FixedCostProvider>(
+              builder: (context, cardProvider, fixedCostProvider, child) {
+                if (cardProvider.isLoading || fixedCostProvider.isLoading) {
+                  return const SplashScreen();
+                }
+                return const MainScreen();
+              },
+            ),
           );
         },
       ),

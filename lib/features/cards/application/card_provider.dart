@@ -18,15 +18,24 @@ class CardProvider with ChangeNotifier {
   List<dm.Transaction> _transactions = [];
   bool _useBillingMonth = false; // 請求月ベース集計フラグ
   final Map<String, int> _budgetCache = {}; // 予算キャッシュ
+  bool _isLoading = false;
 
   List<dm.CreditCard> get cards => _cards;
   List<dm.Transaction> get transactions => _transactions;
   bool get useBillingMonth => _useBillingMonth;
+  bool get isLoading => _isLoading;
 
   // 初期化：データ読み込み
   Future<void> init() async {
-    await _loadAggregationMode();
-    await _loadFromDb();
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _loadAggregationMode();
+      await _loadFromDb();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // 集計モードの読み込み
