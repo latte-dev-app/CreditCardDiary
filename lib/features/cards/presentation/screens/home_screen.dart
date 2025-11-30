@@ -196,367 +196,356 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           });
 
-          return Column(
-            children: [
-              // Fixed Header
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme
-                          .colorScheme
-                          .primaryContainer, // Or a lighter shade of primary
-                    ],
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                expandedHeight: 340.0,
+                backgroundColor: theme.colorScheme.primary,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(32),
                   ),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
                 ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top Bar: Date Only
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: () => _showYearPicker(context, availableYears),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Row(
                           children: [
-                            InkWell(
-                              onTap:
-                                  () =>
-                                      _showYearPicker(context, availableYears),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      '$year年$month月',
-                                      style: theme.textTheme.titleLarge
-                                          ?.copyWith(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.9,
-                                            ),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.keyboard_arrow_down_rounded,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.9,
-                                      ),
-                                      size: 24,
-                                    ),
-                                  ],
-                                ),
+                            Text(
+                              '$year年$month月',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isPrivacyMode = !_isPrivacyMode;
-                                });
-                              },
-                              icon: Icon(
-                                _isPrivacyMode
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              size: 24,
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        // Total Amount (Static)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '今月の請求総額',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _isPrivacyMode
-                                    ? '****'
-                                    : '¥${NumberFormat('#,###').format(totalAmount)}',
-                                style: theme.textTheme.displaySmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Budget Section
-                        InkWell(
-                          onTap:
-                              () => showBudgetDialog(
-                                context,
-                                provider,
-                                year,
-                                month,
-                              ),
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isPrivacyMode = !_isPrivacyMode;
+                        });
+                      },
+                      icon: Icon(
+                        _isPrivacyMode
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primaryContainer,
+                        ],
+                      ),
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(32),
+                      ),
+                    ),
+                    child: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            // Total Amount
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '今月の請求総額',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _isPrivacyMode
+                                        ? '****'
+                                        : '¥${NumberFormat('#,###').format(totalAmount)}',
+                                    style: theme.textTheme.displaySmall
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      budget > 0
-                                          ? '残り予算: ${_isPrivacyMode ? '****' : currencyFormat.format(remainingBudget)}'
-                                          : '予算を設定する',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    if (budget > 0)
-                                      Text(
-                                        '${(budgetProgress * 100).toInt()}%',
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.9,
-                                              ),
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                  ],
+                            const SizedBox(height: 24),
+                            // Budget Section
+                            InkWell(
+                              onTap:
+                                  () => showBudgetDialog(
+                                    context,
+                                    provider,
+                                    year,
+                                    month,
+                                  ),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                  ),
                                 ),
-                                if (budget > 0) ...[
-                                  const SizedBox(height: 12),
-                                  Stack(
-                                    children: [
-                                      Container(
-                                        height: 12,
-                                        width: double.infinity,
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.2,
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          budget > 0
+                                              ? '残り予算: ${_isPrivacyMode ? '****' : currencyFormat.format(remainingBudget)}'
+                                              : '予算を設定する',
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        if (budget > 0)
+                                          Text(
+                                            '${(budgetProgress * 100).toInt()}%',
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.9),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
+                                      ],
+                                    ),
+                                    if (budget > 0) ...[
+                                      const SizedBox(height: 12),
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            height: 12,
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                      TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(
-                                          begin: 0,
-                                          end: budgetProgress,
-                                        ),
-                                        duration: const Duration(
-                                          milliseconds: 1000,
-                                        ),
-                                        curve: Curves.easeOutCubic,
-                                        builder: (context, value, child) {
-                                          return FractionallySizedBox(
-                                            widthFactor: value,
-                                            child: Container(
-                                              height: 12,
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    remainingBudget < 0
-                                                        ? theme
-                                                            .colorScheme
-                                                            .error
-                                                        : const Color(
-                                                          0xFF34D399,
-                                                        ), // Emerald 400
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: (remainingBudget < 0
+                                          TweenAnimationBuilder<double>(
+                                            tween: Tween<double>(
+                                              begin: 0,
+                                              end: budgetProgress,
+                                            ),
+                                            duration: const Duration(
+                                              milliseconds: 1000,
+                                            ),
+                                            curve: Curves.easeOutCubic,
+                                            builder: (context, value, child) {
+                                              return FractionallySizedBox(
+                                                widthFactor: value,
+                                                child: Container(
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        remainingBudget < 0
                                                             ? theme
                                                                 .colorScheme
                                                                 .error
                                                             : const Color(
                                                               0xFF34D399,
-                                                            ))
-                                                        .withValues(alpha: 0.5),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2),
+                                                            ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: (remainingBudget <
+                                                                    0
+                                                                ? theme
+                                                                    .colorScheme
+                                                                    .error
+                                                                : const Color(
+                                                                  0xFF34D399,
+                                                                ))
+                                                            .withValues(
+                                                              alpha: 0.5,
+                                                            ),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(
+                                                          0,
+                                                          2,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ],
-                                  ),
-                                ],
-                              ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-              // Scrollable Body
-              Expanded(
-                child: Column(
-                  children: [
-                    // Month Navigation
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: _previousMonth,
-                            style: TextButton.styleFrom(
-                              foregroundColor: theme.colorScheme.onSurface,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.chevron_left, size: 20),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${prevMonthDate.month}月',
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: _previousMonth,
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onSurface,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                          // Sort Button
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                _isAmountAscending = !_isAmountAscending;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '登録カード',
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: theme.colorScheme.onSurface,
-                                        ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    _isAmountAscending
-                                        ? Icons.arrow_upward_rounded
-                                        : Icons.arrow_downward_rounded,
-                                    size: 18,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.6),
-                                  ),
-                                ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.chevron_left, size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${prevMonthDate.month}月',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: _nextMonth,
-                            style: TextButton.styleFrom(
-                              foregroundColor: theme.colorScheme.onSurface,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '${nextMonthDate.month}月',
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.chevron_right, size: 20),
-                              ],
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    // Card List
-                    Expanded(
-                      child:
-                          sortedCards.isEmpty
-                              ? _buildEmptyState(context)
-                              : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
-                                  20,
-                                  8,
-                                  20,
-                                  80,
+                      // Sort Button
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _isAmountAscending = !_isAmountAscending;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '登録カード',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
                                 ),
-                                itemCount: sortedCards.length,
-                                itemBuilder: (context, index) {
-                                  final card = sortedCards[index];
-                                  final cardMonthTotal = monthTransactions
-                                      .where((t) => t.cardId == card.id)
-                                      .fold(0, (sum, t) => sum + t.amount);
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: _buildCardItem(
-                                      context,
-                                      card,
-                                      cardMonthTotal,
-                                      currencyFormat,
-                                    ),
-                                  );
-                                },
                               ),
-                    ),
-                  ],
+                              const SizedBox(width: 4),
+                              Icon(
+                                _isAmountAscending
+                                    ? Icons.arrow_upward_rounded
+                                    : Icons.arrow_downward_rounded,
+                                size: 18,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _nextMonth,
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onSurface,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${nextMonthDate.month}月',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.chevron_right, size: 20),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+              if (sortedCards.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildEmptyState(context),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final card = sortedCards[index];
+                    final cardMonthTotal = monthTransactions
+                        .where((t) => t.cardId == card.id)
+                        .fold(0, (sum, t) => sum + t.amount);
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                      child: _buildCardItem(
+                        context,
+                        card,
+                        cardMonthTotal,
+                        currencyFormat,
+                      ),
+                    );
+                  }, childCount: sortedCards.length),
+                ),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
             ],
           );
         },

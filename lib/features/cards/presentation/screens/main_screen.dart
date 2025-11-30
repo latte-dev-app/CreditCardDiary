@@ -51,43 +51,48 @@ class _MainScreenState extends State<MainScreen> {
               highlightColor: Colors.transparent,
               hoverColor: Colors.transparent,
             ),
-            child: BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.transparent,
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              iconSize: 24.0,
-              selectedFontSize: 14.0,
-              unselectedFontSize: 14.0, // Consistent font size
-              selectedItemColor: colorScheme.primary,
-              unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              elevation: 0,
-              items: [
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.home_outlined),
-                  activeIcon: const Icon(Icons.home),
-                  label: l10n.home,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                currentIndex: _currentIndex,
+                onTap: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                iconSize: 24.0,
+                selectedFontSize: 14.0,
+                unselectedFontSize: 14.0, // Consistent font size
+                selectedItemColor: colorScheme.primary,
+                unselectedItemColor: colorScheme.onSurface.withValues(
+                  alpha: 0.6,
                 ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.repeat),
-                  label: '固定費',
-                ),
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.show_chart),
-                  label: '推移',
-                ),
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.settings_outlined),
-                  activeIcon: const Icon(Icons.settings),
-                  label: l10n.settings,
-                ),
-              ],
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+                elevation: 0,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.home_outlined),
+                    activeIcon: const Icon(Icons.home),
+                    label: l10n.home,
+                  ),
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.repeat),
+                    label: '固定費',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.show_chart),
+                    label: '推移',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.settings_outlined),
+                    activeIcon: const Icon(Icons.settings),
+                    label: l10n.settings,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
