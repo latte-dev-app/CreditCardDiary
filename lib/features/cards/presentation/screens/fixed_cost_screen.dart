@@ -271,9 +271,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final amountController = TextEditingController(
       text: item?.amount.toString() ?? '',
     );
-    final paymentDayController = TextEditingController(
-      text: item?.paymentDay.toString() ?? '',
-    );
+    int selectedPaymentDay = item?.paymentDay ?? 1;
     String? selectedCardId = item?.cardId;
 
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
@@ -392,12 +390,26 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                         ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 12),
-                                  TextField(
-                                    controller: paymentDayController,
+                                  DropdownButtonFormField<int>(
+                                    value: selectedPaymentDay,
                                     decoration: const InputDecoration(
                                       labelText: '日 (1-31)',
                                     ),
-                                    keyboardType: TextInputType.number,
+                                    items:
+                                        List.generate(
+                                          31,
+                                          (index) => index + 1,
+                                        ).map((day) {
+                                          return DropdownMenuItem(
+                                            value: day,
+                                            child: Text('$day日'),
+                                          );
+                                        }).toList(),
+                                    onChanged: (value) {
+                                      if (value != null) {
+                                        selectedPaymentDay = value;
+                                      }
+                                    },
                                   ),
                                   const SizedBox(height: 24),
 
@@ -445,24 +457,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                               amountController.text,
                                             ) ??
                                             0;
-                                        final paymentDay =
-                                            int.tryParse(
-                                              paymentDayController.text,
-                                            ) ??
-                                            1;
+                                        final paymentDay = selectedPaymentDay;
 
                                         if (title.isEmpty || amount <= 0) {
                                           showTopErrorToast(
                                             dialogContext,
                                             'タイトルと金額を入力してください',
-                                          );
-                                          return;
-                                        }
-
-                                        if (paymentDay < 1 || paymentDay > 31) {
-                                          showTopErrorToast(
-                                            dialogContext,
-                                            '支払日は1〜31の間で入力してください',
                                           );
                                           return;
                                         }
