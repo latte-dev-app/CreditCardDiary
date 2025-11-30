@@ -577,6 +577,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         card,
                         cardMonthTotal,
                         currencyFormat,
+                        month,
                       ),
                     );
                   }, childCount: sortedCards.length),
@@ -636,6 +637,7 @@ class _HomeScreenState extends State<HomeScreen> {
     dynamic card,
     int amount,
     NumberFormat currencyFormat,
+    int viewingMonth,
   ) {
     final theme = Theme.of(context);
     final isPaymentApproaching = _isPaymentDayApproaching(card.paymentDay);
@@ -656,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       final difference = paymentDate.difference(today).inDays;
 
-      paymentInfo = '${paymentDate.day}日支払い';
+      paymentInfo = '$viewingMonth月${card.paymentDay}日支払い';
       if (isPaymentApproaching) {
         paymentInfo += ' (あと$difference日)';
       }
