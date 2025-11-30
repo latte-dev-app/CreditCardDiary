@@ -11,6 +11,7 @@ import '../../application/card_provider.dart';
 import '../../infrastructure/image_storage.dart';
 import '../widgets/number_input_formatter.dart';
 import '../widgets/animated_fab.dart';
+import '../../domain/logic/payment_logic.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
@@ -51,23 +52,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         card = widget.card;
       });
     }
-  }
-
-  bool _isPaymentDayApproaching(int? paymentDay) {
-    if (paymentDay == null) return false;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    // Check current month's payment day
-    DateTime paymentDate = DateTime(now.year, now.month, paymentDay);
-
-    // If passed, check next month
-    if (paymentDate.isBefore(today)) {
-      paymentDate = DateTime(now.year, now.month + 1, paymentDay);
-    }
-
-    final difference = paymentDate.difference(today).inDays;
-    return difference >= 0 && difference <= 3;
   }
 
   @override
@@ -260,13 +244,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                           ? '${card.paymentDay}日'
                                           : '未設定',
                                       valueColor:
-                                          _isPaymentDayApproaching(
+                                          PaymentLogic.isPaymentDayApproaching(
                                                 card.paymentDay,
                                               )
                                               ? theme.colorScheme.error
                                               : null,
                                       icon:
-                                          _isPaymentDayApproaching(
+                                          PaymentLogic.isPaymentDayApproaching(
                                                 card.paymentDay,
                                               )
                                               ? Icons.warning_rounded

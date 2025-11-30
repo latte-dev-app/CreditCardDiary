@@ -1,14 +1,16 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../application/card_provider.dart';
 import '../../../../shared/services/notification_service.dart';
-import 'card_detail_screen.dart';
+
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';
+
 import '../widgets/animated_fab.dart';
+import '../widgets/home_card_item.dart';
+import '../../domain/logic/payment_logic.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -152,23 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  bool _isPaymentDayApproaching(int? paymentDay) {
-    if (paymentDay == null) return false;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    // Check current month's payment day
-    DateTime paymentDate = DateTime(now.year, now.month, paymentDay);
-
-    // If passed, check next month
-    if (paymentDate.isBefore(today)) {
-      paymentDate = DateTime(now.year, now.month + 1, paymentDay);
-    }
-
-    final difference = paymentDate.difference(today).inDays;
-    return difference >= 0 && difference <= 3;
-  }
-
   @override
   Widget build(BuildContext context) {
     final year = _selectedYear ?? _selectedMonth.year;
@@ -196,8 +181,12 @@ class _HomeScreenState extends State<HomeScreen> {
           // Sorting Logic
           final sortedCards = List.of(provider.cards);
           sortedCards.sort((a, b) {
-            final aApproaching = _isPaymentDayApproaching(a.paymentDay);
-            final bApproaching = _isPaymentDayApproaching(b.paymentDay);
+            final aApproaching = PaymentLogic.isPaymentDayApproaching(
+              a.paymentDay,
+            );
+            final bApproaching = PaymentLogic.isPaymentDayApproaching(
+              b.paymentDay,
+            );
 
             // 1. Approaching payment (High priority)
             if (aApproaching && !bApproaching) return -1;
@@ -572,12 +561,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         .fold(0, (sum, t) => sum + t.amount);
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      child: _buildCardItem(
-                        context,
-                        card,
-                        cardMonthTotal,
-                        currencyFormat,
-                        month,
+                      child: HomeCardItem(
+                        card: card,
+                        amount: cardMonthTotal,
+                        currencyFormat: currencyFormat,
+                        viewingMonth: month,
+                        isPrivacyMode: _isPrivacyMode,
                       ),
                     );
                   }, childCount: sortedCards.length),
@@ -627,188 +616,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardItem(
-    BuildContext context,
-    dynamic card,
-    int amount,
-    NumberFormat currencyFormat,
-    int viewingMonth,
-  ) {
-    final theme = Theme.of(context);
-    final isPaymentApproaching = _isPaymentDayApproaching(card.paymentDay);
-    final borderColor =
-        isPaymentApproaching
-            ? theme.colorScheme.error
-            : theme.colorScheme.outline.withValues(alpha: 0.5);
-    final borderWidth = isPaymentApproaching ? 2.0 : 1.0;
-
-    // Calculate next payment date and days remaining
-    String paymentInfo = '';
-    if (card.paymentDay != null) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      DateTime paymentDate = DateTime(now.year, now.month, card.paymentDay!);
-      if (paymentDate.isBefore(today)) {
-        paymentDate = DateTime(now.year, now.month + 1, card.paymentDay!);
-      }
-      final difference = paymentDate.difference(today).inDays;
-
-      paymentInfo = '$viewingMonth月${card.paymentDay}日支払い';
-      if (isPaymentApproaching) {
-        paymentInfo += ' (あと$difference日)';
-      }
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: borderWidth),
-        boxShadow: [
-          BoxShadow(
-            color:
-                isPaymentApproaching
-                    ? theme.colorScheme.error.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: 0.03),
-            blurRadius: isPaymentApproaching ? 20 : 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Color(
-                      int.parse(card.color.replaceFirst('#', '0xFF')),
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(
-                          int.parse(card.color.replaceFirst('#', '0xFF')),
-                        ).withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1.5,
-                    ),
-                  ),
-                  child:
-                      card.imagePath != null
-                          ? ClipOval(
-                            child: Image.file(
-                              File(card.imagePath!),
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => const Icon(
-                                    Icons.credit_card,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                            ),
-                          )
-                          : const Icon(
-                            Icons.credit_card,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              card.name,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (isPaymentApproaching) ...[
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.warning_rounded,
-                              size: 18,
-                              color: theme.colorScheme.error,
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        card.type,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _isPrivacyMode ? '****' : currencyFormat.format(amount),
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color:
-                            isPaymentApproaching
-                                ? theme.colorScheme.error
-                                : theme.colorScheme.onSurface,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    if (paymentInfo.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        paymentInfo,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color:
-                              isPaymentApproaching
-                                  ? theme.colorScheme.error
-                                  : theme.colorScheme.outline,
-                          fontWeight:
-                              isPaymentApproaching
-                                  ? FontWeight.bold
-                                  : FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
