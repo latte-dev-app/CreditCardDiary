@@ -656,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       final difference = paymentDate.difference(today).inDays;
 
-      paymentInfo = '${paymentDate.month}/${paymentDate.day}支払い';
+      paymentInfo = '${paymentDate.day}日支払い';
       if (isPaymentApproaching) {
         paymentInfo += ' (あと$difference日)';
       }
