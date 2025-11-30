@@ -259,7 +259,9 @@ Future<void> showAddCardDialog(
                                     decoration: const InputDecoration(
                                       labelText: 'カード名を入力',
                                       hintText: '例: その他のカード名',
+                                      counterText: '',
                                     ),
+                                    maxLength: 20,
                                   ),
                                 ],
 
@@ -303,7 +305,9 @@ Future<void> showAddCardDialog(
                                     decoration: const InputDecoration(
                                       labelText: 'カード種類を入力',
                                       hintText: '例: その他のカード種類',
+                                      counterText: '',
                                     ),
+                                    maxLength: 20,
                                   ),
                                 ],
 
@@ -337,6 +341,7 @@ Future<void> showAddCardDialog(
                               height: 56,
                               child: FilledButton(
                                 onPressed: () async {
+                                  if (isLoading) return;
                                   HapticFeedback.lightImpact();
                                   final cardName =
                                       isCustomName

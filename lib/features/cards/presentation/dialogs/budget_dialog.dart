@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../application/card_provider.dart';
 import '../widgets/number_input_formatter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:creditcarddiary/shared/widgets/top_error_toast.dart';
 
 /// 予算設定ダイアログを表示
 Future<void> showBudgetDialog(
@@ -89,6 +90,8 @@ Future<void> showBudgetDialog(
                       Navigator.pop(context);
                     }
                   }
+                } else {
+                  showTopErrorToast(context, '予算額を入力してください');
                 }
               },
               child: Text(

@@ -10,7 +10,17 @@ class CardRepositoryImpl implements CardRepository {
   @override
   Future<List<CreditCard>> getAllCards() async {
     final rawData = await _dataSource.getAllCards();
-    return rawData.map((json) => CreditCard.fromJson(json)).toList();
+    return rawData
+        .map((json) {
+          try {
+            return CreditCard.fromJson(json);
+          } catch (e) {
+            // Skip corrupted data
+            return null;
+          }
+        })
+        .whereType<CreditCard>()
+        .toList();
   }
 
   @override
