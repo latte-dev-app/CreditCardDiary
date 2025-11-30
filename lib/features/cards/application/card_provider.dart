@@ -83,15 +83,6 @@ class CardProvider with ChangeNotifier {
 
   // 全データ削除
   Future<void> deleteAllData() async {
-    // This logic might need to be in the repository or handled one by one
-    // For now, let's just clear memory and save empty lists?
-    // Or better, add deleteAll to repository.
-    // Since repository doesn't have deleteAll, we'll iterate or add it.
-    // For now, let's implement it by deleting all.
-    // Actually, the previous implementation just cleared lists and saved.
-    // But we don't have direct save access anymore.
-    // Let's add deleteAll to repository interfaces? Or just loop delete.
-    // Looping delete is safe.
     for (var card in _cards) {
       await _cardRepo.deleteCard(card.id);
     }
@@ -240,14 +231,6 @@ class CardProvider with ChangeNotifier {
 
   // 互換: 既存エクスポートはそのまま
   String exportToJson() {
-    // Use the comprehensive export method
-    // Since this method is synchronous and the other is async, we might need to change this signature
-    // or keep using the old way for now if we can't change the signature easily.
-    // However, SharedPreferencesRepository.exportToJson is static and synchronous for cards/txs.
-    // But exportAllData is async.
-    // Let's stick to the old one for now or update the UI to handle async export.
-    // The UI calls context.read<CardProvider>().exportToJson() which returns String.
-    // Let's update this to be async and use exportAllData.
     return SharedPreferencesRepository.exportToJson(_cards, _transactions);
   }
 

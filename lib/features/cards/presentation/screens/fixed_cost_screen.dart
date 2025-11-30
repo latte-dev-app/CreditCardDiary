@@ -6,6 +6,7 @@ import '../../domain/fixed_cost_model.dart';
 import '../../application/card_provider.dart';
 import '../../../../shared/widgets/top_error_toast.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
+import '../../../../shared/utils/currency_formatter.dart';
 
 class FixedCostScreen extends StatefulWidget {
   const FixedCostScreen({super.key});
@@ -77,7 +78,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   opacity: _isSliverCollapsed ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
                   child: Text(
-                    '¥${fixedCostProvider.totalMonthlyFixedCost.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                    '¥${CurrencyFormatter.format(fixedCostProvider.totalMonthlyFixedCost)}',
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -116,7 +117,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '¥${fixedCostProvider.totalMonthlyFixedCost.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                          '¥${CurrencyFormatter.format(fixedCostProvider.totalMonthlyFixedCost)}',
                           style: theme.textTheme.displaySmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -232,7 +233,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '¥${item.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                                    '¥${CurrencyFormatter.format(item.amount)}',
                                     style: theme.textTheme.titleMedium
                                         ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
@@ -458,6 +459,14 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                           return;
                                         }
 
+                                        if (paymentDay < 1 || paymentDay > 31) {
+                                          showTopErrorToast(
+                                            dialogContext,
+                                            '支払日は1〜31の間で入力してください',
+                                          );
+                                          return;
+                                        }
+
                                         setState(() => isLoading = true);
                                         try {
                                           final newItem = FixedCost(
@@ -623,7 +632,9 @@ class _AnimatedDragHandleState extends State<_AnimatedDragHandle>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(
+            12,
+          ), // UIX-001: Increased padding for better touch target
           color: Colors.transparent, // Hit test area expansion
           child: const Icon(Icons.drag_handle, color: Colors.grey),
         ),

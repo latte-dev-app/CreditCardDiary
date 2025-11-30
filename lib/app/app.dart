@@ -9,7 +9,7 @@ import '../features/cards/presentation/screens/main_screen.dart';
 import 'service_locator.dart';
 import 'app_theme.dart';
 import '../features/cards/application/fixed_cost_provider.dart';
-import '../features/cards/infrastructure/local_storage.dart';
+import '../features/cards/domain/repositories/fixed_cost_repository.dart';
 import 'theme_provider.dart';
 import '../features/cards/presentation/screens/splash_screen.dart';
 
@@ -29,9 +29,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create:
-              (_) => FixedCostProvider(
-                SharedPreferencesRepository(), // Using the implementation directly as it's not in GetIt yet for this specific type, or we can cast/update GetIt
-              )..loadFixedCosts(),
+              (_) =>
+                  FixedCostProvider(getIt<FixedCostRepository>())
+                    ..loadFixedCosts(),
         ),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
