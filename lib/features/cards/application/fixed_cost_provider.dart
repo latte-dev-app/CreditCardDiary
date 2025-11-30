@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../domain/fixed_cost_model.dart';
-import '../infrastructure/local_storage.dart';
+import '../domain/repositories/fixed_cost_repository.dart';
 
 class FixedCostProvider with ChangeNotifier {
-  final SharedPreferencesRepository _repository;
+  final FixedCostRepository _repository;
 
   List<FixedCost> _fixedCosts = [];
   List<FixedCost> get fixedCosts => _fixedCosts;

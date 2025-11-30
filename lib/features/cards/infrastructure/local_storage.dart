@@ -5,8 +5,10 @@ import '../domain/repositories/card_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
 import '../domain/fixed_cost_model.dart';
 
+import '../domain/repositories/fixed_cost_repository.dart';
+
 class SharedPreferencesRepository
-    implements CardRepository, TransactionRepository {
+    implements CardRepository, TransactionRepository, FixedCostRepository {
   static const String _keyCards = 'cards_data';
   static const String _keyTransactions = 'transactions_data';
   static const String _keyCardBudgets = 'card_budgets_data';
@@ -269,6 +271,7 @@ class SharedPreferencesRepository
     await prefs.setString(_keyFixedCosts, jsonEncode(jsonList));
   }
 
+  @override
   Future<List<FixedCost>> getFixedCosts() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyFixedCosts);
@@ -278,12 +281,14 @@ class SharedPreferencesRepository
     return jsonList.map((json) => FixedCost.fromJson(json)).toList();
   }
 
+  @override
   Future<void> addFixedCost(FixedCost fixedCost) async {
     final list = await getFixedCosts();
     list.add(fixedCost);
     await _saveFixedCosts(list);
   }
 
+  @override
   Future<void> updateFixedCost(FixedCost fixedCost) async {
     final list = await getFixedCosts();
     final index = list.indexWhere((fc) => fc.id == fixedCost.id);
@@ -293,6 +298,7 @@ class SharedPreferencesRepository
     }
   }
 
+  @override
   Future<void> deleteFixedCost(String id) async {
     final list = await getFixedCosts();
     list.removeWhere((fc) => fc.id == id);
