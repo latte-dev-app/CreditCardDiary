@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../application/fixed_cost_provider.dart';
@@ -390,24 +392,31 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                         ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 12),
-                                  DropdownButtonFormField<int>(
-                                    value: selectedPaymentDay,
-                                    decoration: const InputDecoration(
-                                      labelText: '日 (1-31)',
+                                  ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
                                     ),
-                                    items:
-                                        List.generate(
-                                          31,
-                                          (index) => index + 1,
-                                        ).map((day) {
-                                          return DropdownMenuItem(
-                                            value: day,
-                                            child: Text('$day日'),
-                                          );
-                                        }).toList(),
-                                    onChanged: (value) {
-                                      if (value != null) {
-                                        selectedPaymentDay = value;
+                                    title: Text(
+                                      '$selectedPaymentDay日',
+                                      style: theme.textTheme.bodyLarge,
+                                    ),
+                                    trailing: const Icon(Icons.chevron_right),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      side: BorderSide(
+                                        color: theme.colorScheme.outline,
+                                      ),
+                                    ),
+                                    tileColor: theme.colorScheme.surface,
+                                    onTap: () async {
+                                      final day = await _showDayPicker(
+                                        context,
+                                        initialDay: selectedPaymentDay,
+                                      );
+                                      if (day != null) {
+                                        setState(() {
+                                          selectedPaymentDay = day;
+                                        });
                                       }
                                     },
                                   ),
@@ -557,6 +566,76 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 ),
               );
             },
+          ),
+    );
+  }
+
+  Future<int?> _showDayPicker(
+    BuildContext context, {
+    required int initialDay,
+  }) async {
+    final theme = Theme.of(context);
+    int selectedIndex = initialDay - 1;
+
+    return await showModalBottomSheet<int?>(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => Container(
+            height: 300,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '支払日を選択',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: CupertinoPicker(
+                    itemExtent: 32,
+                    scrollController: FixedExtentScrollController(
+                      initialItem: selectedIndex,
+                    ),
+                    onSelectedItemChanged: (index) {
+                      HapticFeedback.selectionClick();
+                      selectedIndex = index;
+                    },
+                    children: List.generate(31, (index) {
+                      final day = index + 1;
+                      return Center(
+                        child: Text(
+                          '$day日',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.pop(context, selectedIndex + 1);
+                      },
+                      child: const Text('決定'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
     );
   }

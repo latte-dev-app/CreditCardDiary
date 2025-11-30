@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isSliverCollapsed = false;
   static const double _expandedHeight = 340.0;
+  int _direction = 0; // -1 for previous, 1 for next
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _previousMonth() {
     HapticFeedback.lightImpact();
     setState(() {
+      _direction = -1;
       _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
     });
     _loadBudget();
@@ -71,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _nextMonth() {
     HapticFeedback.lightImpact();
     setState(() {
+      _direction = 1;
       _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
     });
     _loadBudget();
@@ -100,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       builder:
           (context) => Container(
+            height: 300,
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -113,43 +118,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 200,
-                  child: ListView.builder(
-                    itemCount: availableYears.length,
-                    itemBuilder: (context, index) {
+                Expanded(
+                  child: CupertinoPicker(
+                    itemExtent: 32,
+                    onSelectedItemChanged: (index) {
+                      HapticFeedback.selectionClick();
                       final year = availableYears[index];
-                      final isSelected =
-                          year == (_selectedYear ?? _selectedMonth.year);
-                      return ListTile(
-                        title: Text(
-                          '$year年',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontSize: 16,
-                            fontWeight:
-                                isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                            color:
-                                isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        onTap: () {
-                          setState(() {
-                            _selectedYear = year;
-                            _selectedMonth = DateTime(
-                              year,
-                              _selectedMonth.month,
-                            );
-                          });
-                          _loadBudget();
-                          Navigator.pop(context);
-                        },
-                      );
+                      setState(() {
+                        _selectedYear = year;
+                        _direction = 0;
+                        _selectedMonth = DateTime(year, _selectedMonth.month);
+                      });
+                      _loadBudget();
                     },
+                    scrollController: FixedExtentScrollController(
+                      initialItem: availableYears.indexOf(
+                        _selectedYear ?? _selectedMonth.year,
+                      ),
+                    ),
+                    children:
+                        availableYears
+                            .map(
+                              (year) => Center(
+                                child: Text(
+                                  '$year年',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontSize: 20,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
                   ),
                 ),
               ],
@@ -209,6 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
           });
 
           return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             controller: _scrollController,
             slivers: [
               SliverAppBar(
@@ -324,6 +327,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const SizedBox(height: 4),
                                   AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 300),
+                                    transitionBuilder: (
+                                      Widget child,
+                                      Animation<double> animation,
+                                    ) {
+                                      if (_direction == 0) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: child,
+                                        );
+                                      }
+                                      final offset =
+                                          _direction > 0
+                                              ? const Offset(1.0, 0.0)
+                                              : const Offset(-1.0, 0.0);
+                                      return SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: offset,
+                                          end: Offset.zero,
+                                        ).animate(animation),
+                                        child: child,
+                                      );
+                                    },
                                     child: Text(
                                       _isPrivacyMode
                                           ? '****'
@@ -469,6 +494,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (
+                          Widget child,
+                          Animation<double> animation,
+                        ) {
+                          if (_direction == 0) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          }
+                          final offset =
+                              _direction > 0
+                                  ? const Offset(1.0, 0.0)
+                                  : const Offset(-1.0, 0.0);
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: offset,
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          );
+                        },
                         child: HomeCardItem(
                           key: ValueKey('${card.id}_$month'),
                           card: card,

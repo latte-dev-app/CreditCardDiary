@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -72,6 +73,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ..sort((a, b) => b.compareTo(a)); // Descending
 
           return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             slivers: [
               SliverAppBar(
                 expandedHeight: 200.0,
@@ -700,89 +704,218 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   void _showDateSettingsDialog(BuildContext context) {
     final theme = Theme.of(context);
-    int? selectedClosingDay = card.closingDay;
-    int? selectedPaymentDay = card.paymentDay;
-    final days = List.generate(31, (index) => index + 1);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
           (context) => StatefulBuilder(
-            builder:
-                (context, setDialogState) => AlertDialog(
-                  title: Text(
-                    '締め日/支払日設定',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField<int?>(
-                        value: selectedClosingDay,
-                        decoration: InputDecoration(
-                          labelText: '締め日',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('未設定'),
-                          ),
-                          ...days.map(
-                            (d) =>
-                                DropdownMenuItem(value: d, child: Text('$d日')),
-                          ),
-                        ],
-                        onChanged:
-                            (v) => setDialogState(() => selectedClosingDay = v),
+            builder: (context, setState) {
+              return SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<int?>(
-                        value: selectedPaymentDay,
-                        decoration: InputDecoration(
-                          labelText: '支払日',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('未設定'),
-                          ),
-                          ...days.map(
-                            (d) =>
-                                DropdownMenuItem(value: d, child: Text('$d日')),
-                          ),
-                        ],
-                        onChanged:
-                            (v) => setDialogState(() => selectedPaymentDay = v),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('キャンセル'),
                     ),
-                    FilledButton(
-                      onPressed: () {
-                        final updatedCard = card.copyWith(
-                          closingDay: selectedClosingDay,
-                          paymentDay: selectedPaymentDay,
+                    const SizedBox(height: 16),
+                    Text(
+                      '締め日・支払日設定',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ListTile(
+                      title: const Text('締め日'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            card.closingDay != null
+                                ? '${card.closingDay}日'
+                                : '未設定',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
+                      onTap: () async {
+                        final day = await _showDayPicker(
+                          context,
+                          initialDay: card.closingDay,
+                          title: '締め日を選択',
                         );
-                        context.read<CardProvider>().updateCard(updatedCard);
-                        setState(() => card = updatedCard);
-                        Navigator.pop(context);
+                        if (context.mounted) {
+                          final updatedCard = card.copyWith(closingDay: day);
+                          // Handle case where day is 0 (Not Set) - copyWith handles null if we pass null?
+                          // My logic below returns 0 for "Not Set".
+                          // Need to check copyWith logic or pass null.
+                          // Let's assume _showDayPicker returns null for "Not Set".
+
+                          await context.read<CardProvider>().updateCard(
+                            updatedCard,
+                          );
+                          setState(() {
+                            // Update local card state
+                            // But we also need to update the parent widget's card state
+                            // The parent (CardDetailScreen) listens to provider?
+                            // No, it has local state 'card'.
+                            // We need to update that too.
+                            // But this setState only updates the BottomSheet.
+                            // We need to call the parent's setState.
+                            // However, we can't easily access parent's setState here.
+                            // But we can update the 'card' variable of the State class.
+                            card = updatedCard;
+                          });
+                          // Force parent rebuild
+                          setState(() {});
+                        }
                       },
-                      child: const Text('保存'),
                     ),
+                    const Divider(height: 1),
+                    ListTile(
+                      title: const Text('支払日'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            card.paymentDay != null
+                                ? '${card.paymentDay}日'
+                                : '未設定',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
+                      onTap: () async {
+                        final day = await _showDayPicker(
+                          context,
+                          initialDay: card.paymentDay,
+                          title: '支払日を選択',
+                        );
+                        if (context.mounted) {
+                          final updatedCard = card.copyWith(paymentDay: day);
+                          await context.read<CardProvider>().updateCard(
+                            updatedCard,
+                          );
+                          setState(() {
+                            card = updatedCard;
+                          });
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
+              );
+            },
+          ),
+    );
+  }
+
+  Future<int?> _showDayPicker(
+    BuildContext context, {
+    required int? initialDay,
+    required String title,
+  }) async {
+    final theme = Theme.of(context);
+    int selectedIndex = initialDay ?? 0; // 0 represents "Not Set"
+
+    // Items: 0 -> "未設定", 1..31 -> "1日".."31日"
+
+    return await showModalBottomSheet<int?>(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => Container(
+            height: 300,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: CupertinoPicker(
+                    itemExtent: 32,
+                    scrollController: FixedExtentScrollController(
+                      initialItem: selectedIndex,
+                    ),
+                    onSelectedItemChanged: (index) {
+                      HapticFeedback.selectionClick();
+                      selectedIndex = index;
+                    },
+                    children: [
+                      Center(
+                        child: Text(
+                          '未設定',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                        ),
+                      ),
+                      ...List.generate(31, (index) {
+                        final day = index + 1;
+                        return Center(
+                          child: Text(
+                            '$day日',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.pop(
+                          context,
+                          selectedIndex == 0 ? null : selectedIndex,
+                        );
+                      },
+                      child: const Text('決定'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
     );
   }

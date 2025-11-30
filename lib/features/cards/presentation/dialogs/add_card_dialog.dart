@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -226,27 +227,53 @@ Future<void> showAddCardDialog(
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  value: null,
-                                  decoration: const InputDecoration(
-                                    hintText: 'カード名を選択',
+
+                                ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
                                   ),
-                                  items:
-                                      CardConstants.cardNames.map((name) {
-                                        return DropdownMenuItem(
-                                          value: name,
-                                          child: Text(name),
-                                        );
-                                      }).toList(),
-                                  onChanged: (value) {
-                                    if (value != null) {
+                                  title: Text(
+                                    isCustomName || nameController.text.isEmpty
+                                        ? (isCustomName ? 'その他' : 'カード名を選択')
+                                        : nameController.text,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      color:
+                                          nameController.text.isEmpty &&
+                                                  !isCustomName
+                                              ? theme.hintColor
+                                              : theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: theme.colorScheme.outline,
+                                    ),
+                                  ),
+                                  tileColor: theme.colorScheme.surface,
+                                  onTap: () async {
+                                    final selected = await _showItemPicker(
+                                      dialogContext,
+                                      items: CardConstants.cardNames,
+                                      initialItem:
+                                          isCustomName
+                                              ? 'その他'
+                                              : (nameController.text.isEmpty
+                                                  ? CardConstants
+                                                      .cardNames
+                                                      .first
+                                                  : nameController.text),
+                                      title: 'カード名を選択',
+                                    );
+                                    if (selected != null) {
                                       setDialogState(() {
-                                        isCustomName = value == 'その他';
+                                        isCustomName = selected == 'その他';
                                         if (isCustomName) {
                                           customNameController.text = '';
                                           nameController.text = '';
                                         } else {
-                                          nameController.text = value;
+                                          nameController.text = selected;
                                         }
                                       });
                                     }
@@ -275,24 +302,51 @@ Future<void> showAddCardDialog(
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  value: selectedType,
-                                  items:
-                                      CardConstants.cardTypes.map((type) {
-                                        return DropdownMenuItem(
-                                          value: type,
-                                          child: Text(type),
-                                        );
-                                      }).toList(),
-                                  onChanged: (value) {
-                                    if (value != null) {
+                                ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  title: Text(
+                                    isCustomType || selectedType.isEmpty
+                                        ? (isCustomType ? 'その他' : 'カード種類を選択')
+                                        : selectedType,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      color:
+                                          selectedType.isEmpty && !isCustomType
+                                              ? theme.hintColor
+                                              : theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: theme.colorScheme.outline,
+                                    ),
+                                  ),
+                                  tileColor: theme.colorScheme.surface,
+                                  onTap: () async {
+                                    final selected = await _showItemPicker(
+                                      dialogContext,
+                                      items: CardConstants.cardTypes,
+                                      initialItem:
+                                          isCustomType
+                                              ? 'その他'
+                                              : (selectedType.isEmpty
+                                                  ? CardConstants
+                                                      .cardTypes
+                                                      .first
+                                                  : selectedType),
+                                      title: 'カード種類を選択',
+                                    );
+                                    if (selected != null) {
                                       setDialogState(() {
-                                        selectedType = value;
-                                        isCustomType = value == 'その他';
+                                        selectedType = selected;
+                                        isCustomType = selected == 'その他';
                                         if (isCustomType) {
                                           typeController.text = '';
                                         } else {
-                                          typeController.text = value;
+                                          typeController.text = selected;
                                         }
                                       });
                                     }
@@ -474,6 +528,79 @@ Future<void> showAddCardDialog(
               ),
             );
           },
+        ),
+  );
+}
+
+Future<String?> _showItemPicker(
+  BuildContext context, {
+  required List<String> items,
+  required String initialItem,
+  required String title,
+}) async {
+  final theme = Theme.of(context);
+  int selectedIndex = items.indexOf(initialItem);
+  if (selectedIndex < 0) selectedIndex = 0;
+
+  return await showModalBottomSheet<String?>(
+    context: context,
+    backgroundColor: theme.scaffoldBackgroundColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder:
+        (context) => Container(
+          height: 300,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: CupertinoPicker(
+                  itemExtent: 32,
+                  scrollController: FixedExtentScrollController(
+                    initialItem: selectedIndex,
+                  ),
+                  onSelectedItemChanged: (index) {
+                    HapticFeedback.selectionClick();
+                    selectedIndex = index;
+                  },
+                  children:
+                      items.map((item) {
+                        return Center(
+                          child: Text(
+                            item,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(context, items[selectedIndex]);
+                    },
+                    child: const Text('決定'),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
   );
 }
