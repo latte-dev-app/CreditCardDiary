@@ -22,16 +22,38 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _selectedYear;
   bool _isPrivacyMode = false;
   bool _isAmountAscending = false;
+  final ScrollController _scrollController = ScrollController();
+  bool _isSliverCollapsed = false;
+  static const double _expandedHeight = 340.0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<CardProvider>();
       await provider.init();
       _loadBudget();
       await NotificationService.checkPaymentReminders(provider);
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final isCollapsed =
+        _scrollController.offset > (_expandedHeight - kToolbarHeight);
+    if (isCollapsed != _isSliverCollapsed) {
+      setState(() {
+        _isSliverCollapsed = isCollapsed;
+      });
+    }
   }
 
   void _previousMonth() {
@@ -197,10 +219,11 @@ class _HomeScreenState extends State<HomeScreen> {
           });
 
           return CustomScrollView(
+            controller: _scrollController,
             slivers: [
               SliverAppBar(
                 pinned: true,
-                expandedHeight: 340.0,
+                expandedHeight: _expandedHeight,
                 backgroundColor: theme.colorScheme.primary,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(
@@ -208,7 +231,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     InkWell(
                       onTap: () => _showYearPicker(context, availableYears),
@@ -237,21 +259,35 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isPrivacyMode = !_isPrivacyMode;
-                        });
-                      },
-                      icon: Icon(
+                    const Spacer(),
+                    AnimatedOpacity(
+                      opacity: _isSliverCollapsed ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Text(
                         _isPrivacyMode
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.white.withValues(alpha: 0.7),
+                            ? '****'
+                            : '¥${NumberFormat('#,###').format(totalAmount)}',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
+                actions: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isPrivacyMode = !_isPrivacyMode;
+                      });
+                    },
+                    icon: Icon(
+                      _isPrivacyMode ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(
