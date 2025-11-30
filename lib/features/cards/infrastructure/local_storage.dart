@@ -1,14 +1,9 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/card_model.dart';
-import '../domain/repositories/card_repository.dart';
-import '../domain/repositories/transaction_repository.dart';
 import '../domain/fixed_cost_model.dart';
 
-import '../domain/repositories/fixed_cost_repository.dart';
-
-class SharedPreferencesRepository
-    implements CardRepository, TransactionRepository, FixedCostRepository {
+class SharedPreferencesDataSource {
   static const String _keyCards = 'cards_data';
   static const String _keyTransactions = 'transactions_data';
   static const String _keyCardBudgets = 'card_budgets_data';
@@ -73,13 +68,11 @@ class SharedPreferencesRepository
 
   // ---- CardRepository Implementation ----
 
-  @override
   Future<List<CreditCard>> getAllCards() async {
     final prefsData = await _loadData();
     return (prefsData['cards'] as List<CreditCard>? ?? []).toList();
   }
 
-  @override
   Future<void> addCard(CreditCard card) async {
     final prefsData = await _loadData();
     final cards = (prefsData['cards'] as List<CreditCard>? ?? []).toList();
@@ -88,7 +81,6 @@ class SharedPreferencesRepository
     await _saveData(cards, transactions);
   }
 
-  @override
   Future<void> updateCard(CreditCard card) async {
     final prefsData = await _loadData();
     final cards = (prefsData['cards'] as List<CreditCard>? ?? []).toList();
@@ -101,7 +93,6 @@ class SharedPreferencesRepository
     }
   }
 
-  @override
   Future<void> upsertCard(CreditCard card) async {
     final prefsData = await _loadData();
     final cards = (prefsData['cards'] as List<CreditCard>? ?? []).toList();
@@ -115,7 +106,6 @@ class SharedPreferencesRepository
     await _saveData(cards, transactions);
   }
 
-  @override
   Future<void> deleteCard(String cardId) async {
     final prefsData = await _loadData();
     final cards =
@@ -131,13 +121,11 @@ class SharedPreferencesRepository
 
   // ---- TransactionRepository Implementation ----
 
-  @override
   Future<List<Transaction>> getAllTransactions() async {
     final prefsData = await _loadData();
     return (prefsData['transactions'] as List<Transaction>? ?? []).toList();
   }
 
-  @override
   Future<void> addTransaction(Transaction transaction) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
@@ -147,7 +135,6 @@ class SharedPreferencesRepository
     await _saveData(cards, transactions);
   }
 
-  @override
   Future<void> updateTransaction(Transaction transaction) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
@@ -160,7 +147,6 @@ class SharedPreferencesRepository
     }
   }
 
-  @override
   Future<void> upsertTransaction(Transaction transaction) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
@@ -175,7 +161,6 @@ class SharedPreferencesRepository
     await _saveData(cards, transactions);
   }
 
-  @override
   Future<void> deleteTransaction(String transactionId) async {
     final prefsData = await _loadData();
     final cards = prefsData['cards'] as List<CreditCard>? ?? [];
@@ -223,7 +208,6 @@ class SharedPreferencesRepository
     return decoded.map((key, value) => MapEntry(key, value as int));
   }
 
-  @override
   Future<void> setCardBudget(
     String cardId,
     int year,
@@ -240,14 +224,12 @@ class SharedPreferencesRepository
     await _saveCardBudgets(budgets);
   }
 
-  @override
   Future<int?> getCardBudget(String cardId, int year, int month) async {
     final budgets = await _loadCardBudgets();
     final monthKey = '$year-${month.toString().padLeft(2, '0')}';
     return budgets[cardId]?[monthKey];
   }
 
-  @override
   Future<void> setTotalBudget(int year, int month, int amount) async {
     final budgets = await _loadTotalBudgets();
     final monthKey = '$year-${month.toString().padLeft(2, '0')}';
@@ -255,7 +237,6 @@ class SharedPreferencesRepository
     await _saveTotalBudgets(budgets);
   }
 
-  @override
   Future<int?> getTotalBudget(int year, int month) async {
     final budgets = await _loadTotalBudgets();
     final monthKey = '$year-${month.toString().padLeft(2, '0')}';
@@ -271,7 +252,6 @@ class SharedPreferencesRepository
     await prefs.setString(_keyFixedCosts, jsonEncode(jsonList));
   }
 
-  @override
   Future<List<FixedCost>> getFixedCosts() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyFixedCosts);
@@ -281,14 +261,12 @@ class SharedPreferencesRepository
     return jsonList.map((json) => FixedCost.fromJson(json)).toList();
   }
 
-  @override
   Future<void> addFixedCost(FixedCost fixedCost) async {
     final list = await getFixedCosts();
     list.add(fixedCost);
     await _saveFixedCosts(list);
   }
 
-  @override
   Future<void> updateFixedCost(FixedCost fixedCost) async {
     final list = await getFixedCosts();
     final index = list.indexWhere((fc) => fc.id == fixedCost.id);
@@ -298,12 +276,10 @@ class SharedPreferencesRepository
     }
   }
 
-  @override
   Future<void> updateAllFixedCosts(List<FixedCost> fixedCosts) async {
     await _saveFixedCosts(fixedCosts);
   }
 
-  @override
   Future<void> deleteFixedCost(String id) async {
     final list = await getFixedCosts();
     list.removeWhere((fc) => fc.id == id);
@@ -326,7 +302,6 @@ class SharedPreferencesRepository
       'fixedCosts': jsonDecode(fixedCosts),
       'cardBudgets': jsonDecode(cardBudgets),
       'totalBudgets': jsonDecode(totalBudgets),
-      'version': 1,
       'timestamp': DateTime.now().toIso8601String(),
     };
 

@@ -3,6 +3,7 @@ import '../domain/card_model.dart' as dm;
 import '../domain/repositories/card_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
 import '../infrastructure/local_storage.dart';
+import '../../../shared/utils/date_formatter.dart';
 
 class CardProvider with ChangeNotifier {
   final CardRepository _cardRepo;
@@ -40,13 +41,13 @@ class CardProvider with ChangeNotifier {
 
   // 集計モードの読み込み
   Future<void> _loadAggregationMode() async {
-    final prefs = await SharedPreferencesRepository.getSharedPreferences();
+    final prefs = await SharedPreferencesDataSource.getSharedPreferences();
     _useBillingMonth = prefs.getBool('use_billing_month') ?? false;
   }
 
   // 集計モードの保存
   Future<void> _saveAggregationMode() async {
-    final prefs = await SharedPreferencesRepository.getSharedPreferences();
+    final prefs = await SharedPreferencesDataSource.getSharedPreferences();
     await prefs.setBool('use_billing_month', _useBillingMonth);
   }
 
@@ -124,8 +125,10 @@ class CardProvider with ChangeNotifier {
   Map<String, int> getMonthlyTotalByCardId(String cardId) {
     final Map<String, int> monthlyTotal = {};
     for (final transaction in _transactions.where((t) => t.cardId == cardId)) {
-      final monthKey =
-          '${transaction.year}-${transaction.month.toString().padLeft(2, '0')}';
+      final monthKey = DateFormatter.toYearMonthString(
+        transaction.year,
+        transaction.month,
+      );
       monthlyTotal[monthKey] =
           (monthlyTotal[monthKey] ?? 0) + transaction.amount;
     }
@@ -170,7 +173,7 @@ class CardProvider with ChangeNotifier {
     );
     for (final t in _transactions.where((x) => x.cardId == cardId)) {
       final shifted = _shiftByClosing(card, t.year, t.month);
-      final key = '${shifted.$1}-${shifted.$2.toString().padLeft(2, '0')}';
+      final key = DateFormatter.toYearMonthString(shifted.$1, shifted.$2);
       monthlyTotal[key] = (monthlyTotal[key] ?? 0) + t.amount;
     }
     return monthlyTotal;
@@ -231,15 +234,15 @@ class CardProvider with ChangeNotifier {
 
   // 互換: 既存エクスポートはそのまま
   String exportToJson() {
-    return SharedPreferencesRepository.exportToJson(_cards, _transactions);
+    return SharedPreferencesDataSource.exportToJson(_cards, _transactions);
   }
 
   Future<String> exportAllData() async {
-    return await SharedPreferencesRepository.exportAllData();
+    return await SharedPreferencesDataSource.exportAllData();
   }
 
   Future<void> importFromJson(String jsonString) async {
-    await SharedPreferencesRepository.importAllData(jsonString);
+    await SharedPreferencesDataSource.importAllData(jsonString);
     await init(); // Reload all data
   }
 
@@ -263,7 +266,7 @@ class CardProvider with ChangeNotifier {
   // 全体予算を設定
   Future<void> setTotalBudget(int year, int month, int amount) async {
     await _txRepo.setTotalBudget(year, month, amount);
-    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    final monthKey = DateFormatter.toYearMonthString(year, month);
     _budgetCache[monthKey] = amount;
     notifyListeners();
   }
@@ -277,7 +280,7 @@ class CardProvider with ChangeNotifier {
   Future<void> loadTotalBudget(int year, int month) async {
     final budget = await _txRepo.getTotalBudget(year, month);
     if (budget != null) {
-      final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+      final monthKey = DateFormatter.toYearMonthString(year, month);
       _budgetCache[monthKey] = budget;
       notifyListeners();
     }
@@ -285,7 +288,7 @@ class CardProvider with ChangeNotifier {
 
   // キャッシュから予算を取得
   int? getCachedTotalBudget(int year, int month) {
-    final monthKey = '$year-${month.toString().padLeft(2, '0')}';
+    final monthKey = DateFormatter.toYearMonthString(year, month);
     return _budgetCache[monthKey];
   }
 
