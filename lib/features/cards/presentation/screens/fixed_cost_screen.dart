@@ -211,10 +211,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                           const SizedBox(width: 8),
                           ReorderableDragStartListener(
                             index: index,
-                            child: const Icon(
-                              Icons.drag_handle,
-                              color: Colors.grey,
-                            ),
+                            child: const _AnimatedDragHandle(),
                           ),
                         ],
                       ),
@@ -508,17 +505,14 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('固定費を削除'),
-            content: Text('${item.title}を削除しますか？'),
+            title: const Text('固定費の削除'),
+            content: Text('「${item.title}」を削除してもよろしいですか？'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('キャンセル'),
               ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
+              TextButton(
                 onPressed: () {
                   Provider.of<FixedCostProvider>(
                     context,
@@ -526,10 +520,62 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   ).deleteFixedCost(item.id);
                   Navigator.pop(context);
                 },
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
                 child: const Text('削除'),
               ),
             ],
           ),
+    );
+  }
+}
+
+class _AnimatedDragHandle extends StatefulWidget {
+  const _AnimatedDragHandle();
+
+  @override
+  State<_AnimatedDragHandle> createState() => _AnimatedDragHandleState();
+}
+
+class _AnimatedDragHandleState extends State<_AnimatedDragHandle>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _controller.forward(),
+      onPointerUp: (_) => _controller.reverse(),
+      onPointerCancel: (_) => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          color: Colors.transparent, // Hit test area expansion
+          child: const Icon(Icons.drag_handle, color: Colors.grey),
+        ),
+      ),
     );
   }
 }
