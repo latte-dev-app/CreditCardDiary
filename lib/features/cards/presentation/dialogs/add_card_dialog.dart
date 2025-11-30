@@ -417,6 +417,21 @@ Future<void> showAddCardDialog(
                                   }
 
                                   onCardAdded(card);
+                                } else {
+                                  ScaffoldMessenger.of(
+                                    dialogContext,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'カード名と種類を入力してください',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onError,
+                                        ),
+                                      ),
+                                      backgroundColor: theme.colorScheme.error,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
                                 }
                               },
                               style: FilledButton.styleFrom(
