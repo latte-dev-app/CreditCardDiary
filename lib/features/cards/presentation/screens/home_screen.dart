@@ -376,41 +376,42 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       // Sort Button
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isAmountAscending = !_isAmountAscending;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                '登録カード',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
+                      if (sortedCards.isNotEmpty)
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isAmountAscending = !_isAmountAscending;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '登録カード',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                _isAmountAscending
-                                    ? Icons.arrow_upward_rounded
-                                    : Icons.arrow_downward_rounded,
-                                size: 18,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
+                                const SizedBox(width: 4),
+                                Icon(
+                                  _isAmountAscending
+                                      ? Icons.arrow_upward_rounded
+                                      : Icons.arrow_downward_rounded,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
                       TextButton(
                         onPressed: _nextMonth,
                         style: TextButton.styleFrom(
