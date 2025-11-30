@@ -205,6 +205,12 @@ class MockRepository
   }
 
   @override
+  Future<void> updateAllFixedCosts(List<FixedCost> fixedCosts) async {
+    _fixedCosts.clear();
+    _fixedCosts.addAll(fixedCosts);
+  }
+
+  @override
   Future<void> deleteFixedCost(String id) async =>
       _fixedCosts.removeWhere((fc) => fc.id == id);
 }

@@ -299,6 +299,11 @@ class SharedPreferencesRepository
   }
 
   @override
+  Future<void> updateAllFixedCosts(List<FixedCost> fixedCosts) async {
+    await _saveFixedCosts(fixedCosts);
+  }
+
+  @override
   Future<void> deleteFixedCost(String id) async {
     final list = await getFixedCosts();
     list.removeWhere((fc) => fc.id == id);

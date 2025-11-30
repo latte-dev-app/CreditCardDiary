@@ -48,9 +48,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final theme = Theme.of(context);
     final cardProvider = Provider.of<CardProvider>(context);
 
-    // Default sort: Amount Descending
-    final sortedList = List<FixedCost>.from(fixedCostProvider.fixedCosts);
-    sortedList.sort((a, b) => b.amount.compareTo(a.amount));
+    // Use the order from provider directly (user defined order)
+    final fixedCosts = fixedCostProvider.fixedCosts;
 
     return Scaffold(
       body: CustomScrollView(
@@ -132,7 +131,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               ),
             ),
           ),
-          if (fixedCostProvider.fixedCosts.isEmpty)
+          if (fixedCosts.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
@@ -147,9 +146,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
           else
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 80),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final item = sortedList[index];
+              sliver: SliverReorderableList(
+                onReorder: (oldIndex, newIndex) {
+                  fixedCostProvider.reorderFixedCosts(oldIndex, newIndex);
+                },
+                itemBuilder: (context, index) {
+                  final item = fixedCosts[index];
                   final cardName =
                       item.cardId != null
                           ? cardProvider.cards
@@ -161,21 +163,18 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                           : '未設定';
 
                   return Card(
+                    key: ValueKey(item.id),
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.repeat,
-                          color: theme.colorScheme.primary,
+                      leading: ReorderableDragStartListener(
+                        index: index,
+                        child: const Icon(
+                          Icons.drag_handle,
+                          color: Colors.grey,
                         ),
                       ),
                       title: Text(
@@ -209,7 +208,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       ),
                     ),
                   );
-                }, childCount: sortedList.length),
+                },
+                itemCount: fixedCosts.length,
               ),
             ),
         ],

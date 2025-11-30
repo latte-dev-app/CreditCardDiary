@@ -42,6 +42,16 @@ class FixedCostProvider with ChangeNotifier {
     await loadFixedCosts();
   }
 
+  Future<void> reorderFixedCosts(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final item = _fixedCosts.removeAt(oldIndex);
+    _fixedCosts.insert(newIndex, item);
+    notifyListeners();
+    await _repository.updateAllFixedCosts(_fixedCosts);
+  }
+
   int get totalMonthlyFixedCost {
     return _fixedCosts.fold(0, (sum, item) => sum + item.amount);
   }
