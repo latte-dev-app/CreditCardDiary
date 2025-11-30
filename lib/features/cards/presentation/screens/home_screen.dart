@@ -620,6 +620,23 @@ class _HomeScreenState extends State<HomeScreen> {
             : theme.colorScheme.outline.withValues(alpha: 0.5);
     final borderWidth = isPaymentApproaching ? 2.0 : 1.0;
 
+    // Calculate next payment date and days remaining
+    String paymentInfo = '';
+    if (card.paymentDay != null) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      DateTime paymentDate = DateTime(now.year, now.month, card.paymentDay!);
+      if (paymentDate.isBefore(today)) {
+        paymentDate = DateTime(now.year, now.month + 1, card.paymentDay!);
+      }
+      final difference = paymentDate.difference(today).inDays;
+
+      paymentInfo = '${paymentDate.month}/${paymentDate.day}支払い';
+      if (isPaymentApproaching) {
+        paymentInfo += ' (あと$difference日)';
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
@@ -699,11 +716,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            card.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
+                          Flexible(
+                            child: Text(
+                              card.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (isPaymentApproaching) ...[
@@ -724,6 +744,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      if (paymentInfo.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          paymentInfo,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color:
+                                isPaymentApproaching
+                                    ? theme.colorScheme.error
+                                    : theme.colorScheme.onSurfaceVariant,
+                            fontWeight:
+                                isPaymentApproaching
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
