@@ -162,58 +162,89 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                               .name
                           : '未設定';
 
-                  return Card(
+                  return Container(
                     key: ValueKey(item.id),
                     margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
+                    decoration: BoxDecoration(
+                      color: theme.cardTheme.color,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
                         ),
-                        child: Icon(
-                          Icons.repeat,
-                          color: theme.colorScheme.primary,
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showAddEditDialog(context, item),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.repeat,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '毎月 ${item.paymentDay}日 • $cardName',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '¥${item.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ReorderableDragStartListener(
+                                    index: index,
+                                    child: const _AnimatedDragHandle(),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      title: Text(
-                        item.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('毎月 ${item.paymentDay}日 • $cardName'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '¥${item.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20),
-                            onPressed: () => _showAddEditDialog(context, item),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: theme.colorScheme.error,
-                            ),
-                            onPressed:
-                                () => _showDeleteConfirmation(context, item),
-                          ),
-                          const SizedBox(width: 8),
-                          ReorderableDragStartListener(
-                            index: index,
-                            child: const _AnimatedDragHandle(),
-                          ),
-                        ],
                       ),
                     ),
                   );
