@@ -5,6 +5,7 @@ import '../../application/fixed_cost_provider.dart';
 import '../../domain/fixed_cost_model.dart';
 import '../../application/card_provider.dart';
 import '../widgets/animated_fab.dart';
+import '../../../../shared/widgets/top_error_toast.dart';
 
 class FixedCostScreen extends StatefulWidget {
   const FixedCostScreen({super.key});
@@ -447,6 +448,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                             1;
 
                                         if (title.isEmpty || amount <= 0) {
+                                          showTopErrorToast(
+                                            dialogContext,
+                                            'タイトルと金額を入力してください',
+                                          );
                                           return;
                                         }
 

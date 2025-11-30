@@ -7,8 +7,8 @@ import '../../application/card_provider.dart';
 import '../../infrastructure/image_storage.dart';
 import '../constants/card_constants.dart';
 import '../widgets/color_picker.dart';
-
 import '../screens/card_detail_screen.dart';
+import '../../../../shared/widgets/top_error_toast.dart';
 
 /// カード追加ダイアログを表示
 Future<void> showAddCardDialog(
@@ -418,19 +418,9 @@ Future<void> showAddCardDialog(
 
                                   onCardAdded(card);
                                 } else {
-                                  ScaffoldMessenger.of(
+                                  showTopErrorToast(
                                     dialogContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'カード名と種類を入力してください',
-                                        style: TextStyle(
-                                          color: theme.colorScheme.onError,
-                                        ),
-                                      ),
-                                      backgroundColor: theme.colorScheme.error,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
+                                    'カード名と種類を入力してください',
                                   );
                                 }
                               },

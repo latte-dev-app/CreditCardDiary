@@ -12,6 +12,7 @@ import '../../infrastructure/image_storage.dart';
 import '../widgets/number_input_formatter.dart';
 import '../widgets/animated_fab.dart';
 import '../../domain/logic/payment_logic.dart';
+import '../../../../shared/widgets/top_error_toast.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final CreditCard card;
@@ -664,6 +665,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               Navigator.pop(context);
                             }
                           }
+                        } else {
+                          showTopErrorToast(context, 'カード名を入力してください');
                         }
                       },
                       child: const Text('保存'),
@@ -977,6 +980,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             transaction,
                           );
                           Navigator.pop(context);
+                        } else {
+                          showTopErrorToast(context, '金額を入力してください');
                         }
                       },
                       child: const Text('追加'),
@@ -1056,6 +1061,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       updatedTransaction,
                     );
                     Navigator.pop(context);
+                  } else {
+                    showTopErrorToast(context, '金額を入力してください');
                   }
                 },
                 child: const Text('保存'),
