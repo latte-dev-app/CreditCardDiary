@@ -777,14 +777,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '今月の利用',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ],
                 ),
               ],
