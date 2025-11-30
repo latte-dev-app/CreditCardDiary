@@ -5,6 +5,8 @@ import 'package:creditcarddiary/l10n/app_localizations.dart';
 import '../features/cards/application/card_provider.dart';
 import '../features/cards/domain/repositories/card_repository.dart';
 import '../features/cards/domain/repositories/transaction_repository.dart';
+import '../features/settings/domain/repositories/settings_repository.dart';
+import '../features/settings/domain/repositories/backup_repository.dart';
 import '../features/cards/presentation/screens/main_screen.dart';
 import 'service_locator.dart';
 import 'app_theme.dart';
@@ -25,8 +27,11 @@ class MyApp extends StatelessWidget {
               (_) => CardProvider(
                 cardRepo: getIt<CardRepository>(),
                 txRepo: getIt<TransactionRepository>(),
+                settingsRepo: getIt<SettingsRepository>(),
+                backupRepo: getIt<BackupRepository>(),
               )..init(),
         ),
+
         ChangeNotifierProvider(
           create:
               (_) =>

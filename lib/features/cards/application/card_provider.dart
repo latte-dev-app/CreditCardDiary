@@ -1,24 +1,38 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:collection/collection.dart';
 import '../domain/card_model.dart' as dm;
 import '../domain/repositories/card_repository.dart';
 import '../domain/repositories/transaction_repository.dart';
-import '../infrastructure/local_storage.dart';
+import '../../settings/domain/repositories/settings_repository.dart';
+import '../../settings/domain/repositories/backup_repository.dart';
 import '../../../shared/utils/date_formatter.dart';
 
 class CardProvider with ChangeNotifier {
   final CardRepository _cardRepo;
   final TransactionRepository _txRepo;
+  final SettingsRepository _settingsRepo;
+  final BackupRepository _backupRepo;
 
   CardProvider({
     required CardRepository cardRepo,
     required TransactionRepository txRepo,
+    required SettingsRepository settingsRepo,
+    required BackupRepository backupRepo,
   }) : _cardRepo = cardRepo,
-       _txRepo = txRepo;
+       _txRepo = txRepo,
+       _settingsRepo = settingsRepo,
+       _backupRepo = backupRepo;
 
   List<dm.CreditCard> _cards = [];
   List<dm.Transaction> _transactions = [];
   bool _useBillingMonth = false; // 請求月ベース集計フラグ
   final Map<String, int> _budgetCache = {}; // 予算キャッシュ
+
+  // Cache for expensive calculations
+  Map<String, Map<String, int>>? _monthlyTotalCache;
+  Map<String, Map<String, int>>? _billingMonthlyTotalCache;
+
   bool _isLoading = false;
 
   List<dm.CreditCard> get cards => _cards;
@@ -41,14 +55,12 @@ class CardProvider with ChangeNotifier {
 
   // 集計モードの読み込み
   Future<void> _loadAggregationMode() async {
-    final prefs = await SharedPreferencesDataSource.getSharedPreferences();
-    _useBillingMonth = prefs.getBool('use_billing_month') ?? false;
+    _useBillingMonth = await _settingsRepo.getAggregationMode();
   }
 
   // 集計モードの保存
   Future<void> _saveAggregationMode() async {
-    final prefs = await SharedPreferencesDataSource.getSharedPreferences();
-    await prefs.setBool('use_billing_month', _useBillingMonth);
+    await _settingsRepo.setAggregationMode(_useBillingMonth);
   }
 
   // 集計モードの切替
@@ -63,7 +75,13 @@ class CardProvider with ChangeNotifier {
     final t = await _txRepo.getAllTransactions();
     _cards = c;
     _transactions = t;
+    _clearCalculationCache();
     notifyListeners();
+  }
+
+  void _clearCalculationCache() {
+    _monthlyTotalCache = null;
+    _billingMonthlyTotalCache = null;
   }
 
   // カード追加/更新/削除
@@ -123,6 +141,10 @@ class CardProvider with ChangeNotifier {
 
   // カードの月別合計（カレンダー月）
   Map<String, int> getMonthlyTotalByCardId(String cardId) {
+    if (_monthlyTotalCache != null && _monthlyTotalCache!.containsKey(cardId)) {
+      return _monthlyTotalCache![cardId]!;
+    }
+
     final Map<String, int> monthlyTotal = {};
     for (final transaction in _transactions.where((t) => t.cardId == cardId)) {
       final monthKey = DateFormatter.toYearMonthString(
@@ -132,6 +154,10 @@ class CardProvider with ChangeNotifier {
       monthlyTotal[monthKey] =
           (monthlyTotal[monthKey] ?? 0) + transaction.amount;
     }
+
+    _monthlyTotalCache ??= {};
+    _monthlyTotalCache![cardId] = monthlyTotal;
+
     return monthlyTotal;
   }
 
@@ -166,28 +192,41 @@ class CardProvider with ChangeNotifier {
   // 近似: closingDayが設定されているカードの取引は、丸ごと翌月の請求月として扱う。
   // （取引日に日付が無いための近似。closingDay未設定/31日はカレンダー月のまま）
   Map<String, int> getBillingMonthlyTotalByCardId(String cardId) {
+    if (_billingMonthlyTotalCache != null &&
+        _billingMonthlyTotalCache!.containsKey(cardId)) {
+      return _billingMonthlyTotalCache![cardId]!;
+    }
+
     final Map<String, int> monthlyTotal = {};
-    final card = _cards.firstWhere(
-      (c) => c.id == cardId,
-      orElse: () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'),
-    );
+    final card = _cards.firstWhereOrNull((c) => c.id == cardId);
+
+    // カードが存在しない場合は空のマップを返す（または適切なエラーハンドリング）
+    if (card == null) {
+      return {};
+    }
+
     for (final t in _transactions.where((x) => x.cardId == cardId)) {
       final shifted = _shiftByClosing(card, t.year, t.month);
       final key = DateFormatter.toYearMonthString(shifted.$1, shifted.$2);
       monthlyTotal[key] = (monthlyTotal[key] ?? 0) + t.amount;
     }
+
+    _billingMonthlyTotalCache ??= {};
+    _billingMonthlyTotalCache![cardId] = monthlyTotal;
+
     return monthlyTotal;
   }
 
   int getBillingTotalByMonth(int year, int month) {
     int sum = 0;
     for (final t in _transactions) {
-      final card = _cards.firstWhere(
-        (c) => c.id == t.cardId,
-        orElse:
-            () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'),
-      );
-      final shifted = _shiftByClosing(card, t.year, t.month);
+      final card = _cards.firstWhereOrNull((c) => c.id == t.cardId);
+      // カード削除済みなどの場合、デフォルト扱い（カレンダー月）にするか、スキップするか。
+      // ここではデフォルト（カレンダー月）として扱う
+      final safeCard =
+          card ?? dm.CreditCard(id: '', name: '', type: '', color: '#000000');
+
+      final shifted = _shiftByClosing(safeCard, t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         sum += t.amount;
       }
@@ -198,12 +237,11 @@ class CardProvider with ChangeNotifier {
   List<dm.Transaction> getTransactionsByBillingMonth(int year, int month) {
     final List<dm.Transaction> list = [];
     for (final t in _transactions) {
-      final card = _cards.firstWhere(
-        (c) => c.id == t.cardId,
-        orElse:
-            () => dm.CreditCard(id: '', name: '', type: '', color: '#000000'),
-      );
-      final shifted = _shiftByClosing(card, t.year, t.month);
+      final card = _cards.firstWhereOrNull((c) => c.id == t.cardId);
+      final safeCard =
+          card ?? dm.CreditCard(id: '', name: '', type: '', color: '#000000');
+
+      final shifted = _shiftByClosing(safeCard, t.year, t.month);
       if (shifted.$1 == year && shifted.$2 == month) {
         list.add(t);
       }
@@ -234,15 +272,19 @@ class CardProvider with ChangeNotifier {
 
   // 互換: 既存エクスポートはそのまま
   String exportToJson() {
-    return SharedPreferencesDataSource.exportToJson(_cards, _transactions);
+    final Map<String, dynamic> data = {
+      'cards': _cards.map((card) => card.toJson()).toList(),
+      'transactions': _transactions.map((t) => t.toJson()).toList(),
+    };
+    return jsonEncode(data);
   }
 
   Future<String> exportAllData() async {
-    return await SharedPreferencesDataSource.exportAllData();
+    return await _backupRepo.exportAllData();
   }
 
   Future<void> importFromJson(String jsonString) async {
-    await SharedPreferencesDataSource.importAllData(jsonString);
+    await _backupRepo.importAllData(jsonString);
     await init(); // Reload all data
   }
 

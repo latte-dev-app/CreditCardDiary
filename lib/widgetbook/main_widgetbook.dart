@@ -7,6 +7,8 @@ import '../features/cards/application/card_provider.dart';
 import '../features/cards/domain/card_model.dart';
 import '../features/cards/domain/repositories/card_repository.dart';
 import '../features/cards/domain/repositories/transaction_repository.dart';
+import '../features/settings/domain/repositories/settings_repository.dart';
+import '../features/settings/domain/repositories/backup_repository.dart';
 import '../features/cards/presentation/screens/main_screen.dart';
 import '../features/cards/presentation/screens/home_screen.dart';
 import '../features/cards/presentation/screens/line_chart_screen.dart';
@@ -201,6 +203,8 @@ class WidgetbookApp extends StatelessWidget {
     return CardProvider(
       cardRepo: FakeCardRepository(),
       txRepo: FakeTransactionRepository(),
+      settingsRepo: FakeSettingsRepository(),
+      backupRepo: FakeBackupRepository(),
     );
   }
 }
@@ -242,4 +246,18 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<void> setTotalBudget(int year, int month, int amount) async {}
   @override
   Future<int?> getTotalBudget(int year, int month) async => null;
+}
+
+class FakeSettingsRepository implements SettingsRepository {
+  @override
+  Future<bool> getAggregationMode() async => false;
+  @override
+  Future<void> setAggregationMode(bool useBillingMonth) async {}
+}
+
+class FakeBackupRepository implements BackupRepository {
+  @override
+  Future<String> exportAllData() async => '{}';
+  @override
+  Future<void> importAllData(String jsonString) async {}
 }

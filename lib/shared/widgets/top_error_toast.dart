@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 const double _kToastTopMargin = 10.0;
 const double _kToastBorderRadius = 30.0;
 const Duration _kToastDuration = Duration(milliseconds: 300);
-const Duration _kToastDisplayDuration = Duration(seconds: 3);
+const Duration _kToastDisplayDuration = Duration(seconds: 4);
 
 // Singleton to manage the current overlay entry
 OverlayEntry? _currentOverlayEntry;

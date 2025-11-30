@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../domain/card_model.dart';
-import '../domain/fixed_cost_model.dart';
 
 class SharedPreferencesDataSource {
   static const String _keyCards = 'cards_data';
   static const String _keyTransactions = 'transactions_data';
   static const String _keyCardBudgets = 'card_budgets_data';
   static const String _keyTotalBudgets = 'total_budgets_data';
+  static const String _keyFixedCosts = 'fixed_costs_data';
 
   // SharedPreferencesインスタンスを取得（集計モード設定用）
   // Note: This is still static for now as it's used by CardProvider for aggregation mode
@@ -18,37 +17,32 @@ class SharedPreferencesDataSource {
 
   // データを保存
   Future<void> _saveData(
-    List<CreditCard> cards,
-    List<Transaction> transactions,
+    List<Map<String, dynamic>> cards,
+    List<Map<String, dynamic>> transactions,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-
-    final cardsJson = cards.map((card) => card.toJson()).toList();
-    final transactionsJson = transactions.map((t) => t.toJson()).toList();
-
-    await prefs.setString(_keyCards, jsonEncode(cardsJson));
-    await prefs.setString(_keyTransactions, jsonEncode(transactionsJson));
+    await prefs.setString(_keyCards, jsonEncode(cards));
+    await prefs.setString(_keyTransactions, jsonEncode(transactions));
   }
 
   // データを読み込み
-  Future<Map<String, dynamic>> _loadData() async {
+  Future<Map<String, List<Map<String, dynamic>>>> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
 
     final cardsJsonString = prefs.getString(_keyCards);
     final transactionsJsonString = prefs.getString(_keyTransactions);
 
-    List<CreditCard> cards = [];
-    List<Transaction> transactions = [];
+    List<Map<String, dynamic>> cards = [];
+    List<Map<String, dynamic>> transactions = [];
 
     if (cardsJsonString != null) {
       final cardsJson = jsonDecode(cardsJsonString) as List;
-      cards = cardsJson.map((json) => CreditCard.fromJson(json)).toList();
+      cards = cardsJson.cast<Map<String, dynamic>>().toList();
     }
 
     if (transactionsJsonString != null) {
       final transactionsJson = jsonDecode(transactionsJsonString) as List;
-      transactions =
-          transactionsJson.map((json) => Transaction.fromJson(json)).toList();
+      transactions = transactionsJson.cast<Map<String, dynamic>>().toList();
     }
 
     return {'cards': cards, 'transactions': transactions};
@@ -56,103 +50,94 @@ class SharedPreferencesDataSource {
 
   // JSONエクスポート (Static helper)
   static String exportToJson(
-    List<CreditCard> cards,
-    List<Transaction> transactions,
+    List<Map<String, dynamic>> cards,
+    List<Map<String, dynamic>> transactions,
   ) {
     final Map<String, dynamic> data = {
-      'cards': cards.map((card) => card.toJson()).toList(),
-      'transactions': transactions.map((t) => t.toJson()).toList(),
+      'cards': cards,
+      'transactions': transactions,
     };
     return jsonEncode(data);
   }
 
-  // ---- CardRepository Implementation ----
+  // ---- Card Data Operations ----
 
-  Future<List<CreditCard>> getAllCards() async {
+  Future<List<Map<String, dynamic>>> getAllCards() async {
     final prefsData = await _loadData();
-    return (prefsData['cards'] as List<CreditCard>? ?? []).toList();
+    return prefsData['cards']!;
   }
 
-  Future<void> addCard(CreditCard card) async {
+  Future<void> addCard(Map<String, dynamic> card) async {
     final prefsData = await _loadData();
-    final cards = (prefsData['cards'] as List<CreditCard>? ?? []).toList();
+    final cards = prefsData['cards']!;
     cards.add(card);
-    final transactions = prefsData['transactions'] as List<Transaction>? ?? [];
+    final transactions = prefsData['transactions']!;
     await _saveData(cards, transactions);
   }
 
-  Future<void> updateCard(CreditCard card) async {
+  Future<void> updateCard(Map<String, dynamic> card) async {
     final prefsData = await _loadData();
-    final cards = (prefsData['cards'] as List<CreditCard>? ?? []).toList();
-    final index = cards.indexWhere((c) => c.id == card.id);
+    final cards = prefsData['cards']!;
+    final index = cards.indexWhere((c) => c['id'] == card['id']);
     if (index != -1) {
       cards[index] = card;
-      final transactions =
-          prefsData['transactions'] as List<Transaction>? ?? [];
+      final transactions = prefsData['transactions']!;
       await _saveData(cards, transactions);
     }
   }
 
-  Future<void> upsertCard(CreditCard card) async {
+  Future<void> upsertCard(Map<String, dynamic> card) async {
     final prefsData = await _loadData();
-    final cards = (prefsData['cards'] as List<CreditCard>? ?? []).toList();
-    final index = cards.indexWhere((c) => c.id == card.id);
+    final cards = prefsData['cards']!;
+    final index = cards.indexWhere((c) => c['id'] == card['id']);
     if (index != -1) {
       cards[index] = card;
     } else {
       cards.add(card);
     }
-    final transactions = prefsData['transactions'] as List<Transaction>? ?? [];
+    final transactions = prefsData['transactions']!;
     await _saveData(cards, transactions);
   }
 
   Future<void> deleteCard(String cardId) async {
     final prefsData = await _loadData();
-    final cards =
-        (prefsData['cards'] as List<CreditCard>? ?? [])
-            .where((c) => c.id != cardId)
-            .toList();
+    final cards = prefsData['cards']!.where((c) => c['id'] != cardId).toList();
     final transactions =
-        (prefsData['transactions'] as List<Transaction>? ?? [])
-            .where((t) => t.cardId != cardId)
-            .toList();
+        prefsData['transactions']!.where((t) => t['cardId'] != cardId).toList();
     await _saveData(cards, transactions);
   }
 
-  // ---- TransactionRepository Implementation ----
+  // ---- Transaction Data Operations ----
 
-  Future<List<Transaction>> getAllTransactions() async {
+  Future<List<Map<String, dynamic>>> getAllTransactions() async {
     final prefsData = await _loadData();
-    return (prefsData['transactions'] as List<Transaction>? ?? []).toList();
+    return prefsData['transactions']!;
   }
 
-  Future<void> addTransaction(Transaction transaction) async {
+  Future<void> addTransaction(Map<String, dynamic> transaction) async {
     final prefsData = await _loadData();
-    final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions =
-        (prefsData['transactions'] as List<Transaction>? ?? []).toList();
+    final cards = prefsData['cards']!;
+    final transactions = prefsData['transactions']!;
     transactions.add(transaction);
     await _saveData(cards, transactions);
   }
 
-  Future<void> updateTransaction(Transaction transaction) async {
+  Future<void> updateTransaction(Map<String, dynamic> transaction) async {
     final prefsData = await _loadData();
-    final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions =
-        (prefsData['transactions'] as List<Transaction>? ?? []).toList();
-    final index = transactions.indexWhere((t) => t.id == transaction.id);
+    final cards = prefsData['cards']!;
+    final transactions = prefsData['transactions']!;
+    final index = transactions.indexWhere((t) => t['id'] == transaction['id']);
     if (index != -1) {
       transactions[index] = transaction;
       await _saveData(cards, transactions);
     }
   }
 
-  Future<void> upsertTransaction(Transaction transaction) async {
+  Future<void> upsertTransaction(Map<String, dynamic> transaction) async {
     final prefsData = await _loadData();
-    final cards = prefsData['cards'] as List<CreditCard>? ?? [];
-    final transactions =
-        (prefsData['transactions'] as List<Transaction>? ?? []).toList();
-    final index = transactions.indexWhere((t) => t.id == transaction.id);
+    final cards = prefsData['cards']!;
+    final transactions = prefsData['transactions']!;
+    final index = transactions.indexWhere((t) => t['id'] == transaction['id']);
     if (index != -1) {
       transactions[index] = transaction;
     } else {
@@ -163,15 +148,15 @@ class SharedPreferencesDataSource {
 
   Future<void> deleteTransaction(String transactionId) async {
     final prefsData = await _loadData();
-    final cards = prefsData['cards'] as List<CreditCard>? ?? [];
+    final cards = prefsData['cards']!;
     final transactions =
-        (prefsData['transactions'] as List<Transaction>? ?? [])
-            .where((t) => t.id != transactionId)
+        prefsData['transactions']!
+            .where((t) => t['id'] != transactionId)
             .toList();
     await _saveData(cards, transactions);
   }
 
-  // ---- Budget Implementation ----
+  // ---- Budget Data Operations ----
 
   Future<void> _saveCardBudgets(Map<String, Map<String, int>> budgets) async {
     final prefs = await SharedPreferences.getInstance();
@@ -242,47 +227,47 @@ class SharedPreferencesDataSource {
     final monthKey = '$year-${month.toString().padLeft(2, '0')}';
     return budgets[monthKey];
   }
-  // ---- FixedCost Implementation ----
 
-  static const String _keyFixedCosts = 'fixed_costs_data';
+  // ---- FixedCost Data Operations ----
 
-  Future<void> _saveFixedCosts(List<FixedCost> fixedCosts) async {
+  Future<void> _saveFixedCosts(List<Map<String, dynamic>> fixedCosts) async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonList = fixedCosts.map((fc) => fc.toJson()).toList();
-    await prefs.setString(_keyFixedCosts, jsonEncode(jsonList));
+    await prefs.setString(_keyFixedCosts, jsonEncode(fixedCosts));
   }
 
-  Future<List<FixedCost>> getFixedCosts() async {
+  Future<List<Map<String, dynamic>>> getFixedCosts() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyFixedCosts);
     if (jsonString == null) return [];
 
     final jsonList = jsonDecode(jsonString) as List;
-    return jsonList.map((json) => FixedCost.fromJson(json)).toList();
+    return jsonList.cast<Map<String, dynamic>>().toList();
   }
 
-  Future<void> addFixedCost(FixedCost fixedCost) async {
+  Future<void> addFixedCost(Map<String, dynamic> fixedCost) async {
     final list = await getFixedCosts();
     list.add(fixedCost);
     await _saveFixedCosts(list);
   }
 
-  Future<void> updateFixedCost(FixedCost fixedCost) async {
+  Future<void> updateFixedCost(Map<String, dynamic> fixedCost) async {
     final list = await getFixedCosts();
-    final index = list.indexWhere((fc) => fc.id == fixedCost.id);
+    final index = list.indexWhere((fc) => fc['id'] == fixedCost['id']);
     if (index != -1) {
       list[index] = fixedCost;
       await _saveFixedCosts(list);
     }
   }
 
-  Future<void> updateAllFixedCosts(List<FixedCost> fixedCosts) async {
+  Future<void> updateAllFixedCosts(
+    List<Map<String, dynamic>> fixedCosts,
+  ) async {
     await _saveFixedCosts(fixedCosts);
   }
 
   Future<void> deleteFixedCost(String id) async {
     final list = await getFixedCosts();
-    list.removeWhere((fc) => fc.id == id);
+    list.removeWhere((fc) => fc['id'] == id);
     await _saveFixedCosts(list);
   }
 

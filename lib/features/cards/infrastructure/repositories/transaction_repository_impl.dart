@@ -9,22 +9,23 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<List<Transaction>> getAllTransactions() async {
-    return _dataSource.getAllTransactions();
+    final rawData = await _dataSource.getAllTransactions();
+    return rawData.map((json) => Transaction.fromJson(json)).toList();
   }
 
   @override
   Future<void> addTransaction(Transaction transaction) async {
-    return _dataSource.addTransaction(transaction);
+    return _dataSource.addTransaction(transaction.toJson());
   }
 
   @override
   Future<void> updateTransaction(Transaction transaction) async {
-    return _dataSource.updateTransaction(transaction);
+    return _dataSource.updateTransaction(transaction.toJson());
   }
 
   @override
   Future<void> upsertTransaction(Transaction transaction) async {
-    return _dataSource.upsertTransaction(transaction);
+    return _dataSource.upsertTransaction(transaction.toJson());
   }
 
   @override

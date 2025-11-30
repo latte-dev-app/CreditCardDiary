@@ -26,6 +26,13 @@ class SplashScreen extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Loading...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),

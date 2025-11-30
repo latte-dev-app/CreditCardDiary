@@ -4,20 +4,36 @@ import 'package:mockito/annotations.dart';
 import 'package:creditcarddiary/features/cards/application/card_provider.dart';
 import 'package:creditcarddiary/features/cards/domain/repositories/card_repository.dart';
 import 'package:creditcarddiary/features/cards/domain/repositories/transaction_repository.dart';
+import 'package:creditcarddiary/features/settings/domain/repositories/settings_repository.dart';
+import 'package:creditcarddiary/features/settings/domain/repositories/backup_repository.dart';
 import 'package:creditcarddiary/features/cards/domain/card_model.dart';
 
-@GenerateMocks([CardRepository, TransactionRepository])
+@GenerateMocks([
+  CardRepository,
+  TransactionRepository,
+  SettingsRepository,
+  BackupRepository,
+])
 import 'card_provider_test.mocks.dart';
 
 void main() {
   late CardProvider provider;
   late MockCardRepository mockCardRepo;
   late MockTransactionRepository mockTxRepo;
+  late MockSettingsRepository mockSettingsRepo;
+  late MockBackupRepository mockBackupRepo;
 
   setUp(() {
     mockCardRepo = MockCardRepository();
     mockTxRepo = MockTransactionRepository();
-    provider = CardProvider(cardRepo: mockCardRepo, txRepo: mockTxRepo);
+    mockSettingsRepo = MockSettingsRepository();
+    mockBackupRepo = MockBackupRepository();
+    provider = CardProvider(
+      cardRepo: mockCardRepo,
+      txRepo: mockTxRepo,
+      settingsRepo: mockSettingsRepo,
+      backupRepo: mockBackupRepo,
+    );
   });
 
   group('CardProvider', () {

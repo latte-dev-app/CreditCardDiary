@@ -10,7 +10,12 @@ import 'package:creditcarddiary/features/cards/domain/repositories/card_reposito
     as _i2;
 import 'package:creditcarddiary/features/cards/domain/repositories/transaction_repository.dart'
     as _i5;
+import 'package:creditcarddiary/features/settings/domain/repositories/backup_repository.dart'
+    as _i7;
+import 'package:creditcarddiary/features/settings/domain/repositories/settings_repository.dart'
+    as _i6;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -175,4 +180,62 @@ class MockTransactionRepository extends _i1.Mock
             returnValue: _i3.Future<int?>.value(),
           )
           as _i3.Future<int?>);
+}
+
+/// A class which mocks [SettingsRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSettingsRepository extends _i1.Mock
+    implements _i6.SettingsRepository {
+  MockSettingsRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Future<bool> getAggregationMode() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAggregationMode, []),
+            returnValue: _i3.Future<bool>.value(false),
+          )
+          as _i3.Future<bool>);
+
+  @override
+  _i3.Future<void> setAggregationMode(bool? useBillingMonth) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAggregationMode, [useBillingMonth]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+}
+
+/// A class which mocks [BackupRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockBackupRepository extends _i1.Mock implements _i7.BackupRepository {
+  MockBackupRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Future<String> exportAllData() =>
+      (super.noSuchMethod(
+            Invocation.method(#exportAllData, []),
+            returnValue: _i3.Future<String>.value(
+              _i8.dummyValue<String>(
+                this,
+                Invocation.method(#exportAllData, []),
+              ),
+            ),
+          )
+          as _i3.Future<String>);
+
+  @override
+  _i3.Future<void> importAllData(String? jsonString) =>
+      (super.noSuchMethod(
+            Invocation.method(#importAllData, [jsonString]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }

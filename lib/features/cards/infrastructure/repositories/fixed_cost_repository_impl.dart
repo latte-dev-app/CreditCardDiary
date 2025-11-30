@@ -9,22 +9,24 @@ class FixedCostRepositoryImpl implements FixedCostRepository {
 
   @override
   Future<List<FixedCost>> getFixedCosts() async {
-    return _dataSource.getFixedCosts();
+    final rawData = await _dataSource.getFixedCosts();
+    return rawData.map((json) => FixedCost.fromJson(json)).toList();
   }
 
   @override
   Future<void> addFixedCost(FixedCost fixedCost) async {
-    return _dataSource.addFixedCost(fixedCost);
+    return _dataSource.addFixedCost(fixedCost.toJson());
   }
 
   @override
   Future<void> updateFixedCost(FixedCost fixedCost) async {
-    return _dataSource.updateFixedCost(fixedCost);
+    return _dataSource.updateFixedCost(fixedCost.toJson());
   }
 
   @override
   Future<void> updateAllFixedCosts(List<FixedCost> fixedCosts) async {
-    return _dataSource.updateAllFixedCosts(fixedCosts);
+    final rawList = fixedCosts.map((fc) => fc.toJson()).toList();
+    return _dataSource.updateAllFixedCosts(rawList);
   }
 
   @override

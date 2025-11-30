@@ -9,22 +9,23 @@ class CardRepositoryImpl implements CardRepository {
 
   @override
   Future<List<CreditCard>> getAllCards() async {
-    return _dataSource.getAllCards();
+    final rawData = await _dataSource.getAllCards();
+    return rawData.map((json) => CreditCard.fromJson(json)).toList();
   }
 
   @override
   Future<void> addCard(CreditCard card) async {
-    return _dataSource.addCard(card);
+    return _dataSource.addCard(card.toJson());
   }
 
   @override
   Future<void> updateCard(CreditCard card) async {
-    return _dataSource.updateCard(card);
+    return _dataSource.updateCard(card.toJson());
   }
 
   @override
   Future<void> upsertCard(CreditCard card) async {
-    return _dataSource.upsertCard(card);
+    return _dataSource.upsertCard(card.toJson());
   }
 
   @override
