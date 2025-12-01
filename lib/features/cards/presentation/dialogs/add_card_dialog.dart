@@ -108,37 +108,37 @@ Future<void> showAddCardDialog(
                                       >(
                                         context: dialogContext,
                                         builder:
-                                            (sourceDialogContext) => SafeArea(
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  ListTile(
-                                                    leading: const Icon(
-                                                      CupertinoIcons.camera,
-                                                    ),
-                                                    title: const Text('カメラで撮影'),
-                                                    onTap:
+                                            (
+                                              sourceDialogContext,
+                                            ) => CupertinoActionSheet(
+                                              actions: [
+                                                CupertinoActionSheetAction(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        sourceDialogContext,
+                                                        ImageSource.camera,
+                                                      ),
+                                                  child: const Text('カメラで撮影'),
+                                                ),
+                                                CupertinoActionSheetAction(
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        sourceDialogContext,
+                                                        ImageSource.gallery,
+                                                      ),
+                                                  child: const Text(
+                                                    'ギャラリーから選択',
+                                                  ),
+                                                ),
+                                              ],
+                                              cancelButton:
+                                                  CupertinoActionSheetAction(
+                                                    onPressed:
                                                         () => Navigator.pop(
                                                           sourceDialogContext,
-                                                          ImageSource.camera,
                                                         ),
+                                                    child: const Text('キャンセル'),
                                                   ),
-                                                  ListTile(
-                                                    leading: const Icon(
-                                                      CupertinoIcons
-                                                          .photo_on_rectangle,
-                                                    ),
-                                                    title: const Text(
-                                                      'ギャラリーから選択',
-                                                    ),
-                                                    onTap:
-                                                        () => Navigator.pop(
-                                                          sourceDialogContext,
-                                                          ImageSource.gallery,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
                                             ),
                                       );
                                       if (source != null) {
@@ -228,9 +228,10 @@ Future<void> showAddCardDialog(
                                 ),
                                 const SizedBox(height: 12),
 
-                                ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
+                                CupertinoListTile(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
+                                    vertical: 12,
                                   ),
                                   title: Text(
                                     isCustomName || nameController.text.isEmpty
@@ -244,14 +245,11 @@ Future<void> showAddCardDialog(
                                               : theme.colorScheme.onSurface,
                                     ),
                                   ),
-                                  trailing: const Icon(Icons.chevron_right),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(
-                                      color: theme.colorScheme.outline,
-                                    ),
+                                  trailing: const Icon(
+                                    CupertinoIcons.chevron_right,
+                                    size: 20,
                                   ),
-                                  tileColor: theme.colorScheme.surface,
+                                  backgroundColor: theme.colorScheme.surface,
                                   onTap: () async {
                                     final selected = await _showItemPicker(
                                       dialogContext,
@@ -302,9 +300,10 @@ Future<void> showAddCardDialog(
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
+                                CupertinoListTile(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
+                                    vertical: 12,
                                   ),
                                   title: Text(
                                     isCustomType || selectedType.isEmpty
@@ -317,14 +316,11 @@ Future<void> showAddCardDialog(
                                               : theme.colorScheme.onSurface,
                                     ),
                                   ),
-                                  trailing: const Icon(Icons.chevron_right),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(
-                                      color: theme.colorScheme.outline,
-                                    ),
+                                  trailing: const Icon(
+                                    CupertinoIcons.chevron_right,
+                                    size: 20,
                                   ),
-                                  tileColor: theme.colorScheme.surface,
+                                  backgroundColor: theme.colorScheme.surface,
                                   onTap: () async {
                                     final selected = await _showItemPicker(
                                       dialogContext,
@@ -393,7 +389,7 @@ Future<void> showAddCardDialog(
                             child: SizedBox(
                               width: double.infinity,
                               height: 56,
-                              child: FilledButton(
+                              child: CupertinoButton.filled(
                                 onPressed: () async {
                                   if (isLoading) return;
                                   HapticFeedback.lightImpact();
@@ -444,38 +440,44 @@ Future<void> showAddCardDialog(
                                       );
                                       if (!parentContext.mounted) return;
 
-                                      final addExpense = await showDialog<bool>(
-                                        context: parentContext,
-                                        builder:
-                                            (
-                                              confirmDialogContext,
-                                            ) => AlertDialog(
-                                              title: Text(
-                                                '${card.name}を追加しました',
-                                                style:
-                                                    theme.textTheme.titleLarge,
-                                              ),
-                                              content: const Text('支出を追加しますか？'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        confirmDialogContext,
-                                                        false,
-                                                      ),
-                                                  child: const Text('いいえ'),
+                                      final addExpense =
+                                          await showCupertinoDialog<bool>(
+                                            context: parentContext,
+                                            builder:
+                                                (
+                                                  confirmDialogContext,
+                                                ) => CupertinoAlertDialog(
+                                                  title: Text(
+                                                    '${card.name}を追加しました',
+                                                    style:
+                                                        theme
+                                                            .textTheme
+                                                            .titleLarge,
+                                                  ),
+                                                  content: const Text(
+                                                    '支出を追加しますか？',
+                                                  ),
+                                                  actions: [
+                                                    CupertinoDialogAction(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            confirmDialogContext,
+                                                            false,
+                                                          ),
+                                                      child: const Text('いいえ'),
+                                                    ),
+                                                    CupertinoDialogAction(
+                                                      isDefaultAction: true,
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            confirmDialogContext,
+                                                            true,
+                                                          ),
+                                                      child: const Text('はい'),
+                                                    ),
+                                                  ],
                                                 ),
-                                                FilledButton(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        confirmDialogContext,
-                                                        true,
-                                                      ),
-                                                  child: const Text('はい'),
-                                                ),
-                                              ],
-                                            ),
-                                      );
+                                          );
 
                                       if (addExpense == true &&
                                           parentContext.mounted) {
@@ -507,11 +509,6 @@ Future<void> showAddCardDialog(
                                     );
                                   }
                                 },
-                                style: FilledButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
                                 child: const Text(
                                   'カードを追加',
                                   style: TextStyle(
@@ -591,7 +588,7 @@ Future<String?> _showItemPicker(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
+                  child: CupertinoButton.filled(
                     onPressed: () {
                       Navigator.pop(context, items[selectedIndex]);
                     },

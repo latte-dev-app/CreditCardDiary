@@ -30,23 +30,37 @@ class SettingsScreen extends StatelessWidget {
           _SettingsSection(
             title: '表示設定',
             children: [
-              RadioListTile<ThemeMode>(
-                title: const Text('システム設定に従う'),
-                value: ThemeMode.system,
-                groupValue: themeProvider.themeMode,
-                onChanged: (value) => themeProvider.setThemeMode(value!),
-              ),
-              RadioListTile<ThemeMode>(
-                title: const Text('ライトモード'),
-                value: ThemeMode.light,
-                groupValue: themeProvider.themeMode,
-                onChanged: (value) => themeProvider.setThemeMode(value!),
-              ),
-              RadioListTile<ThemeMode>(
-                title: const Text('ダークモード'),
-                value: ThemeMode.dark,
-                groupValue: themeProvider.themeMode,
-                onChanged: (value) => themeProvider.setThemeMode(value!),
+              CupertinoFormSection.insetGrouped(
+                header: const Text('テーマ設定'),
+                children: [
+                  CupertinoFormRow(
+                    prefix: const Text('システム設定に従う'),
+                    child: CupertinoSwitch(
+                      value: themeProvider.themeMode == ThemeMode.system,
+                      onChanged: (value) {
+                        if (value) themeProvider.setThemeMode(ThemeMode.system);
+                      },
+                    ),
+                  ),
+                  CupertinoFormRow(
+                    prefix: const Text('ライトモード'),
+                    child: CupertinoSwitch(
+                      value: themeProvider.themeMode == ThemeMode.light,
+                      onChanged: (value) {
+                        if (value) themeProvider.setThemeMode(ThemeMode.light);
+                      },
+                    ),
+                  ),
+                  CupertinoFormRow(
+                    prefix: const Text('ダークモード'),
+                    child: CupertinoSwitch(
+                      value: themeProvider.themeMode == ThemeMode.dark,
+                      onChanged: (value) {
+                        if (value) themeProvider.setThemeMode(ThemeMode.dark);
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -58,20 +72,22 @@ class SettingsScreen extends StatelessWidget {
                 future: NotificationService.getNotificationEnabled(),
                 builder: (context, snapshot) {
                   final isEnabled = snapshot.data ?? false;
-                  return SwitchListTile(
+                  return CupertinoListTile(
                     title: const Text('支払日リマインダー'),
                     subtitle: const Text('支払日の3日前から通知します'),
-                    value: isEnabled,
-                    onChanged: (value) async {
-                      await NotificationService.setNotificationEnabled(value);
-                      // Force rebuild to show new state
-                      if (context.mounted) {
-                        (context as Element).markNeedsBuild();
-                      }
-                    },
-                    secondary: Icon(
+                    leading: Icon(
                       CupertinoIcons.bell,
                       color: colorScheme.primary,
+                    ),
+                    trailing: CupertinoSwitch(
+                      value: isEnabled,
+                      onChanged: (value) async {
+                        await NotificationService.setNotificationEnabled(value);
+                        // Force rebuild to show new state
+                        if (context.mounted) {
+                          (context as Element).markNeedsBuild();
+                        }
+                      },
                     ),
                   );
                 },
@@ -82,8 +98,8 @@ class SettingsScreen extends StatelessWidget {
           _SettingsSection(
             title: 'データ管理',
             children: [
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
+              CupertinoListTile(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 16,
                 ),
@@ -97,8 +113,8 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () => _exportData(context),
               ),
               Divider(height: 1, color: colorScheme.outlineVariant),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
+              CupertinoListTile(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 16,
                 ),
@@ -112,8 +128,8 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () => _showImportDialog(context),
               ),
               Divider(height: 1, color: colorScheme.outlineVariant),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
+              CupertinoListTile(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 16,
                 ),
@@ -137,8 +153,8 @@ class SettingsScreen extends StatelessWidget {
           _SettingsSection(
             title: 'アプリ情報',
             children: [
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
+              CupertinoListTile(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 16,
                 ),
@@ -149,6 +165,25 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 title: Text('クレカ使用額トラッカー', style: textTheme.titleMedium),
                 subtitle: Text('バージョン 1.0.0', style: textTheme.bodySmall),
+                onTap: () {
+                  showCupertinoDialog(
+                    context: context,
+                    builder:
+                        (context) => CupertinoAlertDialog(
+                          title: const Text('Credit Card Diary'),
+                          content: const Text(
+                            'クレジットカードの利用履歴を管理するアプリです。\n\nVersion 1.0.0',
+                          ),
+                          actions: [
+                            CupertinoDialogAction(
+                              isDefaultAction: true,
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('閉じる'),
+                            ),
+                          ],
+                        ),
+                  );
+                },
               ),
             ],
           ),
@@ -162,10 +197,10 @@ class SettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (context) => CupertinoAlertDialog(
             title: Text('データをインポート', style: textTheme.titleLarge),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -175,22 +210,20 @@ class SettingsScreen extends StatelessWidget {
                   style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                CupertinoTextField(
                   controller: textController,
                   maxLines: 5,
-                  decoration: const InputDecoration(
-                    hintText: 'JSONデータをここに貼り付け...',
-                    border: OutlineInputBorder(),
-                  ),
+                  placeholder: 'JSONデータをここに貼り付け...',
                 ),
               ],
             ),
             actions: [
-              TextButton(
+              CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('キャンセル'),
               ),
-              FilledButton(
+              CupertinoDialogAction(
+                isDestructiveAction: true,
                 onPressed: () async {
                   try {
                     final jsonString = textController.text;
@@ -234,30 +267,30 @@ class SettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (context) => CupertinoAlertDialog(
             title: Text('データをエクスポート', style: textTheme.titleLarge),
-            elevation: 24.0,
-            content: SingleChildScrollView(
-              child: Container(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: SelectableText(
+            content: Container(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: SingleChildScrollView(
+                child: Text(
                   formattedJson,
                   style: textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                 ),
               ),
             ),
             actions: [
-              TextButton(
+              CupertinoDialogAction(
                 onPressed: () {
                   if (!context.mounted) return;
                   Navigator.pop(context);
                 },
                 child: const Text('閉じる'),
               ),
-              ElevatedButton(
+              CupertinoDialogAction(
+                isDefaultAction: true,
                 onPressed: () async {
                   // クリップボードにコピー
                   await Clipboard.setData(ClipboardData(text: formattedJson));
@@ -277,27 +310,26 @@ class SettingsScreen extends StatelessWidget {
   void _showDeleteAllDataDialog(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (context) => CupertinoAlertDialog(
             title: Text('全データを削除', style: textTheme.titleLarge),
             content: Text(
               '本当に全てのデータを削除しますか？この操作は取り消せません。',
               style: textTheme.bodyMedium,
             ),
-            elevation: 24.0,
             actions: [
-              TextButton(
+              CupertinoDialogAction(
                 onPressed: () {
                   if (!context.mounted) return;
                   Navigator.pop(context);
                 },
                 child: const Text('キャンセル'),
               ),
-              ElevatedButton(
+              CupertinoDialogAction(
+                isDestructiveAction: true,
                 onPressed: () {
                   // 全データを削除
                   context.read<CardProvider>().deleteAllData();
@@ -307,10 +339,6 @@ class SettingsScreen extends StatelessWidget {
                     context,
                   ).showSnackBar(const SnackBar(content: Text('データを削除しました')));
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.error,
-                  foregroundColor: colorScheme.onError,
-                ),
                 child: const Text('削除'),
               ),
             ],

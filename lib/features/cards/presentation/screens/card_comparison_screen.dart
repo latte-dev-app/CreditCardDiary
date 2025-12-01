@@ -45,11 +45,10 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
         elevation: 0,
         surfaceTintColor: colorScheme.surfaceTint,
         actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.chevron_left, size: 24.0),
-            constraints: const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
+          CupertinoButton(
+            padding: EdgeInsets.zero,
             onPressed: _previousMonth,
-            tooltip: '前の月',
+            child: const Icon(CupertinoIcons.chevron_left, size: 24.0),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -60,11 +59,10 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(CupertinoIcons.chevron_right, size: 24.0),
-            constraints: const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
+          CupertinoButton(
+            padding: EdgeInsets.zero,
             onPressed: _nextMonth,
-            tooltip: '次の月',
+            child: const Icon(CupertinoIcons.chevron_right, size: 24.0),
           ),
         ],
       ),
@@ -181,7 +179,7 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                       child: Row(
                         children: [
                           Text('当月と比較', style: textTheme.bodyLarge),
-                          Switch(
+                          CupertinoSwitch(
                             value: _compareWithCurrentMonth,
                             onChanged: (value) {
                               setState(() {
@@ -223,17 +221,25 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                           borderRadius: BorderRadius.circular(24),
                           child: BackdropFilter(
                             filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                            child: Card(
-                              elevation: 2,
-                              color: colorScheme.surface.withValues(alpha: 0.8),
-                              shape: RoundedRectangleBorder(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.surface.withValues(
+                                  alpha: 0.8,
+                                ),
                                 borderRadius: BorderRadius.circular(24),
-                                side: BorderSide(
+                                border: Border.all(
                                   color: colorScheme.outline.withValues(
                                     alpha: 0.2,
                                   ),
                                   width: 1.5,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),

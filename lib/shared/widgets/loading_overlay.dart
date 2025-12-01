@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class LoadingOverlay extends StatelessWidget {
@@ -24,7 +25,10 @@ class LoadingOverlay extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(),
+                  const CupertinoActivityIndicator(
+                    color: Colors.white,
+                    radius: 16,
+                  ),
                   if (message != null) ...[
                     const SizedBox(height: 16),
                     Text(

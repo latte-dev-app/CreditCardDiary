@@ -322,7 +322,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               child: Column(
                                 children: [
                                   Icon(
-                                    Icons.receipt_long_rounded,
+                                    CupertinoIcons.doc_text,
                                     size: 64,
                                     color: theme.colorScheme.outline,
                                   ),
@@ -572,98 +572,62 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showCardSettings(BuildContext context) {
-    final theme = Theme.of(context);
-    showModalBottomSheet(
+    showCupertinoModalPopup(
       context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder:
-          (context) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: Icon(
-                    CupertinoIcons.pencil,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  title: Text('カード情報を編集', style: theme.textTheme.bodyLarge),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showEditCardDialog(context, card);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    CupertinoIcons.calendar,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  title: Text('締め日・支払日設定', style: theme.textTheme.bodyLarge),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showDateSettingsDialog(context);
-                  },
-                ),
-
-                ListTile(
-                  leading: Icon(
-                    CupertinoIcons.delete,
-                    color: theme.colorScheme.error,
-                  ),
-                  title: Text(
-                    'カードを削除',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showDeleteConfirmation(context);
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
+          (context) => CupertinoActionSheet(
+            title: const Text('カード設定'),
+            actions: [
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showEditCardDialog(context, card);
+                },
+                child: const Text('カード情報を編集'),
+              ),
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showDateSettingsDialog(context);
+                },
+                child: const Text('締め日・支払日設定'),
+              ),
+              CupertinoActionSheetAction(
+                isDestructiveAction: true,
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showDeleteConfirmation(context);
+                },
+                child: const Text('カードを削除'),
+              ),
+            ],
+            cancelButton: CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('キャンセル'),
             ),
           ),
     );
   }
 
   void _showEditCardDialog(BuildContext context, CreditCard card) async {
-    final theme = Theme.of(context);
     final nameController = TextEditingController(text: card.name);
     final typeController = TextEditingController(text: card.type);
     String selectedColor = card.color;
     String? currentImagePath = card.imagePath;
     File? selectedImageFile;
 
-    await showDialog(
+    await showCupertinoDialog(
       context: context,
       builder:
           (context) => StatefulBuilder(
             builder:
-                (context, setDialogState) => AlertDialog(
-                  title: Text(
-                    'カード編集',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                (context, setDialogState) => CupertinoAlertDialog(
+                  title: const Text('カード編集'),
                   content: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        const SizedBox(height: 16),
                         GestureDetector(
                           onTap: () async {
                             final picker = ImagePicker();
@@ -695,23 +659,29 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        TextField(
+                        CupertinoTextField(
                           controller: nameController,
-                          decoration: InputDecoration(
-                            labelText: 'カード名',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          placeholder: 'カード名',
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemBackground,
+                            border: Border.all(
+                              color: CupertinoColors.systemGrey4,
                             ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        TextField(
+                        const SizedBox(height: 12),
+                        CupertinoTextField(
                           controller: typeController,
-                          decoration: InputDecoration(
-                            labelText: 'カード種類',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          placeholder: 'カード種類',
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemBackground,
+                            border: Border.all(
+                              color: CupertinoColors.systemGrey4,
                             ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -725,11 +695,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     ),
                   ),
                   actions: [
-                    TextButton(
+                    CupertinoDialogAction(
                       onPressed: () => Navigator.pop(context),
                       child: const Text('キャンセル'),
                     ),
-                    FilledButton(
+                    CupertinoDialogAction(
+                      isDefaultAction: true,
                       onPressed: () async {
                         HapticFeedback.lightImpact();
                         if (nameController.text.isNotEmpty) {
@@ -771,129 +742,111 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   void _showDateSettingsDialog(BuildContext context) {
     final theme = Theme.of(context);
 
-    showModalBottomSheet(
+    showCupertinoModalPopup(
       context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder:
-          (context) => StatefulBuilder(
-            builder: (context, setState) {
-              return SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
+          (context) => Container(
+            color: theme.scaffoldBackgroundColor,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
                       '締め日・支払日設定',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('締め日'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            card.closingDay != null
-                                ? '${card.closingDay}日'
-                                : '未設定',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  ),
+                  CupertinoListTile(
+                    title: const Text('締め日'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          card.closingDay != null
+                              ? '${card.closingDay}日'
+                              : '未設定',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.chevron_right),
-                        ],
-                      ),
-                      onTap: () async {
-                        final day = await _showDayPicker(
-                          context,
-                          initialDay: card.closingDay,
-                          title: '締め日を選択',
-                        );
-                        if (context.mounted) {
-                          final updatedCard = card.copyWith(closingDay: day);
-                          // Handle case where day is 0 (Not Set) - copyWith handles null if we pass null?
-                          // My logic below returns 0 for "Not Set".
-                          // Need to check copyWith logic or pass null.
-                          // Let's assume _showDayPicker returns null for "Not Set".
-
-                          await context.read<CardProvider>().updateCard(
-                            updatedCard,
-                          );
-                          setState(() {
-                            // Update local card state
-                            // But we also need to update the parent widget's card state
-                            // The parent (CardDetailScreen) listens to provider?
-                            // No, it has local state 'card'.
-                            // We need to update that too.
-                            // But this setState only updates the BottomSheet.
-                            // We need to call the parent's setState.
-                            // However, we can't easily access parent's setState here.
-                            // But we can update the 'card' variable of the State class.
-                            card = updatedCard;
-                          });
-                          // Force parent rebuild
-                          setState(() {});
-                        }
-                      },
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(CupertinoIcons.chevron_right, size: 20),
+                      ],
                     ),
-                    const Divider(height: 1),
-                    ListTile(
-                      title: const Text('支払日'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            card.paymentDay != null
-                                ? '${card.paymentDay}日'
-                                : '未設定',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    onTap: () async {
+                      final day = await _showDayPicker(
+                        context,
+                        initialDay: card.closingDay,
+                        title: '締め日を選択',
+                      );
+                      if (context.mounted) {
+                        final updatedCard = card.copyWith(closingDay: day);
+                        await context.read<CardProvider>().updateCard(
+                          updatedCard,
+                        );
+                        setState(() {
+                          card = updatedCard;
+                        });
+                      }
+                    },
+                  ),
+                  const Divider(height: 1),
+                  CupertinoListTile(
+                    title: const Text('支払日'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          card.paymentDay != null
+                              ? '${card.paymentDay}日'
+                              : '未設定',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.chevron_right),
-                        ],
-                      ),
-                      onTap: () async {
-                        final day = await _showDayPicker(
-                          context,
-                          initialDay: card.paymentDay,
-                          title: '支払日を選択',
-                        );
-                        if (context.mounted) {
-                          final updatedCard = card.copyWith(paymentDay: day);
-                          await context.read<CardProvider>().updateCard(
-                            updatedCard,
-                          );
-                          setState(() {
-                            card = updatedCard;
-                          });
-                          setState(() {});
-                        }
-                      },
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(CupertinoIcons.chevron_right, size: 20),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              );
-            },
+                    onTap: () async {
+                      final day = await _showDayPicker(
+                        context,
+                        initialDay: card.paymentDay,
+                        title: '支払日を選択',
+                      );
+                      if (context.mounted) {
+                        final updatedCard = card.copyWith(paymentDay: day);
+                        await context.read<CardProvider>().updateCard(
+                          updatedCard,
+                        );
+                        setState(() {
+                          card = updatedCard;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: CupertinoButton.filled(
+                        child: const Text('閉じる'),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
     );
   }
@@ -906,30 +859,32 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final theme = Theme.of(context);
     int selectedIndex = initialDay ?? 0; // 0 represents "Not Set"
 
-    // Items: 0 -> "未設定", 1..31 -> "1日".."31日"
-
-    return await showModalBottomSheet<int?>(
+    return await showCupertinoModalPopup<int?>(
       context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder:
           (context) => Container(
             height: 300,
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            color: theme.scaffoldBackgroundColor,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('キャンセル'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('完了'),
+                      onPressed: () {
+                        Navigator.pop(
+                          context,
+                          selectedIndex == 0 ? null : selectedIndex,
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: CupertinoPicker(
                     itemExtent: 32,
@@ -965,21 +920,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.pop(
-                          context,
-                          selectedIndex == 0 ? null : selectedIndex,
-                        );
-                      },
-                      child: const Text('決定'),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -987,27 +927,19 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
-    final theme = Theme.of(context);
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(
-              'カード削除',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          (context) => CupertinoAlertDialog(
+            title: const Text('カード削除'),
             content: const Text('このカードと全ての支出記録を削除しますか？'),
             actions: [
-              TextButton(
+              CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('キャンセル'),
               ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
+              CupertinoDialogAction(
+                isDestructiveAction: true,
                 onPressed: () {
                   context.read<CardProvider>().deleteCard(card.id);
                   Navigator.pop(context); // Dialog
@@ -1029,111 +961,190 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final years = List.generate(10, (index) => DateTime.now().year - 5 + index);
     final months = List.generate(12, (index) => index + 1);
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder:
           (context) => StatefulBuilder(
             builder:
-                (context, setDialogState) => AlertDialog(
-                  title: Text(
-                    '支出追加',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                (context, setDialogState) => CupertinoAlertDialog(
+                  title: const Text('支出追加'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
-                            child: DropdownButtonFormField<int>(
-                              value: selectedYear,
-                              items:
-                                  years
-                                      .map(
-                                        (y) => DropdownMenuItem(
-                                          value: y,
-                                          child: Text('$y年'),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged:
-                                  (v) =>
-                                      setDialogState(() => selectedYear = v!),
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
+                            child: CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: CupertinoColors.systemGrey4,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '$selectedYear年',
+                                      style: theme.textTheme.bodyMedium,
+                                    ),
+                                    const Icon(
+                                      CupertinoIcons.chevron_down,
+                                      size: 16,
+                                    ),
+                                  ],
                                 ),
                               ),
+                              onPressed: () async {
+                                await showCupertinoModalPopup(
+                                  context: context,
+                                  builder:
+                                      (context) => Container(
+                                        height: 250,
+                                        color: theme.scaffoldBackgroundColor,
+                                        child: CupertinoPicker(
+                                          itemExtent: 32,
+                                          onSelectedItemChanged: (index) {
+                                            setDialogState(
+                                              () => selectedYear = years[index],
+                                            );
+                                          },
+                                          scrollController:
+                                              FixedExtentScrollController(
+                                                initialItem: years.indexOf(
+                                                  selectedYear,
+                                                ),
+                                              ),
+                                          children:
+                                              years
+                                                  .map(
+                                                    (y) => Center(
+                                                      child: Text('$y年'),
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                        ),
+                                      ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: DropdownButtonFormField<int>(
-                              value: selectedMonth,
-                              items:
-                                  months
-                                      .map(
-                                        (m) => DropdownMenuItem(
-                                          value: m,
-                                          child: Text('$m月'),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged:
-                                  (v) =>
-                                      setDialogState(() => selectedMonth = v!),
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
+                            child: CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: CupertinoColors.systemGrey4,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '$selectedMonth月',
+                                      style: theme.textTheme.bodyMedium,
+                                    ),
+                                    const Icon(
+                                      CupertinoIcons.chevron_down,
+                                      size: 16,
+                                    ),
+                                  ],
                                 ),
                               ),
+                              onPressed: () async {
+                                await showCupertinoModalPopup(
+                                  context: context,
+                                  builder:
+                                      (context) => Container(
+                                        height: 250,
+                                        color: theme.scaffoldBackgroundColor,
+                                        child: CupertinoPicker(
+                                          itemExtent: 32,
+                                          onSelectedItemChanged: (index) {
+                                            setDialogState(
+                                              () =>
+                                                  selectedMonth = months[index],
+                                            );
+                                          },
+                                          scrollController:
+                                              FixedExtentScrollController(
+                                                initialItem: months.indexOf(
+                                                  selectedMonth,
+                                                ),
+                                              ),
+                                          children:
+                                              months
+                                                  .map(
+                                                    (m) => Center(
+                                                      child: Text('$m月'),
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                        ),
+                                      ),
+                                );
+                              },
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      TextField(
+                      CupertinoTextField(
                         controller: amountController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           NumberTextInputFormatter(),
                         ],
-                        decoration: InputDecoration(
-                          labelText: '金額',
-                          suffixText: '円',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        placeholder: '金額 (円)',
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemBackground,
+                          border: Border.all(
+                            color: CupertinoColors.systemGrey4,
                           ),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         autofocus: true,
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
+                      const SizedBox(height: 12),
+                      CupertinoTextField(
                         controller: titleController,
-                        decoration: InputDecoration(
-                          labelText: 'メモ (任意)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        placeholder: 'メモ (任意)',
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemBackground,
+                          border: Border.all(
+                            color: CupertinoColors.systemGrey4,
                           ),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ],
                   ),
                   actions: [
-                    TextButton(
+                    CupertinoDialogAction(
                       onPressed: () => Navigator.pop(context),
                       child: const Text('キャンセル'),
                     ),
-                    FilledButton(
+                    CupertinoDialogAction(
+                      isDefaultAction: true,
                       onPressed: () {
                         final amount = int.tryParse(
                           amountController.text.replaceAll(',', ''),
@@ -1169,58 +1180,55 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     BuildContext context,
     Transaction transaction,
   ) {
-    final theme = Theme.of(context);
     final amountController = TextEditingController(
       text: NumberFormat('#,###').format(transaction.amount),
     );
     final titleController = TextEditingController(text: transaction.title);
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(
-              '支出編集',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          (context) => CupertinoAlertDialog(
+            title: const Text('支出編集'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
+                const SizedBox(height: 16),
+                CupertinoTextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     NumberTextInputFormatter(),
                   ],
-                  decoration: InputDecoration(
-                    labelText: '金額',
-                    suffixText: '円',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  placeholder: '金額 (円)',
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemBackground,
+                    border: Border.all(color: CupertinoColors.systemGrey4),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
+                const SizedBox(height: 12),
+                CupertinoTextField(
                   controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'メモ',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  placeholder: 'メモ',
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemBackground,
+                    border: Border.all(color: CupertinoColors.systemGrey4),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ],
             ),
             actions: [
-              TextButton(
+              CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('キャンセル'),
               ),
-              FilledButton(
+              CupertinoDialogAction(
+                isDefaultAction: true,
                 onPressed: () {
                   final amount = int.tryParse(
                     amountController.text.replaceAll(',', ''),

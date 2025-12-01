@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -12,7 +13,7 @@ class SplashScreen extends StatelessWidget {
           children: [
             // App Logo or Icon could go here
             Icon(
-              Icons.credit_card,
+              CupertinoIcons.creditcard,
               size: 80,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -25,7 +26,7 @@ class SplashScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 48),
-            const CircularProgressIndicator(),
+            const CupertinoActivityIndicator(radius: 16),
             const SizedBox(height: 16),
             Text(
               'Loading...',
