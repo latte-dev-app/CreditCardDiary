@@ -13,6 +13,7 @@ import '../../infrastructure/image_storage.dart';
 import '../widgets/number_input_formatter.dart';
 import '../../domain/logic/payment_logic.dart';
 import '../../../../shared/widgets/native_dialog.dart';
+import '../../../../shared/widgets/native_touchable.dart';
 import '../../../../shared/utils/color_utils.dart';
 import '../widgets/color_picker.dart';
 
@@ -491,44 +492,59 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     },
                     child: Column(
                       children: [
-                        ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
-                          ),
-                          title: Text(
-                            currencyFormat.format(transaction.amount),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          subtitle:
-                              transaction.title.isNotEmpty
-                                  ? Text(
-                                    transaction.title,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  )
-                                  : null,
-                          trailing: IconButton(
-                            icon: Icon(
-                              Icons.edit_outlined,
-                              size: 24,
-                              color: theme.colorScheme.primary,
-                            ),
-                            onPressed:
-                                () => _showEditTransactionDialog(
-                                  context,
-                                  transaction,
-                                ),
-                          ),
+                        NativeTouchable(
                           onTap:
                               () => _showEditTransactionDialog(
                                 context,
                                 transaction,
                               ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        currencyFormat.format(
+                                          transaction.amount,
+                                        ),
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                            ),
+                                      ),
+                                      if (transaction.title.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          transaction.title,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color:
+                                                    theme
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 24,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         if (transaction != transactions.last)
                           Divider(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../shared/widgets/native_touchable.dart';
 
 class HomeBudgetCard extends StatelessWidget {
   final int totalAmount;
@@ -24,9 +25,8 @@ class HomeBudgetCard extends StatelessWidget {
         budget > 0 ? (totalAmount / budget).clamp(0.0, 1.0) : 0.0;
     final remainingBudget = budget - totalAmount;
 
-    return InkWell(
+    return NativeTouchable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
