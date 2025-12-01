@@ -450,67 +450,95 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           child: Column(
             children:
                 transactions.map((transaction) {
-                  return Column(
-                    children: [
-                      ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        title: Text(
-                          currencyFormat.format(transaction.amount),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
+                  return Dismissible(
+                    key: ValueKey(transaction.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      color: theme.colorScheme.error,
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    confirmDismiss: (direction) async {
+                      return await showCupertinoDialog<bool>(
+                        context: context,
+                        builder:
+                            (context) => CupertinoAlertDialog(
+                              title: const Text('支出の削除'),
+                              content: Text(
+                                '「${transaction.title.isEmpty ? '支出' : transaction.title}」を削除しますか？',
+                              ),
+                              actions: [
+                                CupertinoDialogAction(
+                                  isDefaultAction: true,
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: const Text('キャンセル'),
+                                ),
+                                CupertinoDialogAction(
+                                  isDestructiveAction: true,
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('削除'),
+                                ),
+                              ],
+                            ),
+                      );
+                    },
+                    onDismissed: (direction) {
+                      context.read<CardProvider>().deleteTransaction(
+                        transaction.id,
+                      );
+                    },
+                    child: Column(
+                      children: [
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
                           ),
-                        ),
-                        subtitle:
-                            transaction.title.isNotEmpty
-                                ? Text(
-                                  transaction.title,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                )
-                                : null,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.edit_outlined,
-                                size: 24,
-                                color: theme.colorScheme.primary,
-                              ),
-                              onPressed:
-                                  () => _showEditTransactionDialog(
-                                    context,
-                                    transaction,
-                                  ),
+                          title: Text(
+                            currencyFormat.format(transaction.amount),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
                             ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.delete_outline,
-                                size: 24,
-                                color: theme.colorScheme.error,
-                              ),
-                              onPressed:
-                                  () => _showDeleteTransactionDialog(
-                                    context,
-                                    transaction,
-                                  ),
+                          ),
+                          subtitle:
+                              transaction.title.isNotEmpty
+                                  ? Text(
+                                    transaction.title,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  )
+                                  : null,
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              size: 24,
+                              color: theme.colorScheme.primary,
                             ),
-                          ],
+                            onPressed:
+                                () => _showEditTransactionDialog(
+                                  context,
+                                  transaction,
+                                ),
+                          ),
+                          onTap:
+                              () => _showEditTransactionDialog(
+                                context,
+                                transaction,
+                              ),
                         ),
-                      ),
-                      if (transaction != transactions.last)
-                        Divider(
-                          height: 1,
-                          indent: 20,
-                          endIndent: 20,
-                          color: theme.colorScheme.outlineVariant,
-                        ),
-                    ],
+                        if (transaction != transactions.last)
+                          Divider(
+                            height: 1,
+                            indent: 20,
+                            endIndent: 20,
+                            color: theme.colorScheme.outlineVariant,
+                          ),
+                      ],
+                    ),
                   );
                 }).toList(),
           ),
@@ -1181,44 +1209,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   }
                 },
                 child: const Text('保存'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _showDeleteTransactionDialog(
-    BuildContext context,
-    Transaction transaction,
-  ) {
-    final theme = Theme.of(context);
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              '支出削除',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: const Text('この記録を削除しますか？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () {
-                  context.read<CardProvider>().deleteTransaction(
-                    transaction.id,
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text('削除'),
               ),
             ],
           ),
