@@ -11,9 +11,8 @@ import '../../domain/card_model.dart';
 import '../../application/card_provider.dart';
 import '../../infrastructure/image_storage.dart';
 import '../widgets/number_input_formatter.dart';
-import '../widgets/animated_fab.dart';
 import '../../domain/logic/payment_logic.dart';
-import '../../../../shared/widgets/top_error_toast.dart';
+import '../../../../shared/widgets/native_dialog.dart';
 import '../../../../shared/utils/color_utils.dart';
 import '../widgets/color_picker.dart';
 
@@ -64,6 +63,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final currencyFormat = NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
 
     return Scaffold(
+      bottomNavigationBar: BottomAppBar(
+        color: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () => _showAddTransactionDialog(context),
+              icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
+              iconSize: 32,
+              tooltip: '支出記録',
+            ),
+          ],
+        ),
+      ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
           final transactions = provider.getTransactionsByCardId(card.id);
@@ -347,14 +363,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ],
           );
         },
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: AnimatedFab(
-          onPressed: () => _showAddTransactionDialog(context),
-          icon: Icons.add,
-          label: '支出記録',
-        ),
       ),
     );
   }
@@ -691,7 +699,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             }
                           }
                         } else {
-                          showTopErrorToast(context, 'カード名を入力してください');
+                          showNativeErrorDialog(context, 'カード名を入力してください');
                         }
                       },
                       child: const Text('保存'),
@@ -1088,7 +1096,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           );
                           Navigator.pop(context);
                         } else {
-                          showTopErrorToast(context, '金額を入力してください');
+                          showNativeErrorDialog(context, '金額を入力してください');
                         }
                       },
                       child: const Text('追加'),
@@ -1169,7 +1177,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     );
                     Navigator.pop(context);
                   } else {
-                    showTopErrorToast(context, '金額を入力してください');
+                    showNativeErrorDialog(context, '金額を入力してください');
                   }
                 },
                 child: const Text('保存'),

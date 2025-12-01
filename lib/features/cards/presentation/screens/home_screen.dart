@@ -10,7 +10,6 @@ import '../../../../shared/services/notification_service.dart';
 import '../dialogs/add_card_dialog.dart';
 import '../dialogs/budget_dialog.dart';
 
-import '../widgets/animated_fab.dart';
 import '../widgets/home_card_item.dart';
 import '../widgets/home_budget_card.dart';
 import '../../domain/logic/payment_logic.dart';
@@ -170,6 +169,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final nextMonthDate = DateTime(year, month + 1);
 
     return Scaffold(
+      bottomNavigationBar: BottomAppBar(
+        color: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
+              icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
+              iconSize: 32,
+              tooltip: 'カード追加',
+            ),
+          ],
+        ),
+      ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
           final totalAmount = provider.getTotalByMonth(year, month);
@@ -532,14 +548,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           );
         },
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: AnimatedFab(
-          onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
-          icon: Icons.add_card,
-          label: 'カード追加',
-        ),
       ),
     );
   }

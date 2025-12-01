@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../application/fixed_cost_provider.dart';
 import '../../domain/fixed_cost_model.dart';
 import '../../application/card_provider.dart';
-import '../../../../shared/widgets/top_error_toast.dart';
+import '../../../../shared/widgets/native_dialog.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 
@@ -56,6 +56,23 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final fixedCosts = fixedCostProvider.fixedCosts;
 
     return Scaffold(
+      bottomNavigationBar: BottomAppBar(
+        color: theme.scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () => _showAddEditDialog(context, null),
+              icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
+              iconSize: 32,
+              tooltip: '固定費を追加',
+            ),
+          ],
+        ),
+      ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -257,13 +274,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               ),
             ),
         ],
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: FloatingActionButton(
-          onPressed: () => _showAddEditDialog(context, null),
-          child: const Icon(Icons.add),
-        ),
       ),
     );
   }
@@ -469,8 +479,8 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                         final paymentDay = selectedPaymentDay;
 
                                         if (title.isEmpty || amount <= 0) {
-                                          showTopErrorToast(
-                                            dialogContext,
+                                          showNativeErrorDialog(
+                                            context,
                                             'タイトルと金額を入力してください',
                                           );
                                           return;

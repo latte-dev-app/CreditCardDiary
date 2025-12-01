@@ -157,6 +157,12 @@ class AppTheme {
         elevation: 3,
       ),
       dividerTheme: const DividerThemeData(color: _n30, thickness: 1, space: 1),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 
@@ -293,6 +299,12 @@ class AppTheme {
         color: _dn600,
         thickness: 1,
         space: 1,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
       ),
     );
   }

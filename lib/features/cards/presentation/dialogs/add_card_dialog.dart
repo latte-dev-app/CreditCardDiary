@@ -10,7 +10,7 @@ import '../../infrastructure/image_storage.dart';
 import '../constants/card_constants.dart';
 import '../widgets/color_picker.dart';
 import '../screens/card_detail_screen.dart';
-import 'package:creditcarddiary/shared/widgets/top_error_toast.dart';
+import '../../../../shared/widgets/native_dialog.dart';
 import 'package:creditcarddiary/shared/widgets/loading_overlay.dart';
 
 /// カード追加ダイアログを表示
@@ -501,7 +501,7 @@ Future<void> showAddCardDialog(
                                       }
                                     }
                                   } else {
-                                    showTopErrorToast(
+                                    showNativeErrorDialog(
                                       dialogContext,
                                       'カード名と種類を入力してください',
                                     );
