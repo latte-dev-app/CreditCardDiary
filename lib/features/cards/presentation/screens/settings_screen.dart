@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../application/card_provider.dart';
@@ -69,7 +70,7 @@ class SettingsScreen extends StatelessWidget {
                       }
                     },
                     secondary: Icon(
-                      Icons.notifications,
+                      CupertinoIcons.bell,
                       color: colorScheme.primary,
                     ),
                   );
@@ -87,7 +88,7 @@ class SettingsScreen extends StatelessWidget {
                   vertical: 16,
                 ),
                 leading: Icon(
-                  Icons.upload_file,
+                  CupertinoIcons.square_arrow_up,
                   size: 24.0,
                   color: colorScheme.onSurface,
                 ),
@@ -102,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
                   vertical: 16,
                 ),
                 leading: Icon(
-                  Icons.file_download,
+                  CupertinoIcons.square_arrow_down,
                   size: 24.0,
                   color: colorScheme.onSurface,
                 ),
@@ -117,7 +118,7 @@ class SettingsScreen extends StatelessWidget {
                   vertical: 16,
                 ),
                 leading: Icon(
-                  Icons.delete_forever,
+                  CupertinoIcons.trash,
                   size: 24.0,
                   color: colorScheme.error,
                 ),
@@ -142,7 +143,7 @@ class SettingsScreen extends StatelessWidget {
                   vertical: 16,
                 ),
                 leading: Icon(
-                  Icons.info,
+                  CupertinoIcons.info,
                   size: 24.0,
                   color: colorScheme.onSurface,
                 ),

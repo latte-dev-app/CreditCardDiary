@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class GlassTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -124,7 +125,7 @@ class GlassDropdown<T> extends StatelessWidget {
               ),
             ),
             icon: Icon(
-              Icons.arrow_drop_down,
+              CupertinoIcons.chevron_down,
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),

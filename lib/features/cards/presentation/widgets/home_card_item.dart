@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import '../../domain/card_model.dart';
 import '../screens/card_detail_screen.dart';
@@ -109,14 +110,14 @@ class HomeCardItem extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (_, __, ___) => const Icon(
-                                    Icons.credit_card,
+                                    CupertinoIcons.creditcard,
                                     color: Colors.white,
                                     size: 28,
                                   ),
                             ),
                           )
                           : const Icon(
-                            Icons.credit_card,
+                            CupertinoIcons.creditcard,
                             color: Colors.white,
                             size: 28,
                           ),
@@ -142,7 +143,7 @@ class HomeCardItem extends StatelessWidget {
                         if (isPaymentApproaching) ...[
                           const SizedBox(width: 8),
                           Icon(
-                            Icons.warning_rounded,
+                            CupertinoIcons.exclamationmark_circle_fill,
                             size: 18,
                             color: theme.colorScheme.error,
                           ),

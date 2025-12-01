@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -45,11 +46,8 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
         surfaceTintColor: colorScheme.surfaceTint,
         actions: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 24.0),
-            constraints: const BoxConstraints(
-              minWidth: 48.0,
-              minHeight: 48.0,
-            ),
+            icon: const Icon(CupertinoIcons.chevron_left, size: 24.0),
+            constraints: const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
             onPressed: _previousMonth,
             tooltip: '前の月',
           ),
@@ -63,11 +61,8 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 24.0),
-            constraints: const BoxConstraints(
-              minWidth: 48.0,
-              minHeight: 48.0,
-            ),
+            icon: const Icon(CupertinoIcons.chevron_right, size: 24.0),
+            constraints: const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
             onPressed: _nextMonth,
             tooltip: '次の月',
           ),
@@ -94,7 +89,7 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
 
           // 当月のカード別合計（比較用）
           Map<String, int> currentMonthTotals = {};
-          if (_compareWithCurrentMonth && 
+          if (_compareWithCurrentMonth &&
               !(currentYear == selectedYear && currentMonth == selectedMonth)) {
             currentMonthTotals = provider.getCardTotalsByMonth(
               currentYear,
@@ -104,20 +99,23 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
 
           // 全カードを取得してソート
           final allCards = provider.cards.toList();
-          
+
           // グラフ用データを準備
           final barGroups = <BarChartGroupData>[];
           final cardNames = <String>[];
-          
+
           for (int i = 0; i < allCards.length; i++) {
             final card = allCards[i];
             cardNames.add(card.name);
-            
-            final selectedAmount = selectedMonthTotals[card.id]?.toDouble() ?? 0.0;
-            final currentAmount = _compareWithCurrentMonth && 
-                !(currentYear == selectedYear && currentMonth == selectedMonth)
-                ? (currentMonthTotals[card.id]?.toDouble() ?? 0.0)
-                : 0.0;
+
+            final selectedAmount =
+                selectedMonthTotals[card.id]?.toDouble() ?? 0.0;
+            final currentAmount =
+                _compareWithCurrentMonth &&
+                        !(currentYear == selectedYear &&
+                            currentMonth == selectedMonth)
+                    ? (currentMonthTotals[card.id]?.toDouble() ?? 0.0)
+                    : 0.0;
 
             barGroups.add(
               BarChartGroupData(
@@ -126,16 +124,19 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                   BarChartRodData(
                     toY: selectedAmount,
                     color: _parseColor(card.color),
-                    width: _compareWithCurrentMonth &&
-                        !(currentYear == selectedYear && currentMonth == selectedMonth)
-                        ? 20
-                        : 30,
+                    width:
+                        _compareWithCurrentMonth &&
+                                !(currentYear == selectedYear &&
+                                    currentMonth == selectedMonth)
+                            ? 20
+                            : 30,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(4),
                     ),
                   ),
                   if (_compareWithCurrentMonth &&
-                      !(currentYear == selectedYear && currentMonth == selectedMonth))
+                      !(currentYear == selectedYear &&
+                          currentMonth == selectedMonth))
                     BarChartRodData(
                       toY: currentAmount,
                       color: _parseColor(card.color).withValues(alpha: 0.5),
@@ -149,11 +150,16 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
             );
           }
 
-          final maxValue = barGroups.isEmpty
-              ? 1.0
-              : barGroups
-                  .map((g) => g.barRods.map((r) => r.toY).reduce((a, b) => a > b ? a : b))
-                  .reduce((a, b) => a > b ? a : b);
+          final maxValue =
+              barGroups.isEmpty
+                  ? 1.0
+                  : barGroups
+                      .map(
+                        (g) => g.barRods
+                            .map((r) => r.toY)
+                            .reduce((a, b) => a > b ? a : b),
+                      )
+                      .reduce((a, b) => a > b ? a : b);
 
           final formatter = NumberFormat('#,###');
 
@@ -165,157 +171,203 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
               return Opacity(
                 opacity: value,
                 child: Column(
-            children: [
-              // 比較モード切替
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: Row(
                   children: [
-                    Text(
-                      '当月と比較',
-                      style: textTheme.bodyLarge,
+                    // 比較モード切替
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Text('当月と比較', style: textTheme.bodyLarge),
+                          Switch(
+                            value: _compareWithCurrentMonth,
+                            onChanged: (value) {
+                              setState(() {
+                                _compareWithCurrentMonth = value;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    Switch(
-                      value: _compareWithCurrentMonth,
-                      onChanged: (value) {
-                        setState(() {
-                          _compareWithCurrentMonth = value;
-                        });
-                      },
+                    // 凡例
+                    if (_compareWithCurrentMonth &&
+                        !(currentYear == selectedYear &&
+                            currentMonth == selectedMonth))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildLegend(
+                              '$selectedYear年$selectedMonth月',
+                              Colors.blue,
+                              textTheme.bodySmall,
+                            ),
+                            const SizedBox(width: 16),
+                            _buildLegend(
+                              '$currentYear年$currentMonth月（当月）',
+                              Colors.blue.withValues(alpha: 0.5),
+                              textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    // グラフ
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                            child: Card(
+                              elevation: 2,
+                              color: colorScheme.surface.withValues(alpha: 0.8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                side: BorderSide(
+                                  color: colorScheme.outline.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child:
+                                    barGroups.isEmpty
+                                        ? Center(
+                                          child: Text(
+                                            'データがありません',
+                                            style: textTheme.bodyLarge
+                                                ?.copyWith(
+                                                  color:
+                                                      colorScheme
+                                                          .onSurfaceVariant,
+                                                ),
+                                          ),
+                                        )
+                                        : BarChart(
+                                          BarChartData(
+                                            alignment:
+                                                BarChartAlignment.spaceAround,
+                                            maxY: (maxValue * 1.1).clamp(
+                                              0,
+                                              double.infinity,
+                                            ),
+                                            barTouchData: BarTouchData(
+                                              touchTooltipData: BarTouchTooltipData(
+                                                getTooltipItem: (
+                                                  group,
+                                                  groupIndex,
+                                                  rod,
+                                                  rodIndex,
+                                                ) {
+                                                  final cardName =
+                                                      cardNames[group.x
+                                                          .toInt()];
+                                                  final amount =
+                                                      rod.toY.toInt();
+                                                  final label =
+                                                      rodIndex == 0
+                                                          ? '$selectedYear年$selectedMonth月'
+                                                          : '$currentYear年$currentMonth月';
+                                                  return BarTooltipItem(
+                                                    '$cardName\n$label: ${formatter.format(amount)}円',
+                                                    const TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            titlesData: FlTitlesData(
+                                              show: true,
+                                              bottomTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: true,
+                                                  getTitlesWidget: (
+                                                    value,
+                                                    meta,
+                                                  ) {
+                                                    if (value.toInt() >= 0 &&
+                                                        value.toInt() <
+                                                            cardNames.length) {
+                                                      return Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              top: 8,
+                                                            ),
+                                                        child: Text(
+                                                          cardNames[value
+                                                              .toInt()],
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 10,
+                                                              ),
+                                                          maxLines: 1,
+                                                          overflow:
+                                                              TextOverflow
+                                                                  .ellipsis,
+                                                        ),
+                                                      );
+                                                    }
+                                                    return const SizedBox.shrink();
+                                                  },
+                                                  reservedSize: 50,
+                                                ),
+                                              ),
+                                              leftTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: true,
+                                                  getTitlesWidget: (
+                                                    value,
+                                                    meta,
+                                                  ) {
+                                                    return Text(
+                                                      '${formatter.format(value)}円',
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                      ),
+                                                    );
+                                                  },
+                                                  reservedSize: 56,
+                                                ),
+                                              ),
+                                              topTitles: const AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
+                                              rightTitles: const AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
+                                            ),
+                                            borderData: FlBorderData(
+                                              show: true,
+                                              border: Border.all(
+                                                color: Colors.grey[300]!,
+                                              ),
+                                            ),
+                                            barGroups: barGroups,
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              // 凡例
-              if (_compareWithCurrentMonth &&
-                  !(currentYear == selectedYear && currentMonth == selectedMonth))
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildLegend(
-                        '$selectedYear年$selectedMonth月',
-                        Colors.blue,
-                        textTheme.bodySmall,
-                      ),
-                      const SizedBox(width: 16),
-                      _buildLegend(
-                        '$currentYear年$currentMonth月（当月）',
-                        Colors.blue.withValues(alpha: 0.5),
-                        textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-              // グラフ
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Card(
-                        elevation: 2,
-                        color: colorScheme.surface.withValues(alpha: 0.8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          side: BorderSide(
-                            color: colorScheme.outline.withValues(alpha: 0.2),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: barGroups.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    'データがありません',
-                                    style: textTheme.bodyLarge?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                )
-                              : BarChart(
-                                  BarChartData(
-                                    alignment: BarChartAlignment.spaceAround,
-                                    maxY: (maxValue * 1.1).clamp(0, double.infinity),
-                                    barTouchData: BarTouchData(
-                                      touchTooltipData: BarTouchTooltipData(
-                                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                          final cardName = cardNames[group.x.toInt()];
-                                          final amount = rod.toY.toInt();
-                                          final label = rodIndex == 0
-                                              ? '$selectedYear年$selectedMonth月'
-                                              : '$currentYear年$currentMonth月';
-                                          return BarTooltipItem(
-                                            '$cardName\n$label: ${formatter.format(amount)}円',
-                                            const TextStyle(color: Colors.white),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    titlesData: FlTitlesData(
-                                      show: true,
-                                      bottomTitles: AxisTitles(
-                                        sideTitles: SideTitles(
-                                          showTitles: true,
-                                          getTitlesWidget: (value, meta) {
-                                            if (value.toInt() >= 0 &&
-                                                value.toInt() < cardNames.length) {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(top: 8),
-                                                child: Text(
-                                                  cardNames[value.toInt()],
-                                                  style: const TextStyle(fontSize: 10),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              );
-                                            }
-                                            return const SizedBox.shrink();
-                                          },
-                                          reservedSize: 50,
-                                        ),
-                                      ),
-                                      leftTitles: AxisTitles(
-                                        sideTitles: SideTitles(
-                                          showTitles: true,
-                                          getTitlesWidget: (value, meta) {
-                                            return Text(
-                                              '${formatter.format(value)}円',
-                                              style: const TextStyle(fontSize: 10),
-                                            );
-                                          },
-                                          reservedSize: 56,
-                                        ),
-                                      ),
-                                      topTitles: const AxisTitles(
-                                        sideTitles: SideTitles(showTitles: false),
-                                      ),
-                                      rightTitles: const AxisTitles(
-                                        sideTitles: SideTitles(showTitles: false),
-                                      ),
-                                    ),
-                                    borderData: FlBorderData(
-                                      show: true,
-                                      border: Border.all(color: Colors.grey[300]!),
-                                    ),
-                                    barGroups: barGroups,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+              );
+            },
+          );
         },
       ),
     );
@@ -334,10 +386,7 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: textStyle,
-        ),
+        Text(label, style: textStyle),
       ],
     );
   }
@@ -350,4 +399,3 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
     }
   }
 }
-

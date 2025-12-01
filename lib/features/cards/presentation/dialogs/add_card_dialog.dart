@@ -86,7 +86,7 @@ Future<void> showAddCardDialog(
                                 ),
                                 const Spacer(),
                                 IconButton(
-                                  icon: const Icon(Icons.close),
+                                  icon: const Icon(CupertinoIcons.xmark),
                                   onPressed: () => Navigator.pop(dialogContext),
                                 ),
                               ],
@@ -114,7 +114,7 @@ Future<void> showAddCardDialog(
                                                 children: [
                                                   ListTile(
                                                     leading: const Icon(
-                                                      Icons.camera_alt,
+                                                      CupertinoIcons.camera,
                                                     ),
                                                     title: const Text('カメラで撮影'),
                                                     onTap:
@@ -125,7 +125,8 @@ Future<void> showAddCardDialog(
                                                   ),
                                                   ListTile(
                                                     leading: const Icon(
-                                                      Icons.photo_library,
+                                                      CupertinoIcons
+                                                          .photo_on_rectangle,
                                                     ),
                                                     title: const Text(
                                                       'ギャラリーから選択',
@@ -191,8 +192,7 @@ Future<void> showAddCardDialog(
                                                     MainAxisAlignment.center,
                                                 children: [
                                                   Icon(
-                                                    Icons
-                                                        .add_photo_alternate_outlined,
+                                                    CupertinoIcons.camera,
                                                     size: 32,
                                                     color:
                                                         theme

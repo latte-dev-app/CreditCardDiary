@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:creditcarddiary/l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
@@ -74,21 +75,21 @@ class _MainScreenState extends State<MainScreen> {
                 elevation: 0,
                 items: [
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.home_outlined),
-                    activeIcon: const Icon(Icons.home),
+                    icon: const Icon(CupertinoIcons.house),
+                    activeIcon: const Icon(CupertinoIcons.house_fill),
                     label: l10n.home,
                   ),
                   const BottomNavigationBarItem(
-                    icon: Icon(Icons.repeat),
+                    icon: Icon(CupertinoIcons.repeat),
                     label: '固定費',
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.show_chart),
+                    icon: const Icon(CupertinoIcons.graph_square),
                     label: '推移',
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.settings_outlined),
-                    activeIcon: const Icon(Icons.settings),
+                    icon: const Icon(CupertinoIcons.settings),
+                    activeIcon: const Icon(CupertinoIcons.settings_solid),
                     label: l10n.settings,
                   ),
                 ],

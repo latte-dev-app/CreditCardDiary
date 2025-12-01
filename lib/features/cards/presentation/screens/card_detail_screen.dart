@@ -74,7 +74,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           children: [
             IconButton(
               onPressed: () => _showAddTransactionDialog(context),
-              icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
+              icon: Icon(
+                CupertinoIcons.add_circled_solid,
+                color: theme.colorScheme.primary,
+              ),
               iconSize: 32,
               tooltip: '支出記録',
             ),
@@ -102,13 +105,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 surfaceTintColor: Colors.transparent,
                 shape: const Border(), // Remove default AppBar border
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(CupertinoIcons.back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
                   IconButton(
                     icon: const Icon(
-                      Icons.settings_outlined,
+                      CupertinoIcons.settings,
                       color: Colors.white,
                     ),
                     onPressed: () => _showCardSettings(context),
@@ -208,14 +211,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                                   errorBuilder:
                                                       (_, __, ___) =>
                                                           const Icon(
-                                                            Icons.credit_card,
+                                                            CupertinoIcons
+                                                                .creditcard,
                                                             color: Colors.white,
                                                             size: 32,
                                                           ),
                                                 ),
                                               )
                                               : const Icon(
-                                                Icons.credit_card,
+                                                CupertinoIcons.creditcard,
                                                 color: Colors.white,
                                                 size: 32,
                                               ),
@@ -288,7 +292,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                           PaymentLogic.isPaymentDayApproaching(
                                                 card.paymentDay,
                                               )
-                                              ? Icons.warning_rounded
+                                              ? CupertinoIcons
+                                                  .exclamationmark_circle_fill
                                               : null,
                                       textColor:
                                           ColorUtils.getTextColorForBackground(
@@ -458,7 +463,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
                       color: theme.colorScheme.error,
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      child: const Icon(
+                        CupertinoIcons.delete,
+                        color: Colors.white,
+                      ),
                     ),
                     confirmDismiss: (direction) async {
                       return await showCupertinoDialog<bool>(
@@ -538,7 +546,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                   ),
                                 ),
                                 Icon(
-                                  Icons.edit_outlined,
+                                  CupertinoIcons.pencil,
                                   size: 24,
                                   color: theme.colorScheme.primary,
                                 ),
@@ -587,7 +595,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  leading: Icon(Icons.edit, color: theme.colorScheme.onSurface),
+                  leading: Icon(
+                    CupertinoIcons.pencil,
+                    color: theme.colorScheme.onSurface,
+                  ),
                   title: Text('カード情報を編集', style: theme.textTheme.bodyLarge),
                   onTap: () {
                     Navigator.pop(context);
@@ -596,7 +607,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ),
                 ListTile(
                   leading: Icon(
-                    Icons.calendar_today,
+                    CupertinoIcons.calendar,
                     color: theme.colorScheme.onSurface,
                   ),
                   title: Text('締め日・支払日設定', style: theme.textTheme.bodyLarge),
@@ -607,7 +618,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ),
 
                 ListTile(
-                  leading: Icon(Icons.delete, color: theme.colorScheme.error),
+                  leading: Icon(
+                    CupertinoIcons.delete,
+                    color: theme.colorScheme.error,
+                  ),
                   title: Text(
                     'カードを削除',
                     style: theme.textTheme.bodyLarge?.copyWith(
@@ -676,7 +690,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             child:
                                 (selectedImageFile == null &&
                                         currentImagePath == null)
-                                    ? const Icon(Icons.add_a_photo)
+                                    ? const Icon(CupertinoIcons.camera)
                                     : null,
                           ),
                         ),

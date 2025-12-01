@@ -179,7 +179,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
               onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
-              icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
+              icon: Icon(
+                CupertinoIcons.add_circled_solid,
+                color: theme.colorScheme.primary,
+              ),
               iconSize: 32,
               tooltip: 'カード追加',
             ),
@@ -260,9 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.keyboard_arrow_down_rounded,
+                              CupertinoIcons.chevron_down,
                               color: Colors.white.withValues(alpha: 0.9),
-                              size: 24,
+                              size: 20,
                             ),
                           ],
                         ),
@@ -298,7 +301,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                     },
                     icon: Icon(
-                      _isPrivacyMode ? Icons.visibility_off : Icons.visibility,
+                      _isPrivacyMode
+                          ? CupertinoIcons.eye_slash_fill
+                          : CupertinoIcons.eye_fill,
                       color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
@@ -420,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.chevron_left, size: 20),
+                            const Icon(CupertinoIcons.chevron_left, size: 20),
                             const SizedBox(width: 4),
                             Text(
                               '${prevMonthDate.month}月',
@@ -457,9 +462,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(width: 4),
                                 Icon(
                                   _isAmountAscending
-                                      ? Icons.arrow_upward_rounded
-                                      : Icons.arrow_downward_rounded,
-                                  size: 18,
+                                      ? CupertinoIcons.arrow_up
+                                      : CupertinoIcons.arrow_down,
+                                  size: 16,
                                   color: theme.colorScheme.onSurface.withValues(
                                     alpha: 0.6,
                                   ),
@@ -486,7 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.chevron_right, size: 20),
+                            const Icon(CupertinoIcons.chevron_right, size: 20),
                           ],
                         ),
                       ),
@@ -561,7 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.credit_card_off_rounded,
+              CupertinoIcons.creditcard,
               size: 64,
               color: theme.colorScheme.outline,
             ),

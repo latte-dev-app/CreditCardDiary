@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../constants/card_constants.dart';
 import '../../../../shared/utils/color_utils.dart';
 
@@ -129,7 +130,7 @@ class _ColorPickerStatefulState extends State<_ColorPickerStateful> {
                         child:
                             isSelected
                                 ? const Icon(
-                                  Icons.check,
+                                  CupertinoIcons.checkmark,
                                   color: Colors.white,
                                   size: 24,
                                 )

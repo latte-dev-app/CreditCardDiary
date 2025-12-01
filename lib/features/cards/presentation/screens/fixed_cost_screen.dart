@@ -67,7 +67,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
           children: [
             IconButton(
               onPressed: () => _showAddEditDialog(context, null),
-              icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
+              icon: Icon(
+                CupertinoIcons.add_circled_solid,
+                color: theme.colorScheme.primary,
+              ),
               iconSize: 32,
               tooltip: '固定費を追加',
             ),
@@ -194,7 +197,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                         color: theme.colorScheme.error,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      child: const Icon(
+                        CupertinoIcons.delete,
+                        color: Colors.white,
+                      ),
                     ),
                     confirmDismiss: (direction) async {
                       return await showCupertinoDialog<bool>(
@@ -248,7 +254,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
-                                  Icons.repeat,
+                                  CupertinoIcons.repeat,
                                   color: theme.colorScheme.primary,
                                 ),
                               ),

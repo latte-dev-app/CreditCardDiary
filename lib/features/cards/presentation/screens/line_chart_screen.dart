@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -87,7 +88,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                         ),
                         const SizedBox(width: 4),
                         Icon(
-                          Icons.arrow_drop_down,
+                          CupertinoIcons.chevron_down,
                           size: 20,
                           color: colorScheme.onSurface,
                         ),
@@ -118,12 +119,12 @@ class _LineChartScreenState extends State<LineChartScreen> {
                           ButtonSegment(
                             value: 0,
                             label: Text('推移'),
-                            icon: Icon(Icons.show_chart),
+                            icon: Icon(CupertinoIcons.graph_square),
                           ),
                           ButtonSegment(
                             value: 1,
                             label: Text('分析'),
-                            icon: Icon(Icons.pie_chart),
+                            icon: Icon(CupertinoIcons.chart_pie),
                           ),
                         ],
                         selected: {_viewMode},
@@ -197,7 +198,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                     Row(
                       children: [
                         Icon(
-                          Icons.account_balance_wallet,
+                          CupertinoIcons.money_dollar_circle,
                           size: 16,
                           color: colorScheme.primary,
                         ),
@@ -240,7 +241,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
                       Row(
                         children: [
                           Icon(
-                            Icons.analytics,
+                            CupertinoIcons.graph_circle,
                             size: 16,
                             color: colorScheme.secondary,
                           ),
@@ -497,7 +498,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios, size: 20),
+              icon: const Icon(CupertinoIcons.chevron_left, size: 20),
               onPressed: () {
                 setState(() {
                   _selectedMonth = DateTime(
@@ -521,7 +522,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.arrow_forward_ios, size: 20),
+              icon: const Icon(CupertinoIcons.chevron_right, size: 20),
               onPressed: () {
                 setState(() {
                   _selectedMonth = DateTime(
@@ -659,7 +660,7 @@ class _LineChartScreenState extends State<LineChartScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.pie_chart_outline,
+              CupertinoIcons.chart_pie,
               size: 64,
               color: Theme.of(
                 context,
