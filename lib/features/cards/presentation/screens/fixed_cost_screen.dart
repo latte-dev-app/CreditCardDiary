@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../application/fixed_cost_provider.dart';
 import '../../domain/fixed_cost_model.dart';
+import '../../domain/card_model.dart';
 import '../../application/card_provider.dart';
 import '../../../../shared/widgets/native_dialog.dart';
 import '../../../../shared/widgets/native_touchable.dart';
@@ -316,6 +317,13 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     String? selectedCardId = item?.cardId;
 
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
+
+    // カードが登録されていない場合はエラーダイアログを表示して終了
+    if (cardProvider.cards.isEmpty) {
+      showNativeErrorDialog(context, '先にカードを登録してください');
+      return;
+    }
+
     if (selectedCardId == null && cardProvider.cards.isNotEmpty) {
       selectedCardId = cardProvider.cards.first.id;
     }
@@ -501,44 +509,16 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                     ],
                                   ),
                                 ),
-                                onPressed: () async {
-                                  await showCupertinoModalPopup(
-                                    context: context,
-                                    builder:
-                                        (context) => Container(
-                                          height: 250,
-                                          color: theme.scaffoldBackgroundColor,
-                                          child: CupertinoPicker(
-                                            itemExtent: 32,
-                                            onSelectedItemChanged: (index) {
-                                              setState(
-                                                () =>
-                                                    selectedCardId =
-                                                        cardProvider
-                                                            .cards[index]
-                                                            .id,
-                                              );
-                                            },
-                                            scrollController:
-                                                FixedExtentScrollController(
-                                                  initialItem: cardProvider
-                                                      .cards
-                                                      .indexWhere(
-                                                        (c) =>
-                                                            c.id ==
-                                                            selectedCardId,
-                                                      ),
-                                                ),
-                                            children:
-                                                cardProvider.cards
-                                                    .map(
-                                                      (c) => Center(
-                                                        child: Text(c.name),
-                                                      ),
-                                                    )
-                                                    .toList(),
-                                          ),
-                                        ),
+                                onPressed: () {
+                                  _showCardPicker(
+                                    context,
+                                    cardProvider.cards,
+                                    selectedCardId!,
+                                    (newId) {
+                                      setState(() {
+                                        selectedCardId = newId;
+                                      });
+                                    },
                                   );
                                 },
                               ),
@@ -684,6 +664,67 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                         ),
                       );
                     }),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Future<void> _showCardPicker(
+    BuildContext context,
+    List<CreditCard> cards,
+    String currentCardId,
+    Function(String) onSelected,
+  ) async {
+    final theme = Theme.of(context);
+    final initialIndex = cards.indexWhere((c) => c.id == currentCardId);
+
+    await showCupertinoModalPopup(
+      context: context,
+      builder:
+          (context) => Container(
+            height: 250,
+            color: theme.scaffoldBackgroundColor,
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('キャンセル'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('完了'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: CupertinoPicker(
+                    itemExtent: 32,
+                    scrollController: FixedExtentScrollController(
+                      initialItem: initialIndex >= 0 ? initialIndex : 0,
+                    ),
+                    onSelectedItemChanged: (index) {
+                      HapticFeedback.selectionClick();
+                      onSelected(cards[index].id);
+                    },
+                    children:
+                        cards
+                            .map(
+                              (card) => Center(
+                                child: Text(
+                                  card.name,
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
                   ),
                 ),
               ],

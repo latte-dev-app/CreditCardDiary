@@ -276,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 actions: [
                   CupertinoButton(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Icon(
                       CupertinoIcons.add,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -285,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         () => showAddCardDialog(context, onCardAdded: (_) {}),
                   ),
                   CupertinoButton(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     onPressed: () {
                       setState(() {
                         _isPrivacyMode = !_isPrivacyMode;

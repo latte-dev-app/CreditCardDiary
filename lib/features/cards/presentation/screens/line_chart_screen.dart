@@ -22,84 +22,86 @@ class _LineChartScreenState extends State<LineChartScreen> {
   int _viewMode = 0; // 0: Trend (Line), 1: Analysis (Pie)
 
   @override
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      extendBodyBehindAppBar: false,
-      appBar: AppBar(
-        title: Text(
-          '推移',
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontFamily:
-                '.SF Pro Display', // iOS default font family if available, else fallback
-          ),
+      body: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
-        centerTitle: true,
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation:
-            0, // Disable Material 3 scroll elevation color change
-        actions: [
-          Consumer<CardProvider>(
-            builder: (context, provider, _) {
-              final years = _getAvailableYears(provider);
-              if (years.isEmpty) return const SizedBox.shrink();
-              final currentYear = _selectedYear ?? years.last;
-              return Container(
-                margin: const EdgeInsets.only(right: 16),
-                child: CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          '$currentYear年',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: kToolbarHeight,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            title: Text(
+              '推移',
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontFamily: '.SF Pro Display',
+              ),
+            ),
+            centerTitle: true,
+            actions: [
+              Consumer<CardProvider>(
+                builder: (context, provider, _) {
+                  final years = _getAvailableYears(provider);
+                  if (years.isEmpty) return const SizedBox.shrink();
+                  final currentYear = _selectedYear ?? years.last;
+                  return Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: CupertinoButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.5,
                           ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          CupertinoIcons.chevron_down,
-                          size: 16,
-                          color: colorScheme.onSurface,
+                        child: Row(
+                          children: [
+                            Text(
+                              '$currentYear年',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              CupertinoIcons.chevron_down,
+                              size: 16,
+                              color: colorScheme.onSurface,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        _showYearPicker(context, years, currentYear);
+                      },
                     ),
-                  ),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    _showYearPicker(context, years, currentYear);
-                  },
-                ),
-              );
-            },
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          // Main Content
-          Container(
-            color: theme.scaffoldBackgroundColor,
+          SliverToBoxAdapter(
             child: SafeArea(
-              child: SingleChildScrollView(
+              top: false, // SliverAppBar handles top safe area
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

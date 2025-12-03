@@ -85,18 +85,18 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 surfaceTintColor: Colors.transparent,
                 shape: const Border(), // Remove default AppBar border
                 leading: CupertinoButton(
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: const Icon(CupertinoIcons.back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
                   CupertinoButton(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: const Icon(CupertinoIcons.add, color: Colors.white),
                     onPressed: () => _showAddTransactionDialog(context),
                   ),
                   CupertinoButton(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: const Icon(
                       CupertinoIcons.settings,
                       color: Colors.white,
