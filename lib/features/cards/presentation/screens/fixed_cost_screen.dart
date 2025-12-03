@@ -57,26 +57,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final fixedCosts = fixedCostProvider.fixedCosts;
 
     return Scaffold(
-      bottomNavigationBar: BottomAppBar(
-        color: theme.scaffoldBackgroundColor,
-        surfaceTintColor: Colors.transparent,
-        height: 60,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () => _showAddEditDialog(context, null),
-              child: Icon(
-                CupertinoIcons.add_circled_solid,
-                color: theme.colorScheme.primary,
-                size: 32,
-              ),
-            ),
-          ],
-        ),
-      ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -110,6 +90,13 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                 ),
               ],
             ),
+            actions: [
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: const Icon(CupertinoIcons.add, color: Colors.white),
+                onPressed: () => _showAddEditDialog(context, null),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -226,6 +213,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       );
                     },
                     onDismissed: (direction) {
+                      HapticFeedback.mediumImpact();
                       fixedCostProvider.deleteFixedCost(item.id);
                     },
                     child: Container(

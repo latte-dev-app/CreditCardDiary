@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart'; // For ThemeMode and Colors if needed
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../application/card_provider.dart';
@@ -13,202 +13,168 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('設定', style: textTheme.titleLarge),
-        elevation: 0,
-        surfaceTintColor: colorScheme.surfaceTint,
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('設定'),
+        backgroundColor: CupertinoColors.systemGroupedBackground,
+        border: null, // Remove border for a cleaner look matching insetGrouped
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-        children: [
-          _SettingsSection(
-            title: '表示設定',
-            children: [
-              CupertinoFormSection.insetGrouped(
-                header: const Text('テーマ設定'),
-                children: [
-                  CupertinoFormRow(
-                    prefix: const Text('システム設定に従う'),
-                    child: CupertinoSwitch(
-                      value: themeProvider.themeMode == ThemeMode.system,
-                      onChanged: (value) {
-                        if (value) themeProvider.setThemeMode(ThemeMode.system);
-                      },
-                    ),
+      child: SafeArea(
+        child: ListView(
+          children: [
+            CupertinoListSection.insetGrouped(
+              header: const Text('表示設定'),
+              children: [
+                CupertinoFormRow(
+                  prefix: const Text(
+                    'テーマ設定',
+                    style: TextStyle(color: CupertinoColors.label),
                   ),
-                  CupertinoFormRow(
-                    prefix: const Text('ライトモード'),
-                    child: CupertinoSwitch(
-                      value: themeProvider.themeMode == ThemeMode.light,
-                      onChanged: (value) {
-                        if (value) themeProvider.setThemeMode(ThemeMode.light);
-                      },
-                    ),
-                  ),
-                  CupertinoFormRow(
-                    prefix: const Text('ダークモード'),
-                    child: CupertinoSwitch(
-                      value: themeProvider.themeMode == ThemeMode.dark,
-                      onChanged: (value) {
-                        if (value) themeProvider.setThemeMode(ThemeMode.dark);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SettingsSection(
-            title: '通知設定',
-            children: [
-              FutureBuilder<bool>(
-                future: NotificationService.getNotificationEnabled(),
-                builder: (context, snapshot) {
-                  final isEnabled = snapshot.data ?? false;
-                  return CupertinoListTile(
-                    title: const Text('支払日リマインダー'),
-                    subtitle: const Text('支払日の3日前から通知します'),
-                    leading: Icon(
-                      CupertinoIcons.bell,
-                      color: colorScheme.primary,
-                    ),
-                    trailing: CupertinoSwitch(
-                      value: isEnabled,
-                      onChanged: (value) async {
-                        await NotificationService.setNotificationEnabled(value);
-                        // Force rebuild to show new state
-                        if (context.mounted) {
-                          (context as Element).markNeedsBuild();
-                        }
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SettingsSection(
-            title: 'データ管理',
-            children: [
-              CupertinoListTile(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                leading: Icon(
-                  CupertinoIcons.square_arrow_up,
-                  size: 24.0,
-                  color: colorScheme.onSurface,
-                ),
-                title: Text('データをエクスポート', style: textTheme.titleMedium),
-                subtitle: Text('JSON形式でダウンロード', style: textTheme.bodySmall),
-                onTap: () => _exportData(context),
-              ),
-              Divider(height: 1, color: colorScheme.outlineVariant),
-              CupertinoListTile(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                leading: Icon(
-                  CupertinoIcons.square_arrow_down,
-                  size: 24.0,
-                  color: colorScheme.onSurface,
-                ),
-                title: Text('データをインポート', style: textTheme.titleMedium),
-                subtitle: Text('JSONファイルから復元', style: textTheme.bodySmall),
-                onTap: () => _showImportDialog(context),
-              ),
-              Divider(height: 1, color: colorScheme.outlineVariant),
-              CupertinoListTile(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                leading: Icon(
-                  CupertinoIcons.trash,
-                  size: 24.0,
-                  color: colorScheme.error,
-                ),
-                title: Text(
-                  '全データを削除',
-                  style: textTheme.titleMedium?.copyWith(
-                    color: colorScheme.error,
+                  child: CupertinoSlidingSegmentedControl<ThemeMode>(
+                    groupValue: themeProvider.themeMode,
+                    children: const {
+                      ThemeMode.system: Text('自動'),
+                      ThemeMode.light: Text('ライト'),
+                      ThemeMode.dark: Text('ダーク'),
+                    },
+                    onValueChanged: (value) {
+                      if (value != null) {
+                        themeProvider.setThemeMode(value);
+                      }
+                    },
                   ),
                 ),
-                subtitle: Text('全てのデータを削除します', style: textTheme.bodySmall),
-                onTap: () => _showDeleteAllDataDialog(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SettingsSection(
-            title: 'アプリ情報',
-            children: [
-              CupertinoListTile(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
+              ],
+            ),
+            CupertinoListSection.insetGrouped(
+              header: const Text('通知設定'),
+              children: [
+                FutureBuilder<bool>(
+                  future: NotificationService.getNotificationEnabled(),
+                  builder: (context, snapshot) {
+                    final isEnabled = snapshot.data ?? false;
+                    return CupertinoListTile(
+                      title: const Text(
+                        '支払日リマインダー',
+                        style: TextStyle(color: CupertinoColors.label),
+                      ),
+                      subtitle: const Text(
+                        '支払日の3日前から通知',
+                        style: TextStyle(color: CupertinoColors.secondaryLabel),
+                      ),
+                      leading: const Icon(CupertinoIcons.bell),
+                      trailing: CupertinoSwitch(
+                        value: isEnabled,
+                        onChanged: (value) async {
+                          await NotificationService.setNotificationEnabled(
+                            value,
+                          );
+                          if (context.mounted) {
+                            (context as Element).markNeedsBuild();
+                          }
+                        },
+                      ),
+                    );
+                  },
                 ),
-                leading: Icon(
-                  CupertinoIcons.info,
-                  size: 24.0,
-                  color: colorScheme.onSurface,
+              ],
+            ),
+            CupertinoListSection.insetGrouped(
+              header: const Text('データ管理'),
+              children: [
+                CupertinoListTile(
+                  leading: const Icon(CupertinoIcons.square_arrow_up),
+                  title: const Text(
+                    'データをエクスポート',
+                    style: TextStyle(color: CupertinoColors.label),
+                  ),
+                  subtitle: const Text(
+                    'JSON形式でダウンロード',
+                    style: TextStyle(color: CupertinoColors.secondaryLabel),
+                  ),
+                  onTap: () => _exportData(context),
                 ),
-                title: Text('クレカ使用額トラッカー', style: textTheme.titleMedium),
-                subtitle: Text('バージョン 1.0.0', style: textTheme.bodySmall),
-                onTap: () {
-                  showCupertinoDialog(
-                    context: context,
-                    builder:
-                        (context) => CupertinoAlertDialog(
-                          title: const Text('Credit Card Diary'),
-                          content: const Text(
-                            'クレジットカードの利用履歴を管理するアプリです。\n\nVersion 1.0.0',
-                          ),
-                          actions: [
-                            CupertinoDialogAction(
-                              isDefaultAction: true,
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('閉じる'),
+                CupertinoListTile(
+                  leading: const Icon(CupertinoIcons.square_arrow_down),
+                  title: const Text(
+                    'データをインポート',
+                    style: TextStyle(color: CupertinoColors.label),
+                  ),
+                  subtitle: const Text(
+                    'JSONファイルから復元',
+                    style: TextStyle(color: CupertinoColors.secondaryLabel),
+                  ),
+                  onTap: () => _showImportDialog(context),
+                ),
+                CupertinoListTile(
+                  leading: const Icon(
+                    CupertinoIcons.trash,
+                    color: CupertinoColors.destructiveRed,
+                  ),
+                  title: const Text(
+                    '全データを削除',
+                    style: TextStyle(color: CupertinoColors.destructiveRed),
+                  ),
+                  onTap: () => _showDeleteAllDataDialog(context),
+                ),
+              ],
+            ),
+            CupertinoListSection.insetGrouped(
+              header: const Text('アプリ情報'),
+              children: [
+                CupertinoListTile(
+                  leading: const Icon(CupertinoIcons.info),
+                  title: const Text(
+                    'クレカ使用額トラッカー',
+                    style: TextStyle(color: CupertinoColors.label),
+                  ),
+                  additionalInfo: const Text(
+                    'v1.0.0',
+                    style: TextStyle(color: CupertinoColors.secondaryLabel),
+                  ),
+                  onTap: () {
+                    showCupertinoDialog(
+                      context: context,
+                      builder:
+                          (context) => CupertinoAlertDialog(
+                            title: const Text('Credit Card Diary'),
+                            content: const Text(
+                              'クレジットカードの利用履歴を管理するアプリです。\n\nVersion 1.0.0',
                             ),
-                          ],
-                        ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
+                            actions: [
+                              CupertinoDialogAction(
+                                isDefaultAction: true,
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('閉じる'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _showImportDialog(BuildContext context) {
     final textController = TextEditingController();
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
 
     showCupertinoDialog(
       context: context,
       builder:
           (context) => CupertinoAlertDialog(
-            title: Text('データをインポート', style: textTheme.titleLarge),
+            title: const Text('データをインポート'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'エクスポートしたJSONデータを貼り付けてください。\n※現在のデータは上書きされます。',
-                  style: textTheme.bodyMedium,
-                ),
+                const Text('エクスポートしたJSONデータを貼り付けてください。\n※現在のデータは上書きされます。'),
                 const SizedBox(height: 16),
                 CupertinoTextField(
                   controller: textController,
@@ -234,17 +200,39 @@ class SettingsScreen extends StatelessWidget {
                     );
                     if (context.mounted) {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('データを復元しました')),
+                      // Use a native-style alert instead of SnackBar for success
+                      showCupertinoDialog(
+                        context: context,
+                        builder:
+                            (context) => CupertinoAlertDialog(
+                              title: const Text('完了'),
+                              content: const Text('データを復元しました'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  isDefaultAction: true,
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('エラーが発生しました: $e'),
-                          backgroundColor: theme.colorScheme.error,
-                        ),
+                      showCupertinoDialog(
+                        context: context,
+                        builder:
+                            (context) => CupertinoAlertDialog(
+                              title: const Text('エラー'),
+                              content: Text('エラーが発生しました: $e'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  isDefaultAction: true,
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
                       );
                     }
                   }
@@ -258,26 +246,22 @@ class SettingsScreen extends StatelessWidget {
 
   void _exportData(BuildContext context) {
     final provider = context.read<CardProvider>();
-    // Pretty print JSON
     final rawJson = provider.exportToJson();
     final dynamic parsedJson = jsonDecode(rawJson);
     final encoder = const JsonEncoder.withIndent('  ');
     final formattedJson = encoder.convert(parsedJson);
 
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-
     showCupertinoDialog(
       context: context,
       builder:
           (context) => CupertinoAlertDialog(
-            title: Text('データをエクスポート', style: textTheme.titleLarge),
+            title: const Text('データをエクスポート'),
             content: Container(
               constraints: const BoxConstraints(maxHeight: 300),
               child: SingleChildScrollView(
                 child: Text(
                   formattedJson,
-                  style: textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                 ),
               ),
             ),
@@ -292,12 +276,24 @@ class SettingsScreen extends StatelessWidget {
               CupertinoDialogAction(
                 isDefaultAction: true,
                 onPressed: () async {
-                  // クリップボードにコピー
                   await Clipboard.setData(ClipboardData(text: formattedJson));
                   if (!context.mounted) return;
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('データをクリップボードにコピーしました')),
+                  // Use native alert for success
+                  showCupertinoDialog(
+                    context: context,
+                    builder:
+                        (context) => CupertinoAlertDialog(
+                          title: const Text('完了'),
+                          content: const Text('データをクリップボードにコピーしました'),
+                          actions: [
+                            CupertinoDialogAction(
+                              isDefaultAction: true,
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                   );
                 },
                 child: const Text('コピー'),
@@ -308,18 +304,12 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showDeleteAllDataDialog(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-
     showCupertinoDialog(
       context: context,
       builder:
           (context) => CupertinoAlertDialog(
-            title: Text('全データを削除', style: textTheme.titleLarge),
-            content: Text(
-              '本当に全てのデータを削除しますか？この操作は取り消せません。',
-              style: textTheme.bodyMedium,
-            ),
+            title: const Text('全データを削除'),
+            content: const Text('本当に全てのデータを削除しますか？この操作は取り消せません。'),
             actions: [
               CupertinoDialogAction(
                 onPressed: () {
@@ -331,48 +321,29 @@ class SettingsScreen extends StatelessWidget {
               CupertinoDialogAction(
                 isDestructiveAction: true,
                 onPressed: () {
-                  // 全データを削除
                   context.read<CardProvider>().deleteAllData();
                   if (!context.mounted) return;
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('データを削除しました')));
+                  showCupertinoDialog(
+                    context: context,
+                    builder:
+                        (context) => CupertinoAlertDialog(
+                          title: const Text('完了'),
+                          content: const Text('データを削除しました'),
+                          actions: [
+                            CupertinoDialogAction(
+                              isDefaultAction: true,
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                  );
                 },
                 child: const Text('削除'),
               ),
             ],
           ),
-    );
-  }
-}
-
-class _SettingsSection extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SettingsSection({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 8),
-          child: Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Card(child: Column(children: children)),
-      ],
     );
   }
 }

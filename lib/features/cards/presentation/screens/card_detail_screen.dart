@@ -64,26 +64,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final currencyFormat = NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
 
     return Scaffold(
-      bottomNavigationBar: BottomAppBar(
-        color: theme.scaffoldBackgroundColor,
-        surfaceTintColor: Colors.transparent,
-        height: 60,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            IconButton(
-              onPressed: () => _showAddTransactionDialog(context),
-              icon: Icon(
-                CupertinoIcons.add_circled_solid,
-                color: theme.colorScheme.primary,
-              ),
-              iconSize: 32,
-              tooltip: '支出記録',
-            ),
-          ],
-        ),
-      ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
           final transactions = provider.getTransactionsByCardId(card.id);
@@ -104,18 +84,24 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 backgroundColor: theme.scaffoldBackgroundColor,
                 surfaceTintColor: Colors.transparent,
                 shape: const Border(), // Remove default AppBar border
-                leading: IconButton(
-                  icon: const Icon(CupertinoIcons.back, color: Colors.white),
+                leading: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: const Icon(CupertinoIcons.back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: const Icon(CupertinoIcons.add, color: Colors.white),
+                    onPressed: () => _showAddTransactionDialog(context),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: const Icon(
                       CupertinoIcons.settings,
                       color: Colors.white,
                     ),
                     onPressed: () => _showCardSettings(context),
-                    tooltip: 'カード設定',
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
@@ -494,6 +480,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       );
                     },
                     onDismissed: (direction) {
+                      HapticFeedback.mediumImpact();
                       context.read<CardProvider>().deleteTransaction(
                         transaction.id,
                       );
@@ -762,7 +749,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     ),
                   ),
                   CupertinoListTile(
-                    title: const Text('締め日'),
+                    title: const Text(
+                      '締め日',
+                      style: TextStyle(color: CupertinoColors.label),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -798,7 +788,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   ),
                   const Divider(height: 1),
                   CupertinoListTile(
-                    title: const Text('支払日'),
+                    title: const Text(
+                      '支払日',
+                      style: TextStyle(color: CupertinoColors.label),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1027,7 +1020,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                               years
                                                   .map(
                                                     (y) => Center(
-                                                      child: Text('$y年'),
+                                                      child: Text(
+                                                        '$y年',
+                                                        style: const TextStyle(
+                                                          color:
+                                                              CupertinoColors
+                                                                  .label,
+                                                        ),
+                                                      ),
                                                     ),
                                                   )
                                                   .toList(),
@@ -1092,7 +1092,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                               months
                                                   .map(
                                                     (m) => Center(
-                                                      child: Text('$m月'),
+                                                      child: Text(
+                                                        '$m月',
+                                                        style: const TextStyle(
+                                                          color:
+                                                              CupertinoColors
+                                                                  .label,
+                                                        ),
+                                                      ),
                                                     ),
                                                   )
                                                   .toList(),

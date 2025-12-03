@@ -13,6 +13,7 @@ import '../dialogs/budget_dialog.dart';
 import '../widgets/home_card_item.dart';
 import '../widgets/home_budget_card.dart';
 import '../../domain/logic/payment_logic.dart';
+import '../../../../shared/widgets/native_touchable.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -95,31 +96,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showYearPicker(BuildContext context, List<int> availableYears) {
     final theme = Theme.of(context);
-    showModalBottomSheet(
+    final initialIndex = availableYears.indexOf(
+      _selectedYear ?? _selectedMonth.year,
+    );
+
+    showCupertinoModalPopup(
       context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder:
           (context) => Container(
-            height: 300,
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            height: 250,
+            color: theme.scaffoldBackgroundColor,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '年を選択',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('キャンセル'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('完了'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: CupertinoPicker(
                     itemExtent: 32,
+                    scrollController: FixedExtentScrollController(
+                      initialItem: initialIndex >= 0 ? initialIndex : 0,
+                    ),
                     onSelectedItemChanged: (index) {
                       HapticFeedback.selectionClick();
                       final year = availableYears[index];
@@ -130,11 +137,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                       _loadBudget();
                     },
-                    scrollController: FixedExtentScrollController(
-                      initialItem: availableYears.indexOf(
-                        _selectedYear ?? _selectedMonth.year,
-                      ),
-                    ),
                     children:
                         availableYears
                             .map(
@@ -169,26 +171,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final nextMonthDate = DateTime(year, month + 1);
 
     return Scaffold(
-      bottomNavigationBar: BottomAppBar(
-        color: theme.scaffoldBackgroundColor,
-        surfaceTintColor: Colors.transparent,
-        height: 60,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            IconButton(
-              onPressed: () => showAddCardDialog(context, onCardAdded: (_) {}),
-              icon: Icon(
-                CupertinoIcons.add_circled_solid,
-                color: theme.colorScheme.primary,
-              ),
-              iconSize: 32,
-              tooltip: 'カード追加',
-            ),
-          ],
-        ),
-      ),
       body: Consumer<CardProvider>(
         builder: (context, provider, _) {
           final totalAmount = provider.getTotalByMonth(year, month);
@@ -244,9 +226,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 title: Row(
                   children: [
-                    InkWell(
+                    NativeTouchable(
                       onTap: () => _showYearPicker(context, availableYears),
-                      borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -294,13 +275,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 actions: [
-                  IconButton(
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(
+                      CupertinoIcons.add,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                    onPressed:
+                        () => showAddCardDialog(context, onCardAdded: (_) {}),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: () {
                       setState(() {
                         _isPrivacyMode = !_isPrivacyMode;
                       });
                     },
-                    icon: Icon(
+                    child: Icon(
                       _isPrivacyMode
                           ? CupertinoIcons.eye_slash_fill
                           : CupertinoIcons.eye_fill,
@@ -438,13 +429,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       // Sort Button
                       if (sortedCards.isNotEmpty)
-                        InkWell(
+                        NativeTouchable(
                           onTap: () {
+                            HapticFeedback.lightImpact();
                             setState(() {
                               _isAmountAscending = !_isAmountAscending;
                             });
                           },
-                          borderRadius: BorderRadius.circular(8),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,

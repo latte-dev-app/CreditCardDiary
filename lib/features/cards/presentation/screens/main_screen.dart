@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:creditcarddiary/l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
@@ -30,20 +31,13 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       extendBody: false,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        child: Container(
-          key: ValueKey<int>(_currentIndex),
-          child: _screens[_currentIndex],
-        ),
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          border: Border(top: BorderSide(color: colorScheme.outline, width: 1)),
+          border: Border(
+            top: BorderSide(color: colorScheme.outline, width: 0.5),
+          ),
         ),
         child: SafeArea(
           child: Theme(
@@ -53,22 +47,25 @@ class _MainScreenState extends State<MainScreen> {
               hoverColor: Colors.transparent,
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.only(top: 8),
               child: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
                 backgroundColor: Colors.transparent,
                 currentIndex: _currentIndex,
                 onTap: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
+                  if (_currentIndex != index) {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  }
                 },
-                iconSize: 24.0,
-                selectedFontSize: 14.0,
-                unselectedFontSize: 14.0, // Consistent font size
+                iconSize: 28.0,
+                selectedFontSize: 10.0,
+                unselectedFontSize: 10.0,
                 selectedItemColor: colorScheme.primary,
                 unselectedItemColor: colorScheme.onSurface.withValues(
-                  alpha: 0.6,
+                  alpha: 0.4,
                 ),
                 showSelectedLabels: true,
                 showUnselectedLabels: true,
@@ -85,6 +82,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   BottomNavigationBarItem(
                     icon: const Icon(CupertinoIcons.graph_square),
+                    activeIcon: const Icon(CupertinoIcons.graph_square_fill),
                     label: '推移',
                   ),
                   BottomNavigationBarItem(

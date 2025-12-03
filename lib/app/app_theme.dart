@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -44,6 +45,24 @@ class AppTheme {
         outline: _n40,
         brightness: Brightness.light,
       ).copyWith(surfaceTint: Colors.transparent),
+      cupertinoOverrideTheme: const CupertinoThemeData(
+        brightness: Brightness.light,
+        primaryColor: _primary,
+        barBackgroundColor: _n10,
+        scaffoldBackgroundColor: _n10,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: _n800,
+          textStyle: TextStyle(color: _n800),
+        ),
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       scaffoldBackgroundColor: _n10,
       textTheme: textTheme
           .apply(bodyColor: _n800, displayColor: _n800)
@@ -157,12 +176,6 @@ class AppTheme {
         elevation: 3,
       ),
       dividerTheme: const DividerThemeData(color: _n30, thickness: 1, space: 1),
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        },
-      ),
     );
   }
 
@@ -184,6 +197,16 @@ class AppTheme {
         outline: _dn600,
         brightness: Brightness.dark,
       ).copyWith(surfaceTint: Colors.transparent),
+      cupertinoOverrideTheme: const CupertinoThemeData(
+        brightness: Brightness.dark,
+        primaryColor: _primary,
+        barBackgroundColor: _dn900,
+        scaffoldBackgroundColor: _dn900,
+        textTheme: CupertinoTextThemeData(
+          primaryColor: _dn100,
+          textStyle: TextStyle(color: _dn100),
+        ),
+      ),
       scaffoldBackgroundColor: _dn900,
       textTheme: textTheme
           .apply(bodyColor: _dn100, displayColor: _dn100)

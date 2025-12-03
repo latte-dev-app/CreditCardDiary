@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -31,11 +32,17 @@ class _LineChartScreenState extends State<LineChartScreen> {
       appBar: AppBar(
         title: Text(
           '推移',
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontFamily:
+                '.SF Pro Display', // iOS default font family if available, else fallback
+          ),
         ),
         centerTitle: true,
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        scrolledUnderElevation:
+            0, // Disable Material 3 scroll elevation color change
         actions: [
           Consumer<CardProvider>(
             builder: (context, provider, _) {
@@ -44,57 +51,42 @@ class _LineChartScreenState extends State<LineChartScreen> {
               final currentYear = _selectedYear ?? years.last;
               return Container(
                 margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: colorScheme.outline.withValues(alpha: 0.1),
-                  ),
-                ),
-                child: PopupMenuButton<int>(
-                  onSelected: (y) {
-                    setState(() {
-                      _selectedYear = y;
-                      // Sync month to the selected year
-                      _selectedMonth = DateTime(y, _selectedMonth.month);
-                    });
-                  },
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  itemBuilder:
-                      (context) =>
-                          years
-                              .map(
-                                (y) =>
-                                    PopupMenuItem(value: y, child: Text('$y年')),
-                              )
-                              .toList(),
-                  child: Padding(
+                child: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.5,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
                         Text(
                           '$currentYear年',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(width: 4),
                         Icon(
                           CupertinoIcons.chevron_down,
-                          size: 20,
+                          size: 16,
                           color: colorScheme.onSurface,
                         ),
                       ],
                     ),
                   ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    _showYearPicker(context, years, currentYear);
+                  },
                 ),
               );
             },
@@ -114,36 +106,32 @@ class _LineChartScreenState extends State<LineChartScreen> {
                   children: [
                     // Sub Level Toggle (Trend vs Analysis)
                     Center(
-                      child: SegmentedButton<int>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 0,
-                            label: Text('推移'),
-                            icon: Icon(CupertinoIcons.graph_square),
-                          ),
-                          ButtonSegment(
-                            value: 1,
-                            label: Text('分析'),
-                            icon: Icon(CupertinoIcons.chart_pie),
-                          ),
-                        ],
-                        selected: {_viewMode},
-                        onSelectionChanged: (Set<int> newSelection) {
-                          setState(() {
-                            _viewMode = newSelection.first;
-                          });
-                        },
-                        style: ButtonStyle(
-                          visualDensity: VisualDensity.comfortable,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          side: WidgetStateProperty.all(
-                            BorderSide(
-                              color: colorScheme.outline.withValues(alpha: 0.2),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: CupertinoSlidingSegmentedControl<int>(
+                          groupValue: _viewMode,
+                          children: const {
+                            0: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text('推移'),
                             ),
-                          ),
+                            1: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text('分析'),
+                            ),
+                          },
+                          onValueChanged: (int? newValue) {
+                            if (newValue != null) {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _viewMode = newValue;
+                              });
+                            }
+                          },
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 24),
 
                     if (_viewMode == 0) ...[
@@ -696,6 +684,70 @@ class _LineChartScreenState extends State<LineChartScreen> {
       }
     }
     return totals;
+  }
+
+  void _showYearPicker(BuildContext context, List<int> years, int currentYear) {
+    final theme = Theme.of(context);
+    final initialIndex = years.indexOf(currentYear);
+
+    showCupertinoModalPopup(
+      context: context,
+      builder:
+          (context) => Container(
+            height: 250,
+            color: theme.scaffoldBackgroundColor,
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('キャンセル'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('完了'),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: CupertinoPicker(
+                    itemExtent: 32,
+                    scrollController: FixedExtentScrollController(
+                      initialItem: initialIndex >= 0 ? initialIndex : 0,
+                    ),
+                    onSelectedItemChanged: (index) {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _selectedYear = years[index];
+                        _selectedMonth = DateTime(
+                          years[index],
+                          _selectedMonth.month,
+                        );
+                      });
+                    },
+                    children:
+                        years
+                            .map(
+                              (y) => Center(
+                                child: Text(
+                                  '$y年',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
   }
 
   List<int> _getAvailableYears(CardProvider provider) {
