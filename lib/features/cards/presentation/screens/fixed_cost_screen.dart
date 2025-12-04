@@ -218,15 +218,18 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       fixedCostProvider.deleteFixedCost(item.id);
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: theme.cardTheme.color,
-                        borderRadius: BorderRadius.circular(20),
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -240,11 +243,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(
                                   CupertinoIcons.repeat,
                                   color: theme.colorScheme.primary,
+                                  size: 20,
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -254,10 +258,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                   children: [
                                     Text(
                                       item.title,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -283,13 +287,18 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 children: [
                                   Text(
                                     '¥${CurrencyFormatter.format(item.amount)}',
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
                                   ReorderableDragStartListener(
                                     index: index,
-                                    child: const _AnimatedDragHandle(),
+                                    child: Icon(
+                                      CupertinoIcons.bars,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.3),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -331,280 +340,291 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final theme = Theme.of(context);
     bool isLoading = false;
 
-    showCupertinoModalPopup(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
           (dialogContext) => StatefulBuilder(
             builder: (context, setState) {
-              return Container(
-                color: theme.scaffoldBackgroundColor,
-                height: MediaQuery.of(context).size.height * 0.85,
-                child: LoadingOverlay(
-                  isLoading: isLoading,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
-                    ),
-                    child: Column(
-                      children: [
-                        // Handle Bar
-                        Center(
-                          child: Container(
-                            margin: const EdgeInsets.only(top: 12, bottom: 8),
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.2,
+              return LoadingOverlay(
+                isLoading: isLoading,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(dialogContext).viewInsets.bottom,
+                  ),
+                  child: DraggableScrollableSheet(
+                    initialChildSize: 0.85,
+                    minChildSize: 0.5,
+                    maxChildSize: 0.95,
+                    expand: false,
+                    builder:
+                        (context, scrollController) => Column(
+                          children: [
+                            // Handle Bar
+                            Center(
+                              child: Container(
+                                margin: const EdgeInsets.only(
+                                  top: 12,
+                                  bottom: 8,
+                                ),
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
-                              borderRadius: BorderRadius.circular(2),
                             ),
-                          ),
-                        ),
-                        // Title
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                item == null ? '固定費を追加' : '固定費を編集',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            // Title
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
                               ),
-                              const Spacer(),
-                              CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                child: const Icon(CupertinoIcons.xmark),
-                                onPressed: () => Navigator.pop(dialogContext),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        // Content
-                        Expanded(
-                          child: ListView(
-                            padding: const EdgeInsets.all(24),
-                            children: [
-                              // Title Input
-                              Text(
-                                'タイトル',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              CupertinoTextField(
-                                controller: titleController,
-                                placeholder: '例: 家賃',
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: CupertinoColors.systemBackground,
-                                  border: Border.all(
-                                    color: CupertinoColors.systemGrey4,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    item == null ? '固定費を追加' : '固定費を編集',
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Amount Input
-                              Text(
-                                '金額',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              CupertinoTextField(
-                                controller: amountController,
-                                placeholder: '金額を入力',
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: CupertinoColors.systemBackground,
-                                  border: Border.all(
-                                    color: CupertinoColors.systemGrey4,
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: const Icon(CupertinoIcons.xmark),
+                                    onPressed:
+                                        () => Navigator.pop(dialogContext),
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                keyboardType: TextInputType.number,
+                                ],
                               ),
-                              const SizedBox(height: 24),
-
-                              // Payment Day Input
-                              Text(
-                                '支払日',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              CupertinoListTile(
-                                title: Text(
-                                  '$selectedPaymentDay日',
-                                  style: theme.textTheme.bodyLarge,
-                                ),
-                                trailing: const Icon(
-                                  CupertinoIcons.chevron_right,
-                                  size: 20,
-                                ),
-                                onTap: () async {
-                                  final day = await _showDayPicker(
-                                    context,
-                                    initialDay: selectedPaymentDay,
-                                  );
-                                  if (day != null) {
-                                    setState(() {
-                                      selectedPaymentDay = day;
-                                    });
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Card Selection
-                              Text(
-                                '支払いカード',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
+                            ),
+                            const Divider(height: 1),
+                            // Content
+                            Expanded(
+                              child: ListView(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(24),
+                                children: [
+                                  // Title Input
+                                  Text(
+                                    'タイトル',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: CupertinoColors.systemGrey4,
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: titleController,
+                                    decoration: const InputDecoration(
+                                      hintText: '例: 家賃',
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    style: theme.textTheme.bodyLarge,
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        cardProvider.cards
-                                            .firstWhere(
-                                              (c) => c.id == selectedCardId,
-                                              orElse:
-                                                  () =>
-                                                      cardProvider.cards.first,
-                                            )
-                                            .name,
-                                        style: theme.textTheme.bodyMedium,
-                                      ),
-                                      const Icon(
-                                        CupertinoIcons.chevron_down,
-                                        size: 16,
-                                      ),
-                                    ],
+                                  const SizedBox(height: 24),
+
+                                  // Amount Input
+                                  Text(
+                                    '金額',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                ),
-                                onPressed: () {
-                                  _showCardPicker(
-                                    context,
-                                    cardProvider.cards,
-                                    selectedCardId!,
-                                    (newId) {
-                                      setState(() {
-                                        selectedCardId = newId;
-                                      });
-                                    },
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 40),
-                            ],
-                          ),
-                        ),
-                        // Bottom Buttons
-                        Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: CupertinoButton.filled(
-                                  onPressed: () async {
-                                    final title = titleController.text;
-                                    final amount =
-                                        int.tryParse(amountController.text) ??
-                                        0;
-                                    final paymentDay = selectedPaymentDay;
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: amountController,
+                                    decoration: const InputDecoration(
+                                      hintText: '金額を入力',
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    style: theme.textTheme.bodyLarge,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  const SizedBox(height: 24),
 
-                                    if (title.isEmpty || amount <= 0) {
-                                      showNativeErrorDialog(
+                                  // Payment Day Input
+                                  Text(
+                                    '支払日',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CupertinoListTile(
+                                    title: Text(
+                                      '$selectedPaymentDay日',
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                    ),
+                                    trailing: const Icon(
+                                      CupertinoIcons.chevron_right,
+                                      size: 20,
+                                    ),
+                                    backgroundColor: theme.colorScheme.surface,
+                                    onTap: () async {
+                                      final day = await _showDayPicker(
                                         context,
-                                        'タイトルと金額を入力してください',
+                                        initialDay: selectedPaymentDay,
                                       );
-                                      return;
-                                    }
-
-                                    setState(() => isLoading = true);
-                                    try {
-                                      final newItem = FixedCost(
-                                        id: item?.id ?? const Uuid().v4(),
-                                        title: title,
-                                        amount: amount,
-                                        paymentDay: paymentDay,
-                                        cardId: selectedCardId,
-                                      );
-
-                                      final provider =
-                                          context.read<FixedCostProvider>();
-                                      if (item == null) {
-                                        await provider.addFixedCost(newItem);
-                                      } else {
-                                        await provider.updateFixedCost(newItem);
+                                      if (day != null) {
+                                        setState(() {
+                                          selectedPaymentDay = day;
+                                        });
                                       }
-
-                                      if (context.mounted) {
-                                        Navigator.pop(context);
-                                      }
-                                    } finally {
-                                      if (context.mounted) {
-                                        setState(() => isLoading = false);
-                                      }
-                                    }
-                                  },
-                                  child: const Text('保存'),
-                                ),
-                              ),
-                              if (item != null) ...[
-                                const SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: CupertinoButton(
-                                    onPressed: () {
-                                      Navigator.pop(
-                                        context,
-                                      ); // Close bottom sheet first
-                                      _showDeleteConfirmation(context, item);
                                     },
-                                    child: Text(
-                                      'この固定費を削除',
-                                      style: TextStyle(
-                                        color: theme.colorScheme.error,
-                                        fontWeight: FontWeight.bold,
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // Card Selection
+                                  Text(
+                                    '支払いカード',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CupertinoListTile(
+                                    title: Text(
+                                      cardProvider.cards
+                                          .firstWhere(
+                                            (c) => c.id == selectedCardId,
+                                            orElse:
+                                                () => cardProvider.cards.first,
+                                          )
+                                          .name,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                    ),
+                                    trailing: const Icon(
+                                      CupertinoIcons.chevron_right,
+                                      size: 20,
+                                    ),
+                                    backgroundColor: theme.colorScheme.surface,
+                                    onTap: () {
+                                      _showCardPicker(
+                                        context,
+                                        cardProvider.cards,
+                                        selectedCardId!,
+                                        (newId) {
+                                          setState(() {
+                                            selectedCardId = newId;
+                                          });
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 40),
+                                ],
+                              ),
+                            ),
+                            // Bottom Buttons
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: CupertinoButton.filled(
+                                      onPressed: () async {
+                                        final title =
+                                            titleController.text.trim();
+                                        final amount =
+                                            int.tryParse(
+                                              amountController.text,
+                                            ) ??
+                                            0;
+                                        final paymentDay = selectedPaymentDay;
+
+                                        if (title.isEmpty || amount <= 0) {
+                                          showNativeErrorDialog(
+                                            context,
+                                            'タイトルと金額を入力してください',
+                                          );
+                                          return;
+                                        }
+
+                                        setState(() => isLoading = true);
+                                        try {
+                                          final newItem = FixedCost(
+                                            id: item?.id ?? const Uuid().v4(),
+                                            title: title,
+                                            amount: amount,
+                                            paymentDay: paymentDay,
+                                            cardId: selectedCardId!,
+                                          );
+
+                                          final provider =
+                                              context.read<FixedCostProvider>();
+                                          if (item == null) {
+                                            await provider.addFixedCost(
+                                              newItem,
+                                            );
+                                          } else {
+                                            await provider.updateFixedCost(
+                                              newItem,
+                                            );
+                                          }
+
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                          }
+                                        } finally {
+                                          if (context.mounted) {
+                                            setState(() => isLoading = false);
+                                          }
+                                        }
+                                      },
+                                      child: Text(
+                                        item == null ? '追加' : '保存',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ],
-                          ),
+                                  if (item != null) ...[
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: CupertinoButton(
+                                        onPressed: () {
+                                          Navigator.pop(
+                                            context,
+                                          ); // Close bottom sheet first
+                                          _showDeleteConfirmation(
+                                            context,
+                                            item,
+                                          );
+                                        },
+                                        child: Text(
+                                          'この固定費を削除',
+                                          style: TextStyle(
+                                            color: theme.colorScheme.error,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
                   ),
                 ),
               );

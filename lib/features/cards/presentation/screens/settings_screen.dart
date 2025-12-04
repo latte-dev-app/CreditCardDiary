@@ -14,6 +14,10 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? CupertinoColors.white : CupertinoColors.black;
+    final secondaryTextColor =
+        isDark ? CupertinoColors.systemGrey : CupertinoColors.secondaryLabel;
 
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.systemGroupedBackground,
@@ -26,26 +30,37 @@ class SettingsScreen extends StatelessWidget {
         child: ListView(
           children: [
             CupertinoListSection.insetGrouped(
-              header: const Text('表示設定'),
+              header: const Text('テーマ設定'),
               children: [
-                CupertinoFormRow(
-                  prefix: const Text(
-                    'テーマ設定',
-                    style: TextStyle(color: CupertinoColors.label),
+                CupertinoListTile(
+                  leading: Icon(
+                    CupertinoIcons.device_phone_portrait,
+                    color: textColor,
                   ),
-                  child: CupertinoSlidingSegmentedControl<ThemeMode>(
-                    groupValue: themeProvider.themeMode,
-                    children: const {
-                      ThemeMode.system: Text('自動'),
-                      ThemeMode.light: Text('ライト'),
-                      ThemeMode.dark: Text('ダーク'),
-                    },
-                    onValueChanged: (value) {
-                      if (value != null) {
-                        themeProvider.setThemeMode(value);
-                      }
-                    },
-                  ),
+                  title: Text('自動', style: TextStyle(color: textColor)),
+                  trailing:
+                      themeProvider.themeMode == ThemeMode.system
+                          ? const Icon(CupertinoIcons.checkmark_alt)
+                          : null,
+                  onTap: () => themeProvider.setThemeMode(ThemeMode.system),
+                ),
+                CupertinoListTile(
+                  leading: Icon(CupertinoIcons.sun_max, color: textColor),
+                  title: Text('ライト', style: TextStyle(color: textColor)),
+                  trailing:
+                      themeProvider.themeMode == ThemeMode.light
+                          ? const Icon(CupertinoIcons.checkmark_alt)
+                          : null,
+                  onTap: () => themeProvider.setThemeMode(ThemeMode.light),
+                ),
+                CupertinoListTile(
+                  leading: Icon(CupertinoIcons.moon, color: textColor),
+                  title: Text('ダーク', style: TextStyle(color: textColor)),
+                  trailing:
+                      themeProvider.themeMode == ThemeMode.dark
+                          ? const Icon(CupertinoIcons.checkmark_alt)
+                          : null,
+                  onTap: () => themeProvider.setThemeMode(ThemeMode.dark),
                 ),
               ],
             ),
@@ -57,15 +72,15 @@ class SettingsScreen extends StatelessWidget {
                   builder: (context, snapshot) {
                     final isEnabled = snapshot.data ?? false;
                     return CupertinoListTile(
-                      title: const Text(
+                      title: Text(
                         '支払日リマインダー',
-                        style: TextStyle(color: CupertinoColors.label),
+                        style: TextStyle(color: textColor),
                       ),
-                      subtitle: const Text(
+                      subtitle: Text(
                         '支払日の3日前から通知',
-                        style: TextStyle(color: CupertinoColors.secondaryLabel),
+                        style: TextStyle(color: secondaryTextColor),
                       ),
-                      leading: const Icon(CupertinoIcons.bell),
+                      leading: Icon(CupertinoIcons.bell, color: textColor),
                       trailing: CupertinoSwitch(
                         value: isEnabled,
                         onChanged: (value) async {
@@ -86,26 +101,26 @@ class SettingsScreen extends StatelessWidget {
               header: const Text('データ管理'),
               children: [
                 CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.square_arrow_up),
-                  title: const Text(
-                    'データをエクスポート',
-                    style: TextStyle(color: CupertinoColors.label),
+                  leading: Icon(
+                    CupertinoIcons.square_arrow_up,
+                    color: textColor,
                   ),
-                  subtitle: const Text(
+                  title: Text('データをエクスポート', style: TextStyle(color: textColor)),
+                  subtitle: Text(
                     'JSON形式でダウンロード',
-                    style: TextStyle(color: CupertinoColors.secondaryLabel),
+                    style: TextStyle(color: secondaryTextColor),
                   ),
                   onTap: () => _exportData(context),
                 ),
                 CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.square_arrow_down),
-                  title: const Text(
-                    'データをインポート',
-                    style: TextStyle(color: CupertinoColors.label),
+                  leading: Icon(
+                    CupertinoIcons.square_arrow_down,
+                    color: textColor,
                   ),
-                  subtitle: const Text(
+                  title: Text('データをインポート', style: TextStyle(color: textColor)),
+                  subtitle: Text(
                     'JSONファイルから復元',
-                    style: TextStyle(color: CupertinoColors.secondaryLabel),
+                    style: TextStyle(color: secondaryTextColor),
                   ),
                   onTap: () => _showImportDialog(context),
                 ),
@@ -126,14 +141,14 @@ class SettingsScreen extends StatelessWidget {
               header: const Text('アプリ情報'),
               children: [
                 CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.info),
-                  title: const Text(
+                  leading: Icon(CupertinoIcons.info, color: textColor),
+                  title: Text(
                     'クレカ使用額トラッカー',
-                    style: TextStyle(color: CupertinoColors.label),
+                    style: TextStyle(color: textColor),
                   ),
-                  additionalInfo: const Text(
+                  additionalInfo: Text(
                     'v1.0.0',
-                    style: TextStyle(color: CupertinoColors.secondaryLabel),
+                    style: TextStyle(color: secondaryTextColor),
                   ),
                   onTap: () {
                     showCupertinoDialog(

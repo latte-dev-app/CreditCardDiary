@@ -136,13 +136,19 @@ class _LineChartScreenState extends State<LineChartScreen> {
 
                     const SizedBox(height: 24),
 
-                    if (_viewMode == 0) ...[
-                      // Trend View (Line Chart)
-                      _buildCardTrendView(context),
-                    ] else ...[
-                      // Analysis View (Pie Chart)
-                      _buildMonthlyAnalysis(context),
-                    ],
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child:
+                          _viewMode == 0
+                              ? KeyedSubtree(
+                                key: const ValueKey('trend'),
+                                child: _buildCardTrendView(context),
+                              )
+                              : KeyedSubtree(
+                                key: const ValueKey('analysis'),
+                                child: _buildMonthlyAnalysis(context),
+                              ),
+                    ),
                   ],
                 ),
               ),

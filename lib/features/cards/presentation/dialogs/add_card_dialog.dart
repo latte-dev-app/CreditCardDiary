@@ -101,8 +101,9 @@ Future<void> showAddCardDialog(
                               children: [
                                 // Image Picker
                                 Center(
-                                  child: GestureDetector(
-                                    onTap: () async {
+                                  child: CupertinoButton(
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () async {
                                       final source = await showModalBottomSheet<
                                         ImageSource
                                       >(
