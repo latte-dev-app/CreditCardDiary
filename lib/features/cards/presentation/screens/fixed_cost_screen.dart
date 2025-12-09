@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../application/fixed_cost_provider.dart';
 import '../../domain/fixed_cost_model.dart';
 import '../../domain/card_model.dart';
+import '../../domain/logic/payment_logic.dart';
 import '../../application/card_provider.dart';
 import '../../../../shared/widgets/native_dialog.dart';
 import '../../../../shared/widgets/native_touchable.dart';
@@ -23,6 +24,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isSliverCollapsed = false;
   static const double _expandedHeight = 200.0;
+  bool _isReorderMode = false;
 
   @override
   void initState() {
@@ -54,8 +56,35 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
     final theme = Theme.of(context);
     final cardProvider = Provider.of<CardProvider>(context);
 
-    // Use the order from provider directly (user defined order)
-    final fixedCosts = fixedCostProvider.fixedCosts;
+    // Create a sorted view of the fixed costs
+    final originalList = fixedCostProvider.fixedCosts;
+    final fixedCosts = List.of(originalList);
+    final now = DateTime.now();
+    final year = now.year;
+    final month = now.month;
+
+    if (!_isReorderMode) {
+      fixedCosts.sort((a, b) {
+        // 1. Paid Status
+        final aPaid = PaymentLogic.isPaid(a.paymentDay, year, month);
+        final bPaid = PaymentLogic.isPaid(b.paymentDay, year, month);
+
+        if (aPaid && !bPaid) return 1; // Paid goes to bottom
+        if (!aPaid && bPaid) return -1;
+
+        // 2. Approaching Status
+        final aApproaching = PaymentLogic.isPaymentDayApproaching(a.paymentDay);
+        final bApproaching = PaymentLogic.isPaymentDayApproaching(b.paymentDay);
+
+        if (aApproaching && !bApproaching) return -1; // Approaching goes to top
+        if (!aApproaching && bApproaching) return 1;
+
+        // 3. User Defined Order (Manual)
+        final indexA = originalList.indexOf(a);
+        final indexB = originalList.indexOf(b);
+        return indexA.compareTo(indexB);
+      });
+    }
 
     return Scaffold(
       body: CustomScrollView(
@@ -92,11 +121,28 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               ],
             ),
             actions: [
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                child: const Icon(CupertinoIcons.add, color: Colors.white),
-                onPressed: () => _showAddEditDialog(context, null),
+              TextButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _isReorderMode = !_isReorderMode;
+                  });
+                },
+                child: Text(
+                  _isReorderMode ? '完了' : '並び替え',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
+              if (!_isReorderMode)
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: const Icon(CupertinoIcons.add, color: Colors.white),
+                  onPressed: () => _showAddEditDialog(context, null),
+                ),
+              const SizedBox(width: 8),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -175,6 +221,53 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                               .name
                           : '未設定';
 
+                  // Payment Logic checks
+                  final now = DateTime.now();
+                  final isPaymentApproaching =
+                      PaymentLogic.isPaymentDayApproaching(item.paymentDay);
+                  final isPaid = PaymentLogic.isPaid(
+                    item.paymentDay,
+                    now.year,
+                    now.month,
+                  );
+
+                  String paymentInfo = '';
+                  if (isPaid) {
+                    paymentInfo = '支払い済み';
+                  } else {
+                    final today = DateTime(now.year, now.month, now.day);
+                    DateTime paymentDate = DateTime(
+                      now.year,
+                      now.month,
+                      item.paymentDay,
+                    );
+
+                    // Weekend Adjustment for display consistency
+                    if (paymentDate.weekday == DateTime.saturday) {
+                      paymentDate = paymentDate.add(const Duration(days: 2));
+                    } else if (paymentDate.weekday == DateTime.sunday) {
+                      paymentDate = paymentDate.add(const Duration(days: 1));
+                    }
+
+                    if (paymentDate.isBefore(today)) {
+                      paymentDate = DateTime(
+                        now.year,
+                        now.month + 1,
+                        item.paymentDay,
+                      );
+                      if (paymentDate.weekday == DateTime.saturday) {
+                        paymentDate = paymentDate.add(const Duration(days: 2));
+                      } else if (paymentDate.weekday == DateTime.sunday) {
+                        paymentDate = paymentDate.add(const Duration(days: 1));
+                      }
+                    }
+                    final difference = paymentDate.difference(today).inDays;
+
+                    if (isPaymentApproaching) {
+                      paymentInfo = 'あと$difference日';
+                    }
+                  }
+
                   return Dismissible(
                     key: ValueKey(item.id),
                     direction: DismissDirection.endToStart,
@@ -183,7 +276,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       padding: const EdgeInsets.only(right: 20),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.error,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         CupertinoIcons.delete,
@@ -213,8 +306,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                             ),
                       );
                     },
-                    onDismissed: (direction) {
-                      HapticFeedback.mediumImpact();
+                    onDismissed: (_) {
                       fixedCostProvider.deleteFixedCost(item.id);
                     },
                     child: Container(
@@ -225,10 +317,22 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
+                        border:
+                            isPaymentApproaching
+                                ? Border.all(
+                                  color: theme.colorScheme.error,
+                                  width: 2,
+                                )
+                                : null,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
+                            color:
+                                isPaymentApproaching
+                                    ? theme.colorScheme.error.withValues(
+                                      alpha: 0.15,
+                                    )
+                                    : Colors.black.withValues(alpha: 0.05),
+                            blurRadius: isPaymentApproaching ? 16 : 10,
                             offset: const Offset(0, 2),
                           ),
                         ],
@@ -256,14 +360,29 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      item.title,
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            item.title,
+                                            style: theme.textTheme.bodyLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (isPaymentApproaching) ...[
+                                          const SizedBox(width: 6),
+                                          Icon(
+                                            CupertinoIcons
+                                                .exclamationmark_circle_fill,
+                                            size: 16,
+                                            color: theme.colorScheme.error,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -278,28 +397,75 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
+                                    if (paymentInfo.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          if (isPaid) ...[
+                                            const Icon(
+                                              CupertinoIcons
+                                                  .check_mark_circled_solid,
+                                              size: 12,
+                                              color:
+                                                  CupertinoColors.activeGreen,
+                                            ),
+                                            const SizedBox(width: 4),
+                                          ],
+                                          Text(
+                                            paymentInfo,
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color:
+                                                      isPaid
+                                                          ? CupertinoColors
+                                                              .activeGreen
+                                                          : (isPaymentApproaching
+                                                              ? theme
+                                                                  .colorScheme
+                                                                  .error
+                                                              : theme
+                                                                  .colorScheme
+                                                                  .outline),
+                                                  fontWeight:
+                                                      (isPaymentApproaching ||
+                                                              isPaid)
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 12),
                               Row(
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     '¥${CurrencyFormatter.format(item.amount)}',
                                     style: theme.textTheme.bodyLarge?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      color:
+                                          isPaymentApproaching
+                                              ? theme.colorScheme.error
+                                              : theme.colorScheme.onSurface,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  ReorderableDragStartListener(
-                                    index: index,
-                                    child: Icon(
-                                      CupertinoIcons.bars,
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.3),
+                                  if (_isReorderMode) ...[
+                                    const SizedBox(width: 16),
+                                    ReorderableDragStartListener(
+                                      index: index,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        color: Colors.transparent,
+                                        child: Icon(
+                                          Icons.drag_handle_rounded,
+                                          color: theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.3),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ],
@@ -327,7 +493,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
 
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
 
-    // カードが登録されていない場合はエラーダイアログを表示して終了
     if (cardProvider.cards.isEmpty) {
       showNativeErrorDialog(context, '先にカードを登録してください');
       return;
@@ -364,7 +529,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     builder:
                         (context, scrollController) => Column(
                           children: [
-                            // Handle Bar
                             Center(
                               child: Container(
                                 margin: const EdgeInsets.only(
@@ -381,7 +545,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 ),
                               ),
                             ),
-                            // Title
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 24,
@@ -404,13 +567,11 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                               ),
                             ),
                             const Divider(height: 1),
-                            // Content
                             Expanded(
                               child: ListView(
                                 controller: scrollController,
                                 padding: const EdgeInsets.all(24),
                                 children: [
-                                  // Title Input
                                   Text(
                                     'タイトル',
                                     style: theme.textTheme.titleMedium
@@ -431,7 +592,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                   ),
                                   const SizedBox(height: 24),
 
-                                  // Amount Input
                                   Text(
                                     '金額',
                                     style: theme.textTheme.titleMedium
@@ -453,7 +613,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                   ),
                                   const SizedBox(height: 24),
 
-                                  // Payment Day Input
                                   Text(
                                     '支払日',
                                     style: theme.textTheme.titleMedium
@@ -487,7 +646,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                   ),
                                   const SizedBox(height: 24),
 
-                                  // Card Selection
                                   Text(
                                     '支払いカード',
                                     style: theme.textTheme.titleMedium
@@ -530,7 +688,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                 ],
                               ),
                             ),
-                            // Bottom Buttons
                             Padding(
                               padding: const EdgeInsets.all(24),
                               child: Column(
@@ -602,9 +759,7 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                       width: double.infinity,
                                       child: CupertinoButton(
                                         onPressed: () {
-                                          Navigator.pop(
-                                            context,
-                                          ); // Close bottom sheet first
+                                          Navigator.pop(context);
                                           _showDeleteConfirmation(
                                             context,
                                             item,
@@ -778,57 +933,6 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
               ),
             ],
           ),
-    );
-  }
-}
-
-class _AnimatedDragHandle extends StatefulWidget {
-  const _AnimatedDragHandle();
-
-  @override
-  State<_AnimatedDragHandle> createState() => _AnimatedDragHandleState();
-}
-
-class _AnimatedDragHandleState extends State<_AnimatedDragHandle>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.3,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (_) => _controller.forward(),
-      onPointerUp: (_) => _controller.reverse(),
-      onPointerCancel: (_) => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          padding: const EdgeInsets.all(
-            12,
-          ), // UIX-001: Increased padding for better touch target
-          color: Colors.transparent, // Hit test area expansion
-          child: const Icon(CupertinoIcons.bars, color: Colors.grey),
-        ),
-      ),
     );
   }
 }

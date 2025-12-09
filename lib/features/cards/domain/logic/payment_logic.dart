@@ -6,13 +6,15 @@ class PaymentLogic {
 
     // Check current month's payment day
     DateTime paymentDate = DateTime(now.year, now.month, paymentDay);
+    DateTime adjustedPaymentDate = _adjustForWeekend(paymentDate);
 
     // If passed, check next month
-    if (paymentDate.isBefore(today)) {
+    if (adjustedPaymentDate.isBefore(today)) {
       paymentDate = DateTime(now.year, now.month + 1, paymentDay);
+      adjustedPaymentDate = _adjustForWeekend(paymentDate);
     }
 
-    final difference = paymentDate.difference(today).inDays;
+    final difference = adjustedPaymentDate.difference(today).inDays;
     return difference >= 0 && difference <= 3;
   }
 
@@ -31,7 +33,19 @@ class PaymentLogic {
       return false; // Future month
     }
 
-    // Current month: Paid if today is strictly after payment day
-    return today.day > paymentDay;
+    // Current month: Paid if today is strictly after ADJUSTED payment day
+    final paymentDate = DateTime(targetYear, targetMonth, paymentDay);
+    final adjustedPaymentDate = _adjustForWeekend(paymentDate);
+
+    return today.isAfter(adjustedPaymentDate);
+  }
+
+  static DateTime _adjustForWeekend(DateTime date) {
+    if (date.weekday == DateTime.saturday) {
+      return date.add(const Duration(days: 2)); // Saturday -> Monday
+    } else if (date.weekday == DateTime.sunday) {
+      return date.add(const Duration(days: 1)); // Sunday -> Monday
+    }
+    return date;
   }
 }

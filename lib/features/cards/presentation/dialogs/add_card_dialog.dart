@@ -28,6 +28,8 @@ Future<void> showAddCardDialog(
   bool isCustomName = false;
   File? selectedImageFile;
   bool isLoading = false;
+  int? selectedClosingDay;
+  int? selectedPaymentDay;
 
   await showModalBottomSheet(
     context: parentContext,
@@ -380,6 +382,93 @@ Future<void> showAddCardDialog(
                                     });
                                   },
                                 ),
+                                const SizedBox(height: 24),
+
+                                // Payment Info (Optional)
+                                Text(
+                                  '支払日・締め日 (任意)',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: CupertinoListTile(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 12,
+                                        ),
+                                        title: Text(
+                                          selectedClosingDay != null
+                                              ? '$selectedClosingDay日締め'
+                                              : '締め日',
+                                          style: theme.textTheme.bodyLarge
+                                              ?.copyWith(
+                                                color:
+                                                    selectedClosingDay == null
+                                                        ? theme.hintColor
+                                                        : theme
+                                                            .colorScheme
+                                                            .onSurface,
+                                              ),
+                                        ),
+                                        backgroundColor:
+                                            theme.colorScheme.surface,
+                                        onTap: () async {
+                                          final day = await _showDayPicker(
+                                            dialogContext,
+                                            initialDay: selectedClosingDay,
+                                            title: '締め日を選択',
+                                          );
+                                          if (day != null) {
+                                            setDialogState(() {
+                                              selectedClosingDay = day;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: CupertinoListTile(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 12,
+                                        ),
+                                        title: Text(
+                                          selectedPaymentDay != null
+                                              ? '$selectedPaymentDay日払い'
+                                              : '支払日',
+                                          style: theme.textTheme.bodyLarge
+                                              ?.copyWith(
+                                                color:
+                                                    selectedPaymentDay == null
+                                                        ? theme.hintColor
+                                                        : theme
+                                                            .colorScheme
+                                                            .onSurface,
+                                              ),
+                                        ),
+                                        backgroundColor:
+                                            theme.colorScheme.surface,
+                                        onTap: () async {
+                                          final day = await _showDayPicker(
+                                            dialogContext,
+                                            initialDay: selectedPaymentDay,
+                                            title: '支払日を選択',
+                                          );
+                                          if (day != null) {
+                                            setDialogState(() {
+                                              selectedPaymentDay = day;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 40),
                               ],
                             ),
@@ -426,6 +515,8 @@ Future<void> showAddCardDialog(
                                         type: type,
                                         color: selectedColor,
                                         imagePath: imagePath,
+                                        closingDay: selectedClosingDay,
+                                        paymentDay: selectedPaymentDay,
                                       );
                                       if (!parentContext.mounted) return;
                                       await parentContext
@@ -595,6 +686,75 @@ Future<String?> _showItemPicker(
                     },
                     child: const Text('決定'),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+  );
+}
+
+Future<int?> _showDayPicker(
+  BuildContext context, {
+  required int? initialDay,
+  required String title,
+}) async {
+  final theme = Theme.of(context);
+  int selectedIndex = (initialDay ?? 1) - 1;
+
+  return await showCupertinoModalPopup<int?>(
+    context: context,
+    builder:
+        (context) => Container(
+          height: 300,
+          color: theme.scaffoldBackgroundColor,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Text('キャンセル'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  CupertinoButton(
+                    child: const Text('完了'),
+                    onPressed: () {
+                      Navigator.pop(context, selectedIndex + 1);
+                    },
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  itemExtent: 32,
+                  scrollController: FixedExtentScrollController(
+                    initialItem: selectedIndex,
+                  ),
+                  onSelectedItemChanged: (index) {
+                    HapticFeedback.selectionClick();
+                    selectedIndex = index;
+                  },
+                  children: List.generate(31, (index) {
+                    final day = index + 1;
+                    return Center(
+                      child: Text(
+                        '$day日',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ),
             ],
