@@ -405,8 +405,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     NumberFormat currencyFormat,
   ) {
     final parts = monthKey.split('-');
-    final year = parts[0];
-    final month = parts[1];
+    final yearStr = parts[0];
+    final monthStr = parts[1];
+    final year = int.parse(yearStr);
+    final month = int.parse(monthStr);
+
+    final isPaid = PaymentLogic.isPaid(card.paymentDay, year, month);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,12 +420,49 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$year年$month月',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              Row(
+                children: [
+                  Text(
+                    '$yearStr年$monthStr月',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (isPaid) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.activeGreen.withValues(
+                          alpha: 0.1,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: CupertinoColors.activeGreen),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.check_mark_circled_solid,
+                            size: 14,
+                            color: CupertinoColors.activeGreen,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '支払い済み',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: CupertinoColors.activeGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),

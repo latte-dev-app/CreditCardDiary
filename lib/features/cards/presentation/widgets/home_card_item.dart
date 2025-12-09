@@ -12,6 +12,7 @@ class HomeCardItem extends StatelessWidget {
   final CreditCard card;
   final int amount;
   final NumberFormat currencyFormat;
+  final int viewingYear;
   final int viewingMonth;
   final bool isPrivacyMode;
 
@@ -20,6 +21,7 @@ class HomeCardItem extends StatelessWidget {
     required this.card,
     required this.amount,
     required this.currencyFormat,
+    required this.viewingYear,
     required this.viewingMonth,
     required this.isPrivacyMode,
   });
@@ -37,8 +39,17 @@ class HomeCardItem extends StatelessWidget {
     final borderWidth = isPaymentApproaching ? 2.0 : 1.0;
 
     // Calculate next payment date and days remaining
+    final isPaid = PaymentLogic.isPaid(
+      card.paymentDay,
+      viewingYear,
+      viewingMonth,
+    );
+
+    // Calculate next payment date and days remaining
     String paymentInfo = '';
-    if (card.paymentDay != null) {
+    if (isPaid) {
+      paymentInfo = '支払い済み';
+    } else if (card.paymentDay != null) {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       DateTime paymentDate = DateTime(now.year, now.month, card.paymentDay!);
@@ -177,18 +188,33 @@ class HomeCardItem extends StatelessWidget {
                   ),
                   if (paymentInfo.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(
-                      paymentInfo,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color:
-                            isPaymentApproaching
-                                ? theme.colorScheme.error
-                                : theme.colorScheme.outline,
-                        fontWeight:
-                            isPaymentApproaching
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isPaid) ...[
+                          const Icon(
+                            CupertinoIcons.check_mark_circled_solid,
+                            size: 14,
+                            color: CupertinoColors.activeGreen,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          paymentInfo,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color:
+                                isPaid
+                                    ? CupertinoColors.activeGreen
+                                    : (isPaymentApproaching
+                                        ? theme.colorScheme.error
+                                        : theme.colorScheme.outline),
+                            fontWeight:
+                                (isPaymentApproaching || isPaid)
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],

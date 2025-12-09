@@ -183,6 +183,13 @@ class _HomeScreenState extends State<HomeScreen> {
           // Sorting Logic
           final sortedCards = List.of(provider.cards);
           sortedCards.sort((a, b) {
+            final aPaid = PaymentLogic.isPaid(a.paymentDay, year, month);
+            final bPaid = PaymentLogic.isPaid(b.paymentDay, year, month);
+
+            // 1. Paid status (Paid goes to bottom)
+            if (!aPaid && bPaid) return -1;
+            if (aPaid && !bPaid) return 1;
+
             final aApproaching = PaymentLogic.isPaymentDayApproaching(
               a.paymentDay,
             );
@@ -190,11 +197,13 @@ class _HomeScreenState extends State<HomeScreen> {
               b.paymentDay,
             );
 
-            // 1. Approaching payment (High priority)
+            // 2. Approaching payment (High priority for unpaid cards)
+            // Note: Since we already separated Paid vs Unpaid, this effectively sorts the "Unpaid" group
+            // If both are paid, this check still runs but approaching paid cards (rare/impossible?) would sort higher among paid
             if (aApproaching && !bApproaching) return -1;
             if (!aApproaching && bApproaching) return 1;
 
-            // 2. Amount (Secondary sort)
+            // 3. Amount (Secondary sort)
             final aAmount = monthTransactions
                 .where((t) => t.cardId == a.id)
                 .fold(0, (sum, t) => sum + t.amount);
@@ -533,6 +542,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           card: card,
                           amount: cardMonthTotal,
                           currencyFormat: currencyFormat,
+                          viewingYear: year,
                           viewingMonth: month,
                           isPrivacyMode: _isPrivacyMode,
                         ),
