@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isAmountAscending = false;
   final ScrollController _scrollController = ScrollController();
   bool _isSliverCollapsed = false;
-  static const double _expandedHeight = 340.0;
+  static const double _expandedHeight = 250.0;
   int _direction = 0; // -1 for previous, 1 for next
   
   @override
@@ -277,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     AnimatedOpacity(
                       opacity: _isSliverCollapsed ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 200),
@@ -291,13 +291,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             '${_isPrivacyMode}_${totalAmount}_collapsed',
                           ),
                           style: theme.textTheme.titleLarge?.copyWith(
-                                                            color: Colors.white,
-                                                            fontWeight: FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 actions: [
                   CupertinoButton(
@@ -343,8 +343,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: SafeArea(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
-                        child: Column(
+                        padding: const EdgeInsets.fromLTRB(24, 10, 24, 32),
+                        child:Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [

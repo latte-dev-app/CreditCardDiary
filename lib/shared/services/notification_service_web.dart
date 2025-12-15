@@ -1,6 +1,7 @@
 // Web-specific implementation using dart:html
 // ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 
 class NotificationImpl {
   static String get permission {
@@ -25,7 +26,7 @@ class NotificationImpl {
 
       // 権限をリクエスト（ユーザーインタラクションが必要）
       final result = await html.Notification.requestPermission();
-      return result ?? 'denied';
+      return result;
     } catch (e) {
       return 'denied';
     }
@@ -67,7 +68,7 @@ class NotificationImpl {
       );
     } catch (e) {
       // 通知表示に失敗した場合はエラーを無視（ログのみ）
-      print('通知表示エラー: $e');
+      debugPrint('通知表示エラー: $e');
     }
   }
 }
