@@ -84,6 +84,7 @@ class SettingsScreen extends StatelessWidget {
                       trailing: CupertinoSwitch(
                         value: isEnabled,
                         onChanged: (value) async {
+                          HapticFeedback.selectionClick();
                           await NotificationService.setNotificationEnabled(
                             value,
                           );

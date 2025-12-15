@@ -128,6 +128,10 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                     _isReorderMode = !_isReorderMode;
                   });
                 },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  minimumSize: const Size(44, 44),
+                ),
                 child: Text(
                   _isReorderMode ? '完了' : '並び替え',
                   style: theme.textTheme.labelLarge?.copyWith(
@@ -337,9 +341,12 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                           ),
                         ],
                       ),
-                      child: NativeTouchable(
+                      child:                       NativeTouchable(
                         onTap: () => _showAddEditDialog(context, item),
-                        child: Padding(
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minHeight: 44,
+                          ),
                           padding: const EdgeInsets.all(16),
                           child: Row(
                             children: [
@@ -456,7 +463,11 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                                     ReorderableDragStartListener(
                                       index: index,
                                       child: Container(
-                                        padding: const EdgeInsets.all(8),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 44,
+                                          minHeight: 44,
+                                        ),
+                                        padding: const EdgeInsets.all(12),
                                         color: Colors.transparent,
                                         child: Icon(
                                           Icons.drag_handle_rounded,

@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSliverCollapsed = false;
   static const double _expandedHeight = 340.0;
   int _direction = 0; // -1 for previous, 1 for next
-
+  
   @override
   void initState() {
     super.initState();
@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     _loadBudget();
   }
-
+  
   void _nextMonth() {
     HapticFeedback.lightImpact();
     setState(() {
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final month = _selectedMonth.month;
     provider.loadTotalBudget(year, month);
   }
-
+  
   List<int> _getAvailableYears() {
     final provider = context.read<CardProvider>();
     final years = provider.transactions.map((t) => t.year).toSet().toList();
@@ -130,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onSelectedItemChanged: (index) {
                       HapticFeedback.selectionClick();
                       final year = availableYears[index];
-                      setState(() {
+              setState(() {
                         _selectedYear = year;
                         _direction = 0;
                         _selectedMonth = DateTime(year, _selectedMonth.month);
@@ -141,22 +141,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         availableYears
                             .map(
                               (year) => Center(
-                                child: Text(
+              child: Text(
                                   '$year年',
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     fontSize: 20,
                                     color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
+                ),
+              ),
+            ),
                             )
                             .toList(),
                   ),
                 ),
               ],
-            ),
-          ),
-    );
+                          ),
+                        ),
+                      );
   }
 
   @override
@@ -246,17 +246,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: Row(
-                  children: [
+                              children: [
                     NativeTouchable(
                       onTap: () => _showYearPicker(context, availableYears),
-                      child: Padding(
+                      child: Container(
+                                      constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 12,
+                          vertical: 8,
                         ),
                         child: Row(
-                          children: [
-                            Text(
+                                  children: [
+                                    Text(
                               '$year年$month月',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.9),
@@ -268,9 +272,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               CupertinoIcons.chevron_down,
                               color: Colors.white.withValues(alpha: 0.9),
                               size: 20,
-                            ),
-                          ],
-                        ),
+                                      ),
+                                  ],
+                                ),
                       ),
                     ),
                     const Spacer(),
@@ -287,17 +291,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             '${_isPrivacyMode}_${totalAmount}_collapsed',
                           ),
                           style: theme.textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
                 ),
                 actions: [
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(44, 44),
                     child: Icon(
                       CupertinoIcons.add,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -306,7 +311,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         () => showAddCardDialog(context, onCardAdded: (_) {}),
                   ),
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(44, 44),
                     onPressed: () {
                       setState(() {
                         _isPrivacyMode = !_isPrivacyMode;
@@ -349,11 +355,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // 今月の請求総額
-                                  Expanded(
-                                    child: Column(
+                  Expanded(
+                        child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
+                          children: [
+                            Text(
                                           '今月の請求総額',
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: Colors.white.withValues(
@@ -369,9 +375,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Widget child,
                                             Animation<double> animation,
                                           ) {
+                                            // iOS標準のイージング曲線を使用
+                                            final curvedAnimation = CurvedAnimation(
+                                              parent: animation,
+                                              curve: Curves.easeOutCubic,
+                                            );
                                             if (_direction == 0) {
                                               return FadeTransition(
-                                                opacity: animation,
+                                                opacity: curvedAnimation,
                                                 child: child,
                                               );
                                             }
@@ -383,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               position: Tween<Offset>(
                                                 begin: offset,
                                                 end: Offset.zero,
-                                              ).animate(animation),
+                                              ).animate(curvedAnimation),
                                               child: child,
                                             );
                                           },
@@ -395,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               '${_isPrivacyMode}_${totalAmount}_expanded',
                                             ),
                                             style: theme.textTheme.headlineMedium?.copyWith(
-                                              color: Colors.white,
+                                        color: Colors.white,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -407,9 +418,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   // 残りの請求総額
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
                                           '残りの請求総額',
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: Colors.white.withValues(
@@ -425,9 +436,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Widget child,
                                             Animation<double> animation,
                                           ) {
+                                            // iOS標準のイージング曲線を使用
+                                            final curvedAnimation = CurvedAnimation(
+                                              parent: animation,
+                                              curve: Curves.easeOutCubic,
+                                            );
                                             if (_direction == 0) {
                                               return FadeTransition(
-                                                opacity: animation,
+                                                opacity: curvedAnimation,
                                                 child: child,
                                               );
                                             }
@@ -439,7 +455,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               position: Tween<Offset>(
                                                 begin: offset,
                                                 end: Offset.zero,
-                                              ).animate(animation),
+                                              ).animate(curvedAnimation),
                                               child: child,
                                             );
                                           },
@@ -454,13 +470,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
                                             ),
-                                          ),
-                                        ),
-                                      ],
+                      ),
+                  ),
+                ],
                                     ),
-                                  ),
-                                ],
-                              ),
+              ),
+            ],
+          ),
                             ),
                             const SizedBox(height: 24),
                             // Budget Section
@@ -494,9 +510,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextButton.styleFrom(
                           foregroundColor: theme.colorScheme.onSurface,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                            horizontal: 16,
+                            vertical: 12,
                           ),
+                          minimumSize: const Size(44, 44),
                         ),
                         child: Row(
                           children: [
@@ -520,10 +537,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               _isAmountAscending = !_isAmountAscending;
                             });
                           },
-                          child: Padding(
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
+                            ),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 12,
+                              vertical: 8,
                             ),
                             child: Row(
                               children: [
@@ -553,9 +574,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextButton.styleFrom(
                           foregroundColor: theme.colorScheme.onSurface,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                            horizontal: 16,
+                            vertical: 12,
                           ),
+                          minimumSize: const Size(44, 44),
                         ),
                         child: Row(
                           children: [
@@ -588,15 +610,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         .fold(0, (sum, t) => sum + t.amount);
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      child: AnimatedSwitcher(
+                      child:                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         transitionBuilder: (
                           Widget child,
                           Animation<double> animation,
                         ) {
+                          // iOS標準のイージング曲線を使用
+                          final curvedAnimation = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          );
                           if (_direction == 0) {
                             return FadeTransition(
-                              opacity: animation,
+                              opacity: curvedAnimation,
                               child: child,
                             );
                           }
@@ -608,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             position: Tween<Offset>(
                               begin: offset,
                               end: Offset.zero,
-                            ).animate(animation),
+                            ).animate(curvedAnimation),
                             child: child,
                           );
                         },
@@ -640,7 +667,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+              children: [
             Icon(
               CupertinoIcons.creditcard,
               size: 64,

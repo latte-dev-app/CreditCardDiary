@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -46,7 +47,8 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
         surfaceTintColor: colorScheme.surfaceTint,
         actions: [
           CupertinoButton(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.all(8),
+            minimumSize: const Size(44, 44),
             onPressed: _previousMonth,
             child: const Icon(CupertinoIcons.chevron_left, size: 24.0),
           ),
@@ -60,7 +62,8 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
             ),
           ),
           CupertinoButton(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.all(8),
+            minimumSize: const Size(44, 44),
             onPressed: _nextMonth,
             child: const Icon(CupertinoIcons.chevron_right, size: 24.0),
           ),
@@ -161,10 +164,10 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
 
           final formatter = NumberFormat('#,###');
 
-          return TweenAnimationBuilder<double>(
+          return           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
             duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOutCubic,
+            curve: Curves.easeOutCubic,
             builder: (context, value, child) {
               return Opacity(
                 opacity: value,
@@ -182,6 +185,7 @@ class _CardComparisonScreenState extends State<CardComparisonScreen> {
                           CupertinoSwitch(
                             value: _compareWithCurrentMonth,
                             onChanged: (value) {
+                              HapticFeedback.selectionClick();
                               setState(() {
                                 _compareWithCurrentMonth = value;
                               });

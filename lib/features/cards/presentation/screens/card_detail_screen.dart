@@ -85,18 +85,21 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 surfaceTintColor: Colors.transparent,
                 shape: const Border(), // Remove default AppBar border
                 leading: CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.all(8),
+                  minimumSize: const Size(44, 44),
                   child: const Icon(CupertinoIcons.back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(44, 44),
                     child: const Icon(CupertinoIcons.add, color: Colors.white),
                     onPressed: () => _showAddTransactionDialog(context),
                   ),
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(44, 44),
                     child: const Icon(
                       CupertinoIcons.settings,
                       color: Colors.white,
@@ -534,7 +537,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 context,
                                 transaction,
                               ),
-                          child: Padding(
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              minHeight: 44,
+                            ),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
@@ -669,21 +675,27 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               });
                             }
                           },
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage:
-                                selectedImageFile != null
-                                    ? FileImage(selectedImageFile!)
-                                    : (currentImagePath != null
-                                            ? FileImage(File(currentImagePath!))
-                                            : null)
-                                        as ImageProvider?,
-                            child:
-                                (selectedImageFile == null &&
-                                        currentImagePath == null)
-                                    ? const Icon(CupertinoIcons.camera)
-                                    : null,
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
+                            ),
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundColor: Colors.grey[200],
+                              backgroundImage:
+                                  selectedImageFile != null
+                                      ? FileImage(selectedImageFile!)
+                                      : (currentImagePath != null
+                                              ? FileImage(File(currentImagePath!))
+                                              : null)
+                                          as ImageProvider?,
+                              child:
+                                  (selectedImageFile == null &&
+                                          currentImagePath == null)
+                                      ? const Icon(CupertinoIcons.camera)
+                                      : null,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -724,7 +736,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   ),
                   actions: [
                     CupertinoDialogAction(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        Navigator.pop(context);
+                      },
                       child: const Text('キャンセル'),
                     ),
                     CupertinoDialogAction(

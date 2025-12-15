@@ -72,7 +72,7 @@ class _ColorPickerStatefulState extends State<_ColorPickerStateful> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // カテゴリ選択（SegmentedButton風）
+            // カテゴリ選択（Cupertinoスタイル）
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -81,13 +81,16 @@ class _ColorPickerStatefulState extends State<_ColorPickerStateful> {
                       final isSelected = currentCategory == category;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(category),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            currentCategoryNotifier.value = category;
-                          },
-                          visualDensity: VisualDensity.comfortable,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: FilterChip(
+                            label: Text(category),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              currentCategoryNotifier.value = category;
+                            },
+                            visualDensity: VisualDensity.comfortable,
+                          ),
                         ),
                       );
                     }).toList(),

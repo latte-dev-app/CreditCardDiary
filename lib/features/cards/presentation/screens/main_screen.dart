@@ -31,7 +31,31 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       extendBody: false,
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          // iOS標準のイージング曲線を使用
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.1, 0),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
+        child: IndexedStack(
+          key: ValueKey(_currentIndex),
+          index: _currentIndex,
+          children: _screens,
+        ),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
@@ -72,22 +96,79 @@ class _MainScreenState extends State<MainScreen> {
                 elevation: 0,
                 items: [
                   BottomNavigationBarItem(
-                    icon: const Icon(CupertinoIcons.house),
-                    activeIcon: const Icon(CupertinoIcons.house_fill),
+                    icon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.house),
+                    ),
+                    activeIcon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.house_fill),
+                    ),
                     label: l10n.home,
                   ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(CupertinoIcons.repeat),
+                  BottomNavigationBarItem(
+                    icon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.repeat),
+                    ),
+                    activeIcon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.repeat),
+                    ),
                     label: '固定費',
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(CupertinoIcons.graph_square),
-                    activeIcon: const Icon(CupertinoIcons.graph_square_fill),
+                    icon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.graph_square),
+                    ),
+                    activeIcon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.graph_square_fill),
+                    ),
                     label: '推移',
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(CupertinoIcons.settings),
-                    activeIcon: const Icon(CupertinoIcons.settings_solid),
+                    icon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.settings),
+                    ),
+                    activeIcon: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(CupertinoIcons.settings_solid),
+                    ),
                     label: l10n.settings,
                   ),
                 ],
