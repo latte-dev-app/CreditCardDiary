@@ -160,32 +160,32 @@ class _FixedCostScreenState extends State<FixedCostScreen> {
                   ),
                 ),
                 child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          '毎月の固定費合計',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            '毎月の固定費合計',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '¥${CurrencyFormatter.format(fixedCostProvider.totalMonthlyFixedCost)}',
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 42,
-                            height: 1.1,
-                            letterSpacing: -1.0,
+                          const SizedBox(height: 4),
+                          Text(
+                            '¥${CurrencyFormatter.format(fixedCostProvider.totalMonthlyFixedCost)}',
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 42,
+                              height: 1.1,
+                              letterSpacing: -1.0,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                 ),
               ),
             ),

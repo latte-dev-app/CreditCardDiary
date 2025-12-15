@@ -47,7 +47,7 @@ class _MainScreenState extends State<MainScreen> {
               hoverColor: Colors.transparent,
             ),
             child: Container(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
                 backgroundColor: Colors.transparent,

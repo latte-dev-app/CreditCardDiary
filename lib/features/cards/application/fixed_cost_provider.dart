@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../domain/fixed_cost_model.dart';
 import '../domain/repositories/fixed_cost_repository.dart';
+import '../domain/logic/payment_logic.dart';
 
 class FixedCostProvider with ChangeNotifier {
   final FixedCostRepository _repository;
@@ -54,5 +55,16 @@ class FixedCostProvider with ChangeNotifier {
 
   int get totalMonthlyFixedCost {
     return _fixedCosts.fold(0, (sum, item) => sum + item.amount);
+  }
+
+  /// 支払い済みを除いた残りの請求総額を取得
+  int get remainingMonthlyFixedCost {
+    final now = DateTime.now();
+    final year = now.year;
+    final month = now.month;
+
+    return _fixedCosts
+        .where((item) => !PaymentLogic.isPaid(item.paymentDay, year, month))
+        .fold(0, (sum, item) => sum + item.amount);
   }
 }

@@ -95,6 +95,102 @@ class SettingsScreen extends StatelessWidget {
                     );
                   },
                 ),
+                FutureBuilder<NotificationPermissionResult>(
+                  future: NotificationService.getPermissionStatus(),
+                  builder: (context, snapshot) {
+                    final permissionStatus = snapshot.data ?? NotificationPermissionResult.notSupported;
+                    String statusText;
+                    bool showRequestButton = false;
+
+                    switch (permissionStatus) {
+                      case NotificationPermissionResult.granted:
+                        statusText = '通知は許可されています';
+                        showRequestButton = false;
+                        break;
+                      case NotificationPermissionResult.denied:
+                        statusText = '通知は拒否されています';
+                        showRequestButton = false;
+                        break;
+                      case NotificationPermissionResult.defaultState:
+                        statusText = '通知権限をリクエスト';
+                        showRequestButton = true;
+                        break;
+                      case NotificationPermissionResult.notSupported:
+                        statusText = '通知はサポートされていません';
+                        showRequestButton = false;
+                        break;
+                      case NotificationPermissionResult.error:
+                        statusText = 'エラーが発生しました';
+                        showRequestButton = false;
+                        break;
+                    }
+
+                    return CupertinoListTile(
+                      title: Text(
+                        '通知権限',
+                        style: TextStyle(color: textColor),
+                      ),
+                      subtitle: Text(
+                        statusText,
+                        style: TextStyle(color: secondaryTextColor),
+                      ),
+                      leading: Icon(
+                        permissionStatus == NotificationPermissionResult.granted
+                            ? CupertinoIcons.checkmark_circle_fill
+                            : CupertinoIcons.exclamationmark_circle,
+                        color: permissionStatus == NotificationPermissionResult.granted
+                            ? CupertinoColors.activeGreen
+                            : textColor,
+                      ),
+                      trailing: showRequestButton
+                          ? CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              child: Text(
+                                'リクエスト',
+                                style: TextStyle(
+                                  color: CupertinoColors.activeBlue,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onPressed: () async {
+                                final result = await NotificationService.requestPermissionFromUser();
+                                if (context.mounted) {
+                                  String message;
+                                  switch (result) {
+                                    case NotificationPermissionResult.granted:
+                                      message = '通知権限が許可されました';
+                                      break;
+                                    case NotificationPermissionResult.denied:
+                                      message = '通知権限が拒否されました。ブラウザの設定から許可してください。';
+                                      break;
+                                    default:
+                                      message = '通知権限のリクエストに失敗しました';
+                                  }
+
+                                  showCupertinoDialog(
+                                    context: context,
+                                    builder: (context) => CupertinoAlertDialog(
+                                      title: const Text('通知権限'),
+                                      content: Text(message),
+                                      actions: [
+                                        CupertinoDialogAction(
+                                          isDefaultAction: true,
+                                          onPressed: () => Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+
+                                  // UIを更新
+                                  (context as Element).markNeedsBuild();
+                                }
+                              },
+                            )
+                          : null,
+                    );
+                  },
+                ),
               ],
             ),
             CupertinoListSection.insetGrouped(

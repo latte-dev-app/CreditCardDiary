@@ -180,6 +180,18 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           final budget = provider.getCachedTotalBudget(year, month) ?? 0;
 
+          // 残りの請求総額を計算（支払い済みでないカードの請求額の合計）
+          int remainingAmount = 0;
+          for (final card in provider.cards) {
+            final isPaid = PaymentLogic.isPaid(card.paymentDay, year, month);
+            if (!isPaid) {
+              final cardAmount = monthTransactions
+                  .where((t) => t.cardId == card.id)
+                  .fold(0, (sum, t) => sum + t.amount);
+              remainingAmount += cardAmount;
+            }
+          }
+
           // Sorting Logic
           final sortedCards = List.of(provider.cards);
           sortedCards.sort((a, b) {
@@ -330,58 +342,121 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            // Total Amount
+                            // Total Amount and Remaining Amount in Row
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Column(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    '今月の請求総額',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                      fontWeight: FontWeight.w500,
+                                  // 今月の請求総額
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '今月の請求総額',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 300),
+                                          transitionBuilder: (
+                                            Widget child,
+                                            Animation<double> animation,
+                                          ) {
+                                            if (_direction == 0) {
+                                              return FadeTransition(
+                                                opacity: animation,
+                                                child: child,
+                                              );
+                                            }
+                                            final offset =
+                                                _direction > 0
+                                                    ? const Offset(1.0, 0.0)
+                                                    : const Offset(-1.0, 0.0);
+                                            return SlideTransition(
+                                              position: Tween<Offset>(
+                                                begin: offset,
+                                                end: Offset.zero,
+                                              ).animate(animation),
+                                              child: child,
+                                            );
+                                          },
+                                          child: Text(
+                                            _isPrivacyMode
+                                                ? '****'
+                                                : '¥${NumberFormat('#,###').format(totalAmount)}',
+                                            key: ValueKey(
+                                              '${_isPrivacyMode}_${totalAmount}_expanded',
+                                            ),
+                                            style: theme.textTheme.headlineMedium?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 300),
-                                    transitionBuilder: (
-                                      Widget child,
-                                      Animation<double> animation,
-                                    ) {
-                                      if (_direction == 0) {
-                                        return FadeTransition(
-                                          opacity: animation,
-                                          child: child,
-                                        );
-                                      }
-                                      final offset =
-                                          _direction > 0
-                                              ? const Offset(1.0, 0.0)
-                                              : const Offset(-1.0, 0.0);
-                                      return SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: offset,
-                                          end: Offset.zero,
-                                        ).animate(animation),
-                                        child: child,
-                                      );
-                                    },
-                                    child: Text(
-                                      _isPrivacyMode
-                                          ? '****'
-                                          : '¥${NumberFormat('#,###').format(totalAmount)}',
-                                      key: ValueKey(
-                                        '${_isPrivacyMode}_${totalAmount}_expanded',
-                                      ),
-                                      style: theme.textTheme.displaySmall
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                  const SizedBox(width: 16),
+                                  // 残りの請求総額
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '残りの請求総額',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                            fontWeight: FontWeight.w500,
                                           ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 300),
+                                          transitionBuilder: (
+                                            Widget child,
+                                            Animation<double> animation,
+                                          ) {
+                                            if (_direction == 0) {
+                                              return FadeTransition(
+                                                opacity: animation,
+                                                child: child,
+                                              );
+                                            }
+                                            final offset =
+                                                _direction > 0
+                                                    ? const Offset(1.0, 0.0)
+                                                    : const Offset(-1.0, 0.0);
+                                            return SlideTransition(
+                                              position: Tween<Offset>(
+                                                begin: offset,
+                                                end: Offset.zero,
+                                              ).animate(animation),
+                                              child: child,
+                                            );
+                                          },
+                                          child: Text(
+                                            _isPrivacyMode
+                                                ? '****'
+                                                : '¥${NumberFormat('#,###').format(remainingAmount)}',
+                                            key: ValueKey(
+                                              '${_isPrivacyMode}_${remainingAmount}_expanded',
+                                            ),
+                                            style: theme.textTheme.headlineMedium?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],

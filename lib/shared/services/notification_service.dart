@@ -9,6 +9,15 @@ import '../../features/cards/application/card_provider.dart';
 import 'notification_service_stub.dart'
     if (dart.library.html) 'notification_service_web.dart';
 
+/// 通知権限の結果を表す列挙型
+enum NotificationPermissionResult {
+  granted, // 権限が許可されている
+  denied, // 権限が拒否されている
+  defaultState, // まだリクエストされていない
+  notSupported, // 通知がサポートされていない（Web以外など）
+  error, // エラーが発生した
+}
+
 class NotificationService {
   static bool _permissionRequested = false;
 
@@ -66,25 +75,62 @@ class NotificationService {
     }
   }
 
-  // ユーザーインタラクションから通知権限をリクエスト
-  static Future<bool> requestPermissionFromUser() async {
-    if (!kIsWeb) return false;
+  /// ユーザーインタラクションから通知権限をリクエスト
+  /// このメソッドはボタンクリックなどのユーザーアクションから呼び出す必要があります
+  static Future<NotificationPermissionResult> requestPermissionFromUser() async {
+    if (!kIsWeb) {
+      return NotificationPermissionResult.notSupported;
+    }
 
     try {
-      if (NotificationImpl.permission == 'granted') {
-        return true;
+      final currentPermission = NotificationImpl.permission;
+      
+      if (currentPermission == 'granted') {
+        return NotificationPermissionResult.granted;
       }
 
-      if (NotificationImpl.permission == 'default') {
-        // 権限リクエストはブラウザが自動的に処理する
-        // 実際の権限リクエストは通知を表示しようとしたときに自動的に表示される
-        return false;
+      if (currentPermission == 'denied') {
+        return NotificationPermissionResult.denied;
       }
 
-      return false; // 'denied'
+      // 権限をリクエスト
+      final result = await NotificationImpl.requestPermission();
+      
+      if (result == 'granted') {
+        _permissionRequested = true;
+        return NotificationPermissionResult.granted;
+      } else if (result == 'denied') {
+        return NotificationPermissionResult.denied;
+      } else {
+        return NotificationPermissionResult.defaultState;
+      }
     } catch (e) {
       debugPrint('通知権限リクエストエラー: $e');
-      return false;
+      return NotificationPermissionResult.error;
+    }
+  }
+
+  /// 現在の通知権限状態を取得
+  static Future<NotificationPermissionResult> getPermissionStatus() async {
+    if (!kIsWeb) {
+      return NotificationPermissionResult.notSupported;
+    }
+
+    try {
+      final permission = NotificationImpl.permission;
+      switch (permission) {
+        case 'granted':
+          return NotificationPermissionResult.granted;
+        case 'denied':
+          return NotificationPermissionResult.denied;
+        case 'default':
+          return NotificationPermissionResult.defaultState;
+        default:
+          return NotificationPermissionResult.error;
+      }
+    } catch (e) {
+      debugPrint('通知権限状態取得エラー: $e');
+      return NotificationPermissionResult.error;
     }
   }
 
