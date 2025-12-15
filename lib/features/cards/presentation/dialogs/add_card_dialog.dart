@@ -104,7 +104,8 @@ Future<void> showAddCardDialog(
                                 // Image Picker
                                 Center(
                                   child: CupertinoButton(
-                                    padding: EdgeInsets.zero,
+                                    padding: const EdgeInsets.all(8),
+                                    minimumSize: const Size(44, 44),
                                     onPressed: () async {
                                       final source = await showModalBottomSheet<
                                         ImageSource

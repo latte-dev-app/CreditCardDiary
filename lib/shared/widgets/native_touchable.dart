@@ -7,6 +7,8 @@ class NativeTouchable extends StatefulWidget {
   final double pressedOpacity;
   final Duration duration;
   final HitTestBehavior behavior;
+  final double? minWidth;
+  final double? minHeight;
 
   const NativeTouchable({
     super.key,
@@ -15,6 +17,8 @@ class NativeTouchable extends StatefulWidget {
     this.pressedOpacity = 0.6,
     this.duration = const Duration(milliseconds: 100),
     this.behavior = HitTestBehavior.opaque,
+    this.minWidth,
+    this.minHeight,
   });
 
   @override
@@ -59,7 +63,13 @@ class _NativeTouchableState extends State<NativeTouchable> {
       child: AnimatedOpacity(
         duration: widget.duration,
         opacity: _isPressed ? widget.pressedOpacity : 1.0,
-        child: widget.child,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: widget.minWidth ?? 0,
+            minHeight: widget.minHeight ?? 0,
+          ),
+          child: widget.child,
+        ),
       ),
     );
   }

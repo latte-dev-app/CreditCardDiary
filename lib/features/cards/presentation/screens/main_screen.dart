@@ -66,8 +66,9 @@ class _MainScreenState extends State<MainScreen> {
         child: SafeArea(
           child: Theme(
             data: Theme.of(context).copyWith(
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
+              // Cupertinoスタイルの軽い視覚的フィードバックを有効化
+              splashColor: colorScheme.primary.withValues(alpha: 0.1),
+              highlightColor: colorScheme.primary.withValues(alpha: 0.05),
               hoverColor: Colors.transparent,
             ),
             child: Container(

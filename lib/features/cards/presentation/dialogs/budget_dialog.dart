@@ -68,6 +68,7 @@ Future<void> showBudgetDialog(
               CupertinoDialogAction(
                 isDestructiveAction: true,
                 onPressed: () async {
+                  HapticFeedback.mediumImpact();
                   await provider.setTotalBudget(year, month, 0);
                   if (context.mounted) {
                     Navigator.pop(context);
@@ -78,6 +79,7 @@ Future<void> showBudgetDialog(
             CupertinoDialogAction(
               isDefaultAction: true,
               onPressed: () async {
+                HapticFeedback.lightImpact();
                 final budgetStr = budgetController.text.trim().replaceAll(
                   ',',
                   '',

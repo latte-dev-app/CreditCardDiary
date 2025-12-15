@@ -57,11 +57,12 @@ class _LineChartScreenState extends State<LineChartScreen> {
                   return Container(
                     margin: const EdgeInsets.only(right: 8),
                     child: CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.all(8),
+                      minimumSize: const Size(44, 44),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 6,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest.withValues(
@@ -495,6 +496,11 @@ class _LineChartScreenState extends State<LineChartScreen> {
           children: [
             IconButton(
               icon: const Icon(CupertinoIcons.chevron_left, size: 20),
+              iconSize: 24,
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
               onPressed: () {
                 setState(() {
                   _selectedMonth = DateTime(
@@ -519,6 +525,11 @@ class _LineChartScreenState extends State<LineChartScreen> {
             ),
             IconButton(
               icon: const Icon(CupertinoIcons.chevron_right, size: 20),
+              iconSize: 24,
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
               onPressed: () {
                 setState(() {
                   _selectedMonth = DateTime(

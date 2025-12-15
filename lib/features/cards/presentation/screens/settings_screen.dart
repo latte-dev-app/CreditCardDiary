@@ -8,8 +8,27 @@ import '../../application/card_provider.dart';
 import '../../../../app/theme_provider.dart';
 import '../../../../shared/services/notification_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  Future<bool>? _notificationEnabledFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationEnabledFuture = NotificationService.getNotificationEnabled();
+  }
+
+  void _refreshNotificationEnabled() {
+    setState(() {
+      _notificationEnabledFuture = NotificationService.getNotificationEnabled();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +87,7 @@ class SettingsScreen extends StatelessWidget {
               header: const Text('通知設定'),
               children: [
                 FutureBuilder<bool>(
-                  future: NotificationService.getNotificationEnabled(),
+                  future: _notificationEnabledFuture,
                   builder: (context, snapshot) {
                     final isEnabled = snapshot.data ?? false;
                     return CupertinoListTile(
@@ -88,8 +107,8 @@ class SettingsScreen extends StatelessWidget {
                           await NotificationService.setNotificationEnabled(
                             value,
                           );
-                          if (context.mounted) {
-                            (context as Element).markNeedsBuild();
+                          if (mounted) {
+                            _refreshNotificationEnabled();
                           }
                         },
                       ),
