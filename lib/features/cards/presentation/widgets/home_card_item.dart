@@ -29,9 +29,14 @@ class HomeCardItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isPaymentApproaching = PaymentLogic.isPaymentDayApproaching(
-      card.paymentDay,
-    );
+    final now = DateTime.now();
+    final isCurrentMonth =
+        viewingYear == now.year && viewingMonth == now.month;
+
+    final isPaymentApproaching =
+        isCurrentMonth &&
+        PaymentLogic.isPaymentDayApproaching(card.paymentDay);
+    
     final borderColor =
         isPaymentApproaching
             ? theme.colorScheme.error

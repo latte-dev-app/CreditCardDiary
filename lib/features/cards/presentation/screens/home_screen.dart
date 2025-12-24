@@ -194,6 +194,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Sorting Logic
           final sortedCards = List.of(provider.cards);
+          final now = DateTime.now();
+          final isCurrentMonth = year == now.year && month == now.month;
+
           sortedCards.sort((a, b) {
             final aPaid = PaymentLogic.isPaid(a.paymentDay, year, month);
             final bPaid = PaymentLogic.isPaid(b.paymentDay, year, month);
@@ -202,10 +205,10 @@ class _HomeScreenState extends State<HomeScreen> {
             if (!aPaid && bPaid) return -1;
             if (aPaid && !bPaid) return 1;
 
-            final aApproaching = PaymentLogic.isPaymentDayApproaching(
+            final aApproaching = isCurrentMonth && PaymentLogic.isPaymentDayApproaching(
               a.paymentDay,
             );
-            final bApproaching = PaymentLogic.isPaymentDayApproaching(
+            final bApproaching = isCurrentMonth && PaymentLogic.isPaymentDayApproaching(
               b.paymentDay,
             );
 
